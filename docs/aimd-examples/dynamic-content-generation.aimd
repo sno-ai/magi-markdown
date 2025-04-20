@@ -1,0 +1,55 @@
+---
+doc-id: da7b1a9e-4f8c-4b7d-8e1f-9c0a2d3b4c5d
+title: Dynamic Content Example with AIMD
+description: Demonstrates using ai-script to request summaries and explanations.
+tags:
+  - aimd-example
+  - ai-script
+  - dynamic-content
+created-date: 2024-07-26T10:00:00Z
+---
+
+# Generating Content Dynamically
+
+AIMD allows embedding instructions directly into the document. This can be used by AI agents to generate or modify content based on the context.
+
+## Section 1: Complex Topic Explanation
+
+Quantum entanglement is a physical phenomenon that occurs when a group of particles are generated, interact, or share spatial proximity in such a way that the quantum state of each particle of the group cannot be described independently of the state of the others, including when the particles are separated by a large distance.
+
+
+```ai-script
+<!-- AI-PROCESSOR: The block below asks for a simplified explanation -->
+{
+  "script-id": "explain-entanglement-simple-v1",
+  "prompt": "Explain the concept of quantum entanglement described above in simpler terms, suitable for a high school student.",
+  "priority": "medium",
+  "auto-run": false,
+  "provider": "anthropic",
+  "model-name": "claude-3-sonnet",
+  "parameters": {
+    "temperature": 0.6
+  },
+  "output-format": "markdown"
+}
+```
+
+## Section 2: Market Analysis Overview
+
+The recent market trends indicate a significant shift towards renewable energy sources. Solar panel installations saw a 40% year-over-year increase, while wind energy investments grew by 25%. However, challenges remain in grid modernization and energy storage solutions.
+
+```ai-script
+{
+  "script-id": "summarize-market-trends-v2",
+  "prompt": "Provide a 2-sentence summary of the key market trends discussed in the preceding paragraph.",
+  "priority": "high",
+  "auto-run": true,
+  "parameters": {
+    "max-tokens": 50
+  },
+  "runtime-env": "server",
+  "output-format": "text"
+}
+```
+
+This demonstrates how AI can be instructed to perform tasks like simplification or summarization directly within the document flow.
