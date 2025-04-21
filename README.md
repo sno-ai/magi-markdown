@@ -1,6 +1,7 @@
 # 📝 MAGI: Markdown for Agent Guidance & Instruction 📝
+## Bridging Human Content and LLM Agent Processing with Context-Rich Markdown Extension Format.
 
-[![CI](https://img.shields.io/github/actions/workflow/status/snoai/magi-markdown/pr-checks.yml?branch=main)](https://github.com/snoai/magi-markdown/actions)
+[![CI](https://img.shields.io/github/actions/workflow/status/snoai/magi-markdown/sync-mdx.yml?branch=main)](https://github.com/snoai/magi-markdown/actions/workflows/sync-mdx.yml)
 [![License](https://img.shields.io/github/license/snoai/magi-markdown)](https://github.com/snoai/magi-markdown/blob/main/LICENSE)
 
 ---
