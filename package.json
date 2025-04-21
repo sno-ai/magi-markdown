@@ -1,0 +1,26 @@
+{
+	"name": "ai-markdown",
+	"version": "0.9.0",
+	"license": "MIT",
+	"workspaces": [
+		"apps/*"
+	],
+	"scripts": {},
+	"devDependencies": {
+		"@types/jsdom": "^21.1.7",
+		"@types/turndown": "^5.0.5",
+		"cspell": "^8.8.1",
+		"markdownlint-cli": "^0.41.0",
+		"mintlify": "^4.0.491",
+		"prettier": "^3.2.5",
+		"tsx": "^4.10.5",
+		"typescript": "^5.4.5",
+		"vitest": "^1.6.0",
+		"wrangler": "^3.57.0"
+	},
+	"dependencies": {
+		"@cloudflare/puppeteer": "^1.0.2",
+		"@types/node": "^20.12.12",
+		"react-tweet": "^3.2.2"
+	}
+}

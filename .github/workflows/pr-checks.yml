@@ -1,0 +1,64 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches:
+      - main # Or your default branch name
+    paths:
+      - 'docs/**'
+      - '.github/workflows/pr-checks.yml'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.markdownlint.jsonc'
+      - 'cspell.json'
+      - 'mintlify.json'
+
+permissions:
+  contents: read # Allow actions to read repo content
+
+jobs:
+  lint-spell-links:
+    name: Lint, Spellcheck & Link Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Use Node.js 20 or your preferred version
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8 # Use pnpm version 8 or your preferred version
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint Markdown/AiMD files
+        run: pnpm exec markdownlint-cli "docs/**/*.md" "docs/**/*.aimd"
+
+      - name: Check spelling
+        run: pnpm exec cspell "docs/**/*.{md,aimd}" --no-progress --show-context
+
+      - name: Install Mintlify CLI
+        run: pnpm exec mintlify install # Installs necessary Mintlify dependencies
+
+      - name: Check for broken links (Mintlify)
+        run: pnpm exec mintlify broken-links 

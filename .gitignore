@@ -1,0 +1,106 @@
+# Node.js and npm
+## Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+pnpm-lock.yaml
+
+.editorconfig
+
+
+
+## Diagnostic reports
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+## Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+## Dependency directories
+node_modules/
+web_modules/
+
+## Cache directories
+.npm
+.cache
+.parcel-cache
+.fusebox/
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+## Output files
+*.tgz
+build/Release
+dist/
+out/
+
+# Testing and Coverage
+coverage/
+*.lcov
+.nyc_output
+.vscode-test
+
+# Build tools
+## Grunt
+.grunt
+
+## Node-waf
+.lock-wscript
+
+# TypeScript
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+.dev.vars
+
+# Framework specific
+## Next.js
+.next
+
+## Nuxt.js
+.nuxt
+
+## Gatsby
+.cache/
+# public            # Uncomment if using Gatsby instead of Next.js
+
+## Docusaurus
+.docusaurus
+
+## Serverless
+.serverless/
+
+# Wrangler directories
+.wrangler/
+apps/url2aimd/.wrangler/
+
+# Cloudflare Workers config file (ignored) and example (included)
+apps/url2aimd/wrangler.toml
+!apps/url2aimd/wrangler.example.toml
+
+# Database
+.dynamodb/
+
+# Other
+.tern-port
+.etc/
+.DS_Store
+.yarn-integrity
+
+# VSCode
+.vscode/
