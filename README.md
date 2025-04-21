@@ -20,6 +20,8 @@ MAGI files (`.mda`) remain perfectly readable by humans and standard Markdown re
 
 ## What Is MAGI? (Core Components)
 
+![MAGI: Three Major Components](/images/three-parts.svg)
+
 MAGI enhances standard Markdown by incorporating three key, **optional** components:
 
 1.  **YAML Front Matter:** Provides structured metadata (e.g., `doc-id`, `title`, `tags`, `purpose`).
@@ -170,12 +172,13 @@ Instructions can also be passed externally via API metadata for separation of co
 ### Part 3: Footnote for Document Relationships
 
 Leverage standard Markdown footnotes `[^ref-id]` with embedded JSON to define explicit, typed relationships between documents. Essential for knowledge graphs.
+![MAGI: Knowledge Graph Construction](/images/doc-graph.svg)
 
 **Core Components:**
 
 *   **`doc-id` References:** Each MAGI document needs a unique `doc-id` in its Front Matter.
 *   **Relationship Types:** Defined in the JSON (e.g., `parent`, `child`, `related`, `cites`, `supports`, `contradicts`).
-*   **Footnote Syntax:** `[^ref-id]: { ... JSON payload ... }`
+*   **Footnote Syntax:** `[^ref-id]`: { ... JSON payload ... }`
 
 **Implementation Example:**
 
