@@ -5,7 +5,9 @@
 	"workspaces": [
 		"apps/*"
 	],
-	"scripts": {},
+	"scripts": {
+		"sync:mdx": "tsx scripts/sync-mdx.ts"
+	},
 	"devDependencies": {
 		"@types/jsdom": "^21.1.7",
 		"@types/turndown": "^5.0.5",

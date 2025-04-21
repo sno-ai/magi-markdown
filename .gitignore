@@ -104,3 +104,9 @@ apps/url2aimd/wrangler.toml
 
 # VSCode
 .vscode/
+
+# Cursor
+.cursor/
+.cursorignore
+.cursor-update-log.md
+
