@@ -39,11 +39,14 @@ jobs:
       - name: Check for changes
         id: git_status
         run: |
-          git status --porcelain docs/mdx/
-          echo "changes=$(git status --porcelain docs/mdx/)" >> $GITHUB_OUTPUT
+          if [[ -n "$(git status --porcelain docs/mdx/)" ]]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Commit and push changes
-        if: steps.git_status.outputs.changes
+        if: steps.git_status.outputs.has_changes == 'true'
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
