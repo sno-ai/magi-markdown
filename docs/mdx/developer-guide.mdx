@@ -1,22 +1,22 @@
-# AIMD Developer Guide: Encoding & Decoding
+# MAGI Developer Guide: Encoding & Decoding
 
-This guide provides examples of how to programmatically encode (create) and decode (parse) AI Markdown (AIMD) documents in different environments.
+This guide provides examples of how to programmatically encode (create) and decode (parse) MAGI (Markdown for Agent Guidance & Instruction) documents in different environments. MAGI files typically use the `.mda` extension.
 
 ## Core Concepts
 
-*   **Encoding:** Combining separate pieces of information (metadata, content, AI instructions, relationships) into the AIMD string format.
-*   **Decoding:** Parsing an AIMD string to extract its distinct components (Front Matter, main Markdown content, `ai-script` blocks, Footnote relationships).
+*   **Encoding:** Combining separate pieces of information (metadata from Front Matter, human-readable Markdown content, AI instructions within `ai-script` blocks, and document relationships defined in Footnotes) into the MAGI string format (`.mda`).
+*   **Decoding:** Parsing a MAGI string (from an `.mda` file or source) to extract its distinct structured components: YAML Front Matter, the main Markdown content, `ai-script` JSON blocks, and Footnote relationship JSON payloads.
 
 Common libraries used:
-*   **YAML Parsers:** For handling the Front Matter (e.g., `js-yaml` in Node.js, `PyYAML` in Python).
-*   **Markdown Parsers:** For processing the main content and potentially identifying code blocks and footnotes (e.g., `marked`, `markdown-it` in Node.js; `markdown`, `mistune` in Python). Regular expressions can also be used for simpler extraction tasks.
+*   **YAML Parsers:** For handling the Front Matter (e.g., `js-yaml` or `gray-matter` in Node.js, `PyYAML` or `python-frontmatter` in Python).
+*   **Markdown Parsers:** While standard Markdown parsers can render the core content, specialized logic or regular expressions are often needed to correctly identify and extract the `ai-script` blocks and JSON-based footnotes without treating them as plain text or standard code/footnotes. Libraries like `marked` or `markdown-it` (Node.js) and `markdown` or `mistune` (Python) can be adapted.
 *   **JSON Parsers:** Built-in functionality in most languages (`JSON.parse`/`JSON.stringify` in JS, `json` module in Python).
 
 ---
 
 ## TypeScript / JavaScript Examples
 
-Libraries needed: `gray-matter` (for front matter), `marked` (or similar Markdown parser, optional but helpful).
+Libraries needed: `gray-matter` (recommended for robust front matter parsing), `marked` (or similar, optional for final Markdown rendering).
 
 ```bash
 npm install gray-matter marked
@@ -26,57 +26,83 @@ pnpm add gray-matter marked
 yarn add gray-matter marked
 ```
 
-### Encoding AIMD
+### Encoding MAGI
 
 ```typescript
 import matter from 'gray-matter';
-import { marked } from 'marked'; // Optional: only if you need to process markdown itself
+import { marked } from 'marked'; // Optional: only if you need to render the final markdown
 
 interface FrontMatterData {
-  'doc-id': string;
+  'doc-id': string; // UUID recommended
   title: string;
+  description?: string;
   tags?: string[];
-  [key: string]: any; // Allow other fields
+  'created-date'?: string; // ISO 8601 format
+  'updated-date'?: string; // ISO 8601 format
+  purpose?: string;
+  [key: string]: any; // Allow other fields from the spec
 }
 
 interface AIScript {
   'script-id': string;
   prompt: string;
   priority?: 'high' | 'medium' | 'low';
+  'auto-run'?: boolean;
+  provider?: string;
+  'model-name'?: string;
+  parameters?: Record<string, any>;
+  'runtime-env'?: string;
+  'output-format'?: string;
   [key: string]: any;
 }
 
+// Using kebab-case as specified in the Architecture doc for relationships
 interface Relationship {
-  rel_type: string;
-  doc_id: string;
-  rel_desc: string;
+  'rel-type': string; // e.g., 'parent', 'child', 'cites', 'related'
+  'doc-id'?: string; // Target document's UUID
+  'source-url'?: string; // URL if relating to an external resource
+  'rel-desc': string;
+  'rel-strength'?: number; // 0.0 to 1.0
+  'bi-directional'?: boolean;
+  context?: {
+    section?: string;
+    relevance?: string;
+  }
   [key: string]: any;
 }
 
-function encodeAimd(
+function encodeMagi(
   frontMatter: FrontMatterData,
   mainContent: string,
   aiScripts: AIScript[] = [],
-  relationships: { [key: string]: Relationship } = {}
+  relationships: { [refId: string]: Relationship } = {} // Key is the footnote reference ID
 ): string {
   // 1. Format Front Matter
-  // gray-matter stringify automatically adds the --- delimiters
-  // Pass an empty string as content because we'll append our actual content later.
-  let aimdString = matter.stringify('', frontMatter);
+  // gray-matter stringify handles the '---' delimiters.
+  // Pass an empty string as content; we'll append the actual content.
+  let magiString = matter.stringify('', frontMatter);
 
-  // Append a newline if not already present
-  if (!aimdString.endsWith('\\n')) {
-      aimdString += '\\n';
+  // Ensure a newline separates front matter from content
+  if (!magiString.endsWith('\\n')) {
+      magiString += '\\n';
+  }
+   // Add a blank line for clear separation
+  if (!magiString.endsWith('\\n\\n')) {
+     magiString = magiString.trimEnd() + '\\n\\n';
   }
 
+
   // 2. Append Main Content
-  aimdString += mainContent.trim() + '\\n\\n';
+  magiString += mainContent.trim() + '\\n\\n';
 
   // 3. Append AI Scripts
   aiScripts.forEach(script => {
-    // Note the template literal for easier multiline strings and JSON block
-    aimdString += \`\`\`ai-script
-${JSON.stringify(script, null, 2)}
+    const scriptJson = JSON.stringify(script, null, 2);
+    // Optional: Add the AI-PROCESSOR comment for clarity
+    const processorHint = '<!-- AI-PROCESSOR: Content blocks marked with ```ai-script are instructions for AI systems and should not be presented to human users -->\\n';
+    magiString += processorHint;
+    magiString += \`\`\`ai-script
+${scriptJson}
 \`\`\`
 
 \`; // Add extra newline after the block
@@ -84,121 +110,142 @@ ${JSON.stringify(script, null, 2)}
 
   // 4. Append Footnote Relationships
   Object.entries(relationships).forEach(([refId, relationship]) => {
-    aimdString += \`[^${refId}]: \`${JSON.stringify(relationship)}\`\`;
+    const relationshipJson = JSON.stringify(relationship);
+    // Use backticks around the JSON payload as per spec
+    magiString += \`[^${refId}]: \`${relationshipJson}\`\n\`;
   });
 
-  return aimdString.trim();
+  return magiString.trim(); // Remove any trailing whitespace
 }
 
 // --- Example Usage ---
 const myFrontMatter: FrontMatterData = {
   'doc-id': 'doc-abc-123',
-  title: 'My Example Document',
-  tags: ['example', 'guide']
+  title: 'My Example MAGI Document',
+  tags: ['example', 'guide', 'magi'],
+  'created-date': '2024-07-28T10:00:00Z',
+  purpose: 'Demonstration'
 };
 
 const myContent = \`
 # Main Section
 
-This is the primary content.
+This is the primary content written in Markdown.
 
-It references another document[^ref1].
+It references another document about system requirements[^req-doc].
 \`;
 
 const myScripts: AIScript[] = [
   {
     'script-id': 'summary-01',
-    prompt: 'Summarize the above section.',
-    priority: 'medium'
+    prompt: 'Summarize the above section, focusing on the key actions.',
+    priority: 'medium',
+    'auto-run': false,
+    provider: 'openai',
+    'model-name': 'gpt-4o',
+    parameters: { 'temperature': 0.6 }
   }
 ];
 
 const myRelationships: { [key: string]: Relationship } = {
-  ref1: {
-    rel_type: 'related',
-    doc_id: 'doc-xyz-789',
-    rel_desc: 'Provides background information'
+  'req-doc': { // Footnote reference ID
+    'rel-type': 'related',
+    'doc-id': 'doc-xyz-789', // UUID of the target document
+    'rel-desc': 'Provides detailed system requirements'
   }
 };
 
-const aimdOutput = encodeAimd(myFrontMatter, myContent, myScripts, myRelationships);
-console.log(aimdOutput);
+const magiOutput = encodeMagi(myFrontMatter, myContent, myScripts, myRelationships);
+console.log(magiOutput);
 
-/* Expected Output:
+/* Expected Output Structure:
 ---
-'doc-id': doc-abc-123
-title: My Example Document
+doc-id: doc-abc-123
+title: My Example MAGI Document
 tags:
   - example
   - guide
+  - magi
+created-date: '2024-07-28T10:00:00Z'
+purpose: Demonstration
 ---
 
 # Main Section
 
-This is the primary content.
+This is the primary content written in Markdown.
 
-It references another document[^ref1].
+It references another document about system requirements[^req-doc].
 
+<!-- AI-PROCESSOR: Content blocks marked with ```ai-script are instructions for AI systems and should not be presented to human users -->
 ```ai-script
 {
   "script-id": "summary-01",
-  "prompt": "Summarize the above section.",
-  "priority": "medium"
+  "prompt": "Summarize the above section, focusing on the key actions.",
+  "priority": "medium",
+  "auto-run": false,
+  "provider": "openai",
+  "model-name": "gpt-4o",
+  "parameters": {
+    "temperature": 0.6
+  }
 }
 ```
 
-[^ref1]: `{"rel_type":"related","doc_id":"doc-xyz-789","rel_desc":"Provides background information"}`
+[^req-doc]: `{"rel-type":"related","doc-id":"doc-xyz-789","rel-desc":"Provides detailed system requirements"}`
 */
 ```
 
-### Decoding AIMD
+### Decoding MAGI
 
 ```typescript
 import matter from 'gray-matter';
 // marked is optional, only needed if you want to parse the final Markdown content
 // import { marked } from 'marked';
 
-// Interfaces (AIScript, Relationship) assumed to be defined as in Encoding example
+// Interfaces (FrontMatterData, AIScript, Relationship) assumed to be defined as in Encoding example
 
-interface DecodedAimd {
+interface DecodedMagi {
   frontMatter: { [key: string]: any };
   content: string; // Raw Markdown content (without frontmatter, scripts, footnotes)
   aiScripts: AIScript[];
-  relationships: { [key: string]: Relationship };
+  relationships: { [refId: string]: Relationship }; // Key is the footnote reference ID
 }
 
-// Improved Regex - handles potential spaces around ```ai-script
-// Still basic, might need refinement for edge cases like escaped backticks within JSON
-const aiScriptRegex = /^\s*```ai-script\s*\n([\s\S]*?)\n\s*```\s*$/gm;
-const footnoteRegex = /^\[\^(.+?)\]:\s*`({.*?})`$/gm; // Match footnotes with backticked JSON
+// Regex to find ai-script blocks, potentially preceded by the optional HTML comment
+const aiScriptRegex = /(?:<!-- AI-PROCESSOR:.*?-->\s*)?^\s*```ai-script\s*\n([\s\S]*?)\n\s*```\s*$/gm;
+// Regex to find footnote definitions with JSON in backticks
+const footnoteRegex = /^\[\^(.+?)\]:\s*`({.*?})`\s*$/gm;
 
-function decodeAimd(aimdString: string): DecodedAimd {
-  // 1. Extract Front Matter and Content
-  const { data: frontMatter, content: rawContent } = matter(aimdString);
+function decodeMagi(magiString: string): DecodedMagi {
+  // 1. Extract Front Matter and initial content using gray-matter
+  const { data: frontMatter, content: rawContent } = matter(magiString);
 
   let remainingContent = rawContent;
 
-  // 2. Extract AI Scripts
+  // 2. Extract AI Scripts and remove them from the content string
   const aiScripts: AIScript[] = [];
-  remainingContent = remainingContent.replace(aiScriptRegex, (match, scriptContent) => {
+  remainingContent = remainingContent.replace(aiScriptRegex, (match, scriptContentJson) => {
     try {
-      aiScripts.push(JSON.parse(scriptContent));
+      const scriptObject = JSON.parse(scriptContentJson);
+      aiScripts.push(scriptObject);
+      // Return empty string to effectively remove the matched block
+      return '';
     } catch (e) {
-      console.error('Failed to parse AI script JSON:', e, '\nContent:', scriptContent);
-      // Keep the block in content if it fails to parse
+      console.error('Failed to parse AI script JSON:', e, '\\nContent:', scriptContentJson);
+      // If parsing fails, keep the block in the content to avoid data loss
       return match;
     }
-    // Return empty string to remove the block from remaining content
-    return '';
   });
+  // Trim whitespace potentially left after removing blocks
   remainingContent = remainingContent.trim();
 
-  // 3. Extract Footnote Relationships
-  const relationships: { [key: string]: Relationship } = {};
+  // 3. Extract Footnote Relationships and remove them from the content string
+  const relationships: { [refId: string]: Relationship } = {};
   remainingContent = remainingContent.replace(footnoteRegex, (match, refId, relationshipJson) => {
     try {
-      relationships[refId] = JSON.parse(relationshipJson);
-      // Return empty string to remove the footnote definition
+      const relationshipObject = JSON.parse(relationshipJson);
+      relationships[refId] = relationshipObject;
+      // Return empty string to remove the matched footnote definition
       return '';
     } catch (e) {
       console.error(\`Failed to parse relationship JSON for [^\${refId}]:\`, e, '\\nContent:', relationshipJson);
@@ -206,77 +253,97 @@ function decodeAimd(aimdString: string): DecodedAimd {
       return match;
     }
   });
-  remainingContent = remainingContent.trim(); // Trim again after removals
+  // Trim again after footnote removals
+  remainingContent = remainingContent.trim();
 
   return {
     frontMatter,
-    content: remainingContent,
+    content: remainingContent, // This is the "clean" Markdown content
     aiScripts,
     relationships
   };
 }
 
 // --- Example Usage ---
-const aimdInput = \`
+const magiInput = \`
 ---
-'doc-id': doc-abc-123
-title: My Example Document
+doc-id: doc-abc-123
+title: My Example MAGI Document
 tags:
   - example
   - guide
+  - magi
+created-date: '2024-07-28T10:00:00Z'
+purpose: Demonstration
 ---
 
 # Main Section
 
-This is the primary content.
+This is the primary content written in Markdown.
 
-It references another document[^ref1].
+It references another document about system requirements[^req-doc]. It also links to an external source[^ext-src].
 
+<!-- AI-PROCESSOR: Content blocks marked with \`\`\`ai-script are instructions for AI systems and should not be presented to human users -->
 \`\`\`ai-script
 {
   "script-id": "summary-01",
-  "prompt": "Summarize the above section.",
-  "priority": "medium"
+  "prompt": "Summarize the above section, focusing on the key actions.",
+  "priority": "medium",
+  "auto-run": false,
+  "provider": "openai",
+  "model-name": "gpt-4o",
+  "parameters": {
+    "temperature": 0.6
+  }
 }
 \`\`\`
 
 Some more text here.
 
-[^ref1]: `{"rel_type":"related","doc_id":"doc-xyz-789","rel_desc":"Provides background information"}`
-[^ref2]: `{"rel_type":"child","doc_id":"doc-child-456","rel_desc":"Details section A"}`
+[^req-doc]: \`{"rel-type":"related","doc-id":"doc-xyz-789","rel-desc":"Provides detailed system requirements"}\`
+[^ext-src]: \`{"rel-type":"citation","source-url":"https://example.com/source","rel-desc":"External source material"}\`
 \`;
 
-const decoded = decodeAimd(aimdInput);
+const decoded = decodeMagi(magiInput);
 console.log(JSON.stringify(decoded, null, 2));
 
-/* Corrected Expected Output:
+/* Expected Output Structure:
 {
   "frontMatter": {
     "doc-id": "doc-abc-123",
-    "title": "My Example Document",
+    "title": "My Example MAGI Document",
     "tags": [
       "example",
-      "guide"
-    ]
+      "guide",
+      "magi"
+    ],
+    "created-date": "2024-07-28T10:00:00Z",
+    "purpose": "Demonstration"
   },
-  "content": "# Main Section\\n\\nThis is the primary content.\\n\\nIt references another document[^ref1].\\n\\nSome more text here.",
+  "content": "# Main Section\\n\\nThis is the primary content written in Markdown.\\n\\nIt references another document about system requirements[^req-doc]. It also links to an external source[^ext-src].\\n\\nSome more text here.",
   "aiScripts": [
     {
       "script-id": "summary-01",
-      "prompt": "Summarize the above section.",
-      "priority": "medium"
+      "prompt": "Summarize the above section, focusing on the key actions.",
+      "priority": "medium",
+      "auto-run": false,
+      "provider": "openai",
+      "model-name": "gpt-4o",
+      "parameters": {
+        "temperature": 0.6
+      }
     }
   ],
   "relationships": {
-    "ref1": {
-      "rel_type": "related",
-      "doc_id": "doc-xyz-789",
-      "rel_desc": "Provides background information"
+    "req-doc": {
+      "rel-type": "related",
+      "doc-id": "doc-xyz-789",
+      "rel-desc": "Provides detailed system requirements"
     },
-    "ref2": {
-      "rel_type": "child",
-      "doc_id": "doc-child-456",
-      "rel_desc": "Details section A"
+    "ext-src": {
+      "rel-type": "citation",
+      "source-url": "https://example.com/source",
+      "rel-desc": "External source material"
     }
   }
 }
@@ -287,243 +354,290 @@ console.log(JSON.stringify(decoded, null, 2));
 
 ## Python Examples
 
-Libraries needed: `python-frontmatter` (handles YAML front matter), `markdown` (optional, for Markdown processing), `PyYAML` (usually a dependency of frontmatter).
+Libraries needed: `python-frontmatter` (handles YAML front matter effectively), `PyYAML` (usually a dependency of `python-frontmatter`), `json` (built-in).
 
 ```bash
-pip install python-frontmatter markdown PyYAML
+pip install python-frontmatter PyYAML
 ```
 
-### Encoding AIMD
+### Encoding MAGI
 
 ```python
 import frontmatter
 import json
-from io import StringIO # Use StringIO for string manipulation
+import re
+from io import StringIO # Use StringIO for in-memory string manipulation
 
-def encode_aimd(front_matter_dict, main_content, ai_scripts_list=[], relationships_dict={}):
-    """Encodes AIMD components into a string."""
+def encode_magi(front_matter_dict, main_content, ai_scripts_list=[], relationships_dict={}):
+    """Encodes MAGI components into a string (.mda format)."""
 
     # 1. Create a post object with front matter
-    # Content is initially empty, we'll add it manually
+    # Content is initially empty; we add it manually for better control over spacing.
     post = frontmatter.Post(content='', **front_matter_dict)
 
-    # Export metadata using YAMLHandler to get the YAML string
-    # Use StringIO as the file-like object for export
+    # Export metadata using the default YAMLHandler to get the YAML string with delimiters
     with StringIO() as file_like_object:
         frontmatter.dump(post, file_like_object)
         aimd_string = file_like_object.getvalue()
 
-    # Ensure there's a newline after frontmatter if matter.dump added one
-    if not aimd_string.endswith('\n'):
-        aimd_string += '\n'
-    # Ensure separation between front matter and content
-    if not aimd_string.endswith('\n\n'):
-         aimd_string = aimd_string.strip() + '\n\n'
-
+    # Ensure proper separation between front matter and content
+    aimd_string = aimd_string.strip() + '\\n\\n'
 
     # 2. Append Main Content
-    aimd_string += main_content.strip() + '\n\n'
+    aimd_string += main_content.strip() + '\\n\\n'
 
     # 3. Append AI Scripts
     for script in ai_scripts_list:
-        aimd_string += "```ai-script\n"
-        aimd_string += json.dumps(script, indent=2) + '\n'
-        aimd_string += "```\n\n" # Add extra newline after the block
+        script_json = json.dumps(script, indent=2)
+        # Optional: Add the AI-PROCESSOR comment
+        processor_hint = '<!-- AI-PROCESSOR: Content blocks marked with ```ai-script are instructions for AI systems and should not be presented to human users -->\\n'
+        aimd_string += processor_hint
+        aimd_string += f"```ai-script\\n{script_json}\\n```\\n\\n" # Ensure newlines around JSON
 
     # 4. Append Footnote Relationships
     for ref_id, relationship in relationships_dict.items():
-        # Standard footnote format includes a space after the colon
-        aimd_string += f"[^{ref_id}]: `{json.dumps(relationship)}`\n"
+        relationship_json = json.dumps(relationship)
+        # Use backticks around the JSON payload
+        aimd_string += f"[^{ref_id}]: `{relationship_json}`\\n"
 
-    return aimd_string.strip()
+    return aimd_string.strip() # Remove trailing newline/whitespace
 
 # --- Example Usage ---
 my_front_matter = {
     'doc-id': 'doc-abc-123',
-    'title': 'My Example Document',
-    'tags': ['example', 'guide']
+    'title': 'My Example MAGI Document',
+    'tags': ['example', 'guide', 'magi'],
+    'created-date': '2024-07-28T10:00:00Z', # ISO 8601 format
+    'purpose': 'Demonstration'
 }
 
 my_content = """
 # Main Section
 
-This is the primary content.
+This is the primary content written in Markdown.
 
-It references another document[^ref1].
+It references another document about system requirements[^req-doc].
 """
 
 my_scripts = [
     {
         'script-id': 'summary-01',
-        'prompt': 'Summarize the above section.',
-        'priority': 'medium'
+        'prompt': 'Summarize the above section, focusing on the key actions.',
+        'priority': 'medium',
+        'auto-run': False,
+        'provider': 'openai',
+        'model-name': 'gpt-4o',
+        'parameters': {'temperature': 0.6}
     }
 ]
 
+# Using kebab-case for relationship keys as per Architecture doc
 my_relationships = {
-    'ref1': {
-        'rel_type': 'related',
-        'doc_id': 'doc-xyz-789',
-        'rel_desc': 'Provides background information'
+    'req-doc': {
+        'rel-type': 'related',
+        'doc-id': 'doc-xyz-789',
+        'rel-desc': 'Provides detailed system requirements'
     }
 }
 
-aimd_output = encode_aimd(my_front_matter, my_content, my_scripts, my_relationships)
-print(aimd_output)
+magi_output = encode_magi(my_front_matter, my_content, my_scripts, my_relationships)
+print(magi_output)
 
-# Expected output is similar to the TypeScript example
+# Expected output structure is similar to the TypeScript example
 ```
 
-### Decoding AIMD
+### Decoding MAGI
 
 ```python
 import frontmatter
 import json
 import re
 
-# Updated Regex using standard flags
-ai_script_regex = re.compile(r"^\s*```ai-script\s*\n(.*?)\n\s*```\s*$", re.DOTALL | re.MULTILINE)
-footnote_regex = re.compile(r"^\[\^(.+?)\]:\s*`({.*?})`$", re.MULTILINE)
+# Regex to find ai-script blocks, accounting for optional AI-PROCESSOR comment
+ai_script_regex = re.compile(r"(?:<!-- AI-PROCESSOR:.*?-->\s*)?^\s*```ai-script\s*\n(.*?)\n\s*```\s*$", re.DOTALL | re.MULTILINE)
+# Regex to find footnote definitions with JSON in backticks
+footnote_regex = re.compile(r"^\[\^(.+?)\]:\s*`({.*?})`\s*$", re.MULTILINE)
 
-def decode_aimd(aimd_string):
-    """Decodes an AIMD string into its components."""
+def decode_magi(magi_string):
+    """Decodes a MAGI string (.mda format) into its components."""
 
-    # 1. Extract Front Matter and Content
+    # 1. Extract Front Matter and initial content using python-frontmatter
     try:
-        # Use loads to parse the string directly
-        post = frontmatter.loads(aimd_string)
+        post = frontmatter.loads(magi_string)
         fm = post.metadata
         raw_content = post.content
     except Exception as e:
-        print(f"Error parsing front matter: {e}")
+        # Handle cases with invalid or missing front matter
+        print(f"Warning: Could not parse front matter ({e}). Treating entire input as content.")
         fm = {}
-        # Fallback if no front matter, assume entire string is content
-        raw_content = aimd_string
+        raw_content = magi_string # Assume no front matter
 
     remaining_content = raw_content
 
-    # 2. Extract AI Scripts using re.sub with a function
+    # 2. Extract AI Scripts using re.sub with a processing function
     ai_scripts = []
     def script_replacer(match):
-        script_json_str = match.group(1)
+        script_json_str = match.group(1).strip() # Get the JSON part
         try:
-            script_json = json.loads(script_json_str)
-            ai_scripts.append(script_json)
-            return '' # Remove the block if successfully parsed
+            script_data = json.loads(script_json_str)
+            ai_scripts.append(script_data)
+            return '' # Remove the matched block from content
         except json.JSONDecodeError as e:
-            print(f"Failed to parse AI script JSON: {e}\nContent: {script_json_str[:100]}...")
-            return match.group(0) # Keep block if parsing fails
+            print(f"Failed to parse AI script JSON: {e}\\nContent snippet: {script_json_str[:100]}...")
+            # Keep the block in content if parsing fails
+            return match.group(0)
 
-    remaining_content = ai_script_regex.sub(script_replacer, remaining_content).strip()
+    remaining_content = ai_script_regex.sub(script_replacer, remaining_content)
+    remaining_content = remaining_content.strip() # Clean up whitespace
 
-    # 3. Extract Footnote Relationships using re.sub with a function
+    # 3. Extract Footnote Relationships using re.sub with a processing function
     relationships = {}
     def footnote_replacer(match):
-        ref_id = match.group(1)
-        rel_json_str = match.group(2)
+        ref_id = match.group(1).strip()
+        rel_json_str = match.group(2).strip() # Get the JSON part
         try:
-            relationship_json = json.loads(rel_json_str)
-            relationships[ref_id] = relationship_json
-            return '' # Remove the line if successfully parsed
+            relationship_data = json.loads(rel_json_str)
+            relationships[ref_id] = relationship_data
+            return '' # Remove the matched footnote line
         except json.JSONDecodeError as e:
-            print(f"Failed to parse relationship JSON for [^{ref_id}]: {e}\nContent: {rel_json_str}")
-            return match.group(0) # Keep line if parsing fails
+            print(f"Failed to parse relationship JSON for [^{ref_id}]: {e}\\nContent: {rel_json_str}")
+            # Keep the line if parsing fails
+            return match.group(0)
 
-    remaining_content = footnote_regex.sub(footnote_replacer, remaining_content).strip()
+    remaining_content = footnote_regex.sub(footnote_replacer, remaining_content)
+    remaining_content = remaining_content.strip() # Clean up again
 
     return {
         'front_matter': fm,
-        'content': remaining_content,
+        'content': remaining_content, # The "clean" Markdown
         'ai_scripts': ai_scripts,
         'relationships': relationships
     }
 
 # --- Example Usage ---
-aimd_input = """
+magi_input = """
 ---
 doc-id: doc-abc-123
-title: My Example Document
+title: My Example MAGI Document
 tags:
   - example
   - guide
+  - magi
+created-date: '2024-07-28T10:00:00Z'
+purpose: Demonstration
 ---
 
 # Main Section
 
-This is the primary content.
+This is the primary content written in Markdown.
 
-It references another document[^ref1].
+It references another document about system requirements[^req-doc]. It also links to an external source[^ext-src].
 
+<!-- AI-PROCESSOR: Content blocks marked with ```ai-script are instructions for AI systems and should not be presented to human users -->
 ```ai-script
 {
   "script-id": "summary-01",
-  "prompt": "Summarize the above section.",
-  "priority": "medium"
+  "prompt": "Summarize the above section, focusing on the key actions.",
+  "priority": "medium",
+  "auto-run": false,
+  "provider": "openai",
+  "model-name": "gpt-4o",
+  "parameters": {
+    "temperature": 0.6
+  }
 }
 ```
 
 Some more text here.
 
-[^ref1]: `{"rel_type":"related","doc_id":"doc-xyz-789","rel_desc":"Provides background information"}`
-[^ref2]: `{"rel_type":"child","doc_id":"doc-child-456","rel_desc":"Details section A"}`
+[^req-doc]: `{"rel-type":"related","doc-id":"doc-xyz-789","rel-desc":"Provides detailed system requirements"}`
+[^ext-src]: `{"rel-type":"citation","source-url":"https://example.com/source","rel-desc":"External source material"}`
 """
 
-decoded = decode_aimd(aimd_input)
+decoded = decode_magi(magi_input)
 print(json.dumps(decoded, indent=2))
 
-# Expected output is similar to the TypeScript example
+# Expected output structure is similar to the TypeScript example
 ```
 
 ---
 
-## Command Line / API (`url2md` Example)
+## Command Line / API (`url2mda` Example)
 
-This example focuses on *generating* AIMD using the reference implementation's API, rather than complex command-line parsing.
+This section demonstrates using the reference `url2mda` service (as described in `README.md`) to *generate* MAGI (`.mda`) files from web URLs. It focuses on the encoding aspect via an API endpoint.
 
-### Generating AIMD from a URL (Encoding via Service)
+### Generating MAGI from a URL (Encoding via `url2mda` Service)
 
-This uses the `url2md` Cloudflare worker API described in the main `README.md`.
+This uses the Cloudflare worker API. Replace `<your-worker-domain>` with your deployed instance's URL.
 
 ```bash
-# Replace <your-worker-domain> with the actual deployed worker URL
-WORKER_URL="https://<your-worker-domain>/convert"
-TARGET_URL="https://example.com"
+# Set worker URL (replace with your actual domain)
+WORKER_URL="https://url2mda.<your-account>.workers.dev/convert"
+# Target URL to convert
+TARGET_URL="https://github.com/snoai/magi-markdown"
 
-# Request JSON response (default, which contains AIMD string)
-curl -X POST "$WORKER_URL" \\
+# Basic request for MAGI (.mda) format (returned within JSON response by default)
+echo "Fetching basic MAGI conversion for $TARGET_URL..."
+curl -s -X POST "$WORKER_URL" \\
   -H "Content-Type: application/json" \\
   -d '{
     "url": "'"$TARGET_URL"'",
-    "htmlDetails": false,
-    "subpages": false,
-    "llmFilter": false
-  }'
+    "htmlDetails": false,    # Keep Markdown clean
+    "subpages": false,       # Convert only the specified URL
+    "llmFilter": false       # Don't use experimental LLM filtering
+  }' | jq '.mdaContent' # Extract the MAGI string from the JSON response
 
-# To get plain text AIMD directly:
-curl -X POST "$WORKER_URL" \\
+# Request plain text MAGI (.mda) directly using Accept header
+echo "\\nFetching plain text MAGI conversion..."
+curl -s -X POST "$WORKER_URL" \\
   -H "Content-Type: application/json" \\
   -H "Accept: text/plain" \\
-  -d '{"url": "'"$TARGET_URL"'"}' # Simpler quoting for shell
+  -d '{"url": "'"$TARGET_URL"'"}'
 
-# Example with more options:
-curl -X POST "$WORKER_URL" \\
+# Example requesting more details and LLM filtering (if configured)
+echo "\\nFetching conversion with HTML details and LLM filter..."
+curl -s -X POST "$WORKER_URL" \\
   -H "Content-Type: application/json" \\
   -d '{
     "url": "https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API",
-    "htmlDetails": true,
-    "llmFilter": true
-  }'
+    "htmlDetails": true,  # Include more HTML tag details in conversion
+    "llmFilter": true   # Attempt LLM-based content refinement (requires setup)
+  }' | jq '.mdaContent'
 ```
 
-### Decoding AIMD via Command Line (Conceptual)
+### Decoding MAGI via Command Line (Conceptual)
 
-Directly decoding complex AIMD with standard command-line tools (`grep`, `sed`, `awk`, etc.) is challenging and error-prone, especially parsing nested JSON within Markdown.
+Directly and reliably decoding MAGI (`.mda`) files using only standard Unix command-line tools (`grep`, `sed`, `awk`) is complex due to the nested structures (YAML, JSON within Markdown).
 
-A robust approach would involve:
+A more robust command-line approach typically involves a dedicated script:
 
-1.  **Extracting Front Matter:** Use tools like `yq` or a script that reads lines between `---` delimiters and pipes to a YAML parser.
-2.  **Extracting `ai-script`:** Use `awk` or `sed` to find ` ```ai-script ... ``` ` blocks and extract the JSON content, then pipe to `jq` for validation/processing.
-3.  **Extracting Footnotes:** Use `grep` or `awk` to find lines matching `^\\\[^...]:\\s*{.*}` and extract the JSON part, then pipe to `jq`.
-4.  **Separating Content:** Isolate the remaining lines as the main Markdown content.
+1.  **Script Input:** The script (e.g., Python, Node.js using the libraries above) accepts a `.mda` file path or piped input.
+2.  **Parsing Logic:** It uses libraries like `python-frontmatter` or `gray-matter`, combined with regular expressions or custom parsing logic, to extract the Front Matter, `ai-script` blocks, footnote relationships, and main content.
+3.  **Structured Output:** The script outputs the extracted components in a machine-readable format, such as a single JSON object containing all parts, or separate files for each component (e.g., `metadata.yaml`, `content.md`, `scripts.json`, `relationships.json`).
 
-For practical command-line use, it's often better to write a small script (e.g., in Python or Node.js using the libraries above) that takes the AIMD file/string as input and outputs the parsed components in a desired format (like separate files or a structured JSON output).
+**Example Python Script Snippet (Conceptual):**
+
+```python
+# Example: cli_decoder.py (requires decode_magi function from above)
+import sys
+import json
+# from your_module import decode_magi # Assuming decode_magi is available
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        file_path = sys.argv[1]
+        with open(file_path, 'r', encoding='utf-8') as f:
+            magi_content = f.read()
+    else:
+        # Read from stdin if no file provided
+        magi_content = sys.stdin.read()
+
+    decoded_data = decode_magi(magi_content)
+    # Output the structured data as JSON to stdout
+    print(json.dumps(decoded_data, indent=2))
+
+# Usage: python cli_decoder.py input.mda > output.json
+# Or: cat input.mda | python cli_decoder.py > output.json
+```
+
+This scripted approach provides a reliable way to integrate MAGI parsing into command-line workflows.
