@@ -2,9 +2,6 @@
 	"name": "ai-markdown",
 	"version": "0.9.0",
 	"license": "MIT",
-	"workspaces": [
-		"apps/*"
-	],
 	"scripts": {
 		"sync:mdx": "tsx scripts/sync-mdx.ts"
 	},
