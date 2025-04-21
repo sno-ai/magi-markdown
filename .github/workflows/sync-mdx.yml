@@ -1,0 +1,54 @@
+name: Sync MDX Files
+
+on:
+  push:
+    branches:
+      - main # Or your default branch
+    paths:
+      - 'docs/**.md' # Trigger only if .md files in docs/ change
+      - 'scripts/sync-mdx.ts'
+      - '.github/workflows/sync-mdx.yml'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      # Give the default GITHUB_TOKEN write permission to commit and push the changed files back to the repository.
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        # `with:` block can be removed if empty
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Use a version compatible with your project
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8 # Or your preferred pnpm version
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run MDX Sync Script
+        run: pnpm run sync:mdx
+
+      - name: Check for changes
+        id: git_status
+        run: |
+          git status --porcelain docs/mdx/
+          echo "changes=$(git status --porcelain docs/mdx/)" >> $GITHUB_OUTPUT
+
+      - name: Commit and push changes
+        if: steps.git_status.outputs.changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add docs/mdx/*.mdx
+          git commit -m "chore: Sync MDX files from source MD files [skip ci]"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
