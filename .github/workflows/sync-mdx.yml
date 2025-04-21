@@ -31,7 +31,7 @@ jobs:
           version: 8 # Or your preferred pnpm version
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       - name: Run MDX Sync Script
         run: pnpm run sync:mdx
