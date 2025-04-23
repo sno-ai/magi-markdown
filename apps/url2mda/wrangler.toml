@@ -1,4 +1,4 @@
-name = "url2md"
+name = "url2mda"
 main = "src/index.ts"
 compatibility_date = "2023-09-04"
 compatibility_flags = [ "nodejs_compat"]
@@ -16,7 +16,7 @@ tag = "v1" # Should be unique for each entry
 new_classes = ["Browser"] # Array of new classes
 
 [[kv_namespaces]]
-binding= "MD_CACHE"
+binding= "MDA_CACHE"
 id = "d8976411926248238493989e7ac09dd9"
 preview_id = "c92ff41b8f074a7ab5f7aa3bb711a38d" 
 

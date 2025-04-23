@@ -2,7 +2,7 @@
 export interface Env {
 	BROWSER: DurableObjectNamespace;
 	MYBROWSER: Fetcher;
-	MD_CACHE: KVNamespace;
+	MDA_CACHE: KVNamespace;
 	RATELIMITER: RateLimit;
 	AI: Ai;
 	BACKEND_SECURITY_TOKEN: string;

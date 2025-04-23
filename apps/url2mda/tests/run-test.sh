@@ -9,7 +9,7 @@ fi
 
 if [[ "$*" == *"--prod"* ]]; then
     echo "Running in testing production mode"
-    WORKER_URL="https://url2md.sno.ai"
+    WORKER_URL="https://url2mda.sno.ai"
 else
     echo "Running in testing development mode"
     WORKER_URL="http://localhost:8787"

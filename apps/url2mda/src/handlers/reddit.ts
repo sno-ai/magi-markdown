@@ -151,7 +151,7 @@ async function fetchRedditPublicApi(
 		// Cache successful responses
 		if (md && md.length > 100) {
 			console.log("[Reddit-Public] Caching successful response");
-			await env.MD_CACHE.put(cacheKey, md, { expirationTtl: 3600 });
+			await env.MDA_CACHE.put(cacheKey, md, { expirationTtl: 3600 });
 		}
 
 		console.log("[Reddit-Public] === COMPLETED PUBLIC API FETCH ===");
@@ -191,7 +191,7 @@ async function fetchRedditAuthenticatedApi(
 		}
 
 		const tokenCacheKey = "Reddit:OAuthToken";
-		let token = await env.MD_CACHE.get(tokenCacheKey);
+		let token = await env.MDA_CACHE.get(tokenCacheKey);
 
 		console.log("[Reddit-Auth] Cached token available:", !!token);
 
@@ -222,7 +222,7 @@ async function fetchRedditAuthenticatedApi(
 				);
 				const errorText = await tokenResponse.text();
 				console.log(`[Reddit-Auth] Token error response: ${errorText}`);
-				await env.MD_CACHE.delete(tokenCacheKey);
+				await env.MDA_CACHE.delete(tokenCacheKey);
 				return `Failed to authenticate with Reddit: ${tokenResponse.status}`;
 			}
 
@@ -257,7 +257,7 @@ async function fetchRedditAuthenticatedApi(
 
 			if (token) {
 				console.log("[Reddit-Auth] Caching token");
-				await env.MD_CACHE.put(tokenCacheKey, token, {
+				await env.MDA_CACHE.put(tokenCacheKey, token, {
 					expirationTtl: 3000,
 				}); // 50 minutes
 				console.log("[Reddit-Auth] Token cached successfully");
@@ -278,7 +278,7 @@ async function fetchRedditAuthenticatedApi(
 		const resp = await fetch(apiUrl, {
 			headers: {
 				Authorization: `Bearer ${token}`,
-				"User-Agent": "url2md/1.0 (by /u/your_username)", // Replace with actual user if needed
+				"User-Agent": "url2mda/1.0 (by /u/sno_ai)", // Replace with actual user if needed
 				Accept: "application/json",
 			},
 		});
@@ -290,7 +290,7 @@ async function fetchRedditAuthenticatedApi(
 		if (!resp.ok) {
 			if (resp.status === 401) {
 				console.log("[Reddit-Auth] UNAUTHORIZED: Invalid or expired token");
-				await env.MD_CACHE.delete(tokenCacheKey);
+				await env.MDA_CACHE.delete(tokenCacheKey);
 				return `Reddit authentication failed. Token may have expired.`;
 			}
 
@@ -338,7 +338,7 @@ async function fetchRedditAuthenticatedApi(
 		// Cache successful response
 		if (md && md.length > 100) {
 			console.log("[Reddit-Auth] Caching successful response");
-			await env.MD_CACHE.put(cacheKey, md, { expirationTtl: 3600 });
+			await env.MDA_CACHE.put(cacheKey, md, { expirationTtl: 3600 });
 		}
 
 		console.log("[Reddit-Auth] === COMPLETED AUTHENTICATED API FETCH ===");
@@ -374,7 +374,7 @@ export async function handleRedditURL(
 		console.log("[Reddit] Extracted subreddit:", subreddit);
 
 		const cacheKey = `Reddit:${url}`;
-		const cached = await env.MD_CACHE.get(cacheKey);
+		const cached = await env.MDA_CACHE.get(cacheKey);
 		if (cached) {
 			console.log("[Reddit] Using cached content for:", url);
 			return { url, md: cached };

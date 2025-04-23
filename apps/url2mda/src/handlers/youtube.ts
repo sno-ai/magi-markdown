@@ -10,7 +10,7 @@ import type { Env } from '../types';
 export async function getYouTubeMetadata(url: string, env: Env): Promise<string> {
 	// Use cache first
 	const cacheKey = `Youtube:${url}`;
-	const cached = await env.MD_CACHE.get(cacheKey);
+	const cached = await env.MDA_CACHE.get(cacheKey);
 	if (cached) {
 		console.log('[YouTube] Using cached content for:', url);
 		return cached;
@@ -37,7 +37,7 @@ export async function getYouTubeMetadata(url: string, env: Env): Promise<string>
 		
 		console.log('[YouTube] Successfully generated metadata for:', videoId);
 		// Cache the result
-		await env.MD_CACHE.put(cacheKey, md, { expirationTtl: 3600 }); // Cache for 1 hour
+		await env.MDA_CACHE.put(cacheKey, md, { expirationTtl: 3600 }); // Cache for 1 hour
 		console.log('[YouTube] Cached metadata for:', url);
 
 		return md;

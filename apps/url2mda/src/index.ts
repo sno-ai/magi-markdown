@@ -431,7 +431,7 @@ export class Browser {
 							console.log(`[DO GetMarkdown] Routing to default page handler for: ${url}`);
 							// Check cache for default pages
 							const cacheKey = `Default:${cacheIdBase}`;
-							const cached = await this.env.MD_CACHE.get(cacheKey);
+							const cached = await this.env.MDA_CACHE.get(cacheKey);
 							if (cached) {
 								console.log(`[DO GetMarkdown] Using cached content for default URL: ${url}`);
 								result = { url, md: cached };
@@ -452,7 +452,7 @@ export class Browser {
 								}
 								// Cache the final result (original, error, or filtered) for default pages
 								if (!result.error) {
-									await this.env.MD_CACHE.put(cacheKey, result.md, { expirationTtl: 3600 });
+									await this.env.MDA_CACHE.put(cacheKey, result.md, { expirationTtl: 3600 });
 									console.log(`[DO GetMarkdown] Cached content for default URL: ${url}`);
 								}
 							}

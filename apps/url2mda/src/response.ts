@@ -1,7 +1,7 @@
 export const html = `<!DOCTYPE html>
 <html>
 <head>
-    <title>URL2MD - Convert Websites to Markdown</title>
+    <title>URL2MDA - Convert Websites to Markdown</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -31,7 +31,7 @@ export const html = `<!DOCTYPE html>
     <main class="flex flex-col items-center justify-center min-h-screen px-4 py-12">
         <div class="max-w-4xl w-full space-y-8">
             <div class="text-center space-y-3">
-                <h1 class="text-5xl font-extrabold tracking-tight text-white drop-shadow-lg">URL2MD</h1>
+                <h1 class="text-5xl font-extrabold tracking-tight text-white drop-shadow-lg">URL2MDA</h1>
                 <p class="text-xl text-blue-100">
                     A fast tool to convert any website into LLM-ready markdown data, 
                     <span class="font-semibold">with enhanced extraction for sites like YouTube, Twitter, and GitHub.</span>
@@ -75,14 +75,14 @@ export const html = `<!DOCTYPE html>
                     <!-- Curl Example -->
                     <div>
                         <h3 class="text-lg font-semibold text-blue-100 mb-2">Using curl:</h3>
-                        <pre class="code-block"><code>$ curl 'https://url2md.sno.ai/?url=https://example.com'</code></pre>
+                        <pre class="code-block"><code>$ curl 'https://url2mda.sno.ai/?url=https://example.com'</code></pre>
                     </div>
                     <!-- TypeScript Example -->
                     <div>
                         <h3 class="text-lg font-semibold text-blue-100 mb-2">Using TypeScript (fetch):</h3>
                         <pre class="code-block"><code>import fetch from 'node-fetch'; // Or use browser fetch
 
-const apiUrl = 'https://url2md.sno.ai';
+const apiUrl = 'https://url2mda.sno.ai';
 const targetUrl = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'; // Example YouTube URL
 
 async function getMarkdown() {
@@ -107,7 +107,7 @@ getMarkdown();</code></pre>
                         <pre class="code-block"><code>import requests
 import urllib.parse
 
-api_url = 'https://url2md.sno.ai'
+api_url = 'https://url2mda.sno.ai'
 target_url = 'https://github.com/openai/gpt-3' # Example GitHub URL
 
 params = {'url': target_url}
@@ -140,19 +140,19 @@ except requests.exceptions.RequestException as e:
                                 <code class="font-semibold text-white bg-gray-700 px-1 rounded">enableDetailedResponse</code> (boolean, default: <code class="text-white">false</code>): 
                                 Captures more of the raw page structure instead of relying solely on Readability.js for main content extraction.
                                 <pre class="code-block mt-1"><code># Example (curl)
-$ curl 'https://url2md.sno.ai/?url=https://example.com&enableDetailedResponse=true'</code></pre>
+$ curl 'https://url2mda.sno.ai/?url=https://example.com&enableDetailedResponse=true'</code></pre>
                             </li>
                              <li>
                                 <code class="font-semibold text-white bg-gray-700 px-1 rounded">subpages</code> (boolean, default: <code class="text-white">false</code>): 
                                 Attempts to crawl and return markdown for up to 10 linked subpages found on the provided URL.
                                  <pre class="code-block mt-1"><code># Example (curl)
-$ curl 'https://url2md.sno.ai/?url=https://example.com/blog&subpages=true'</code></pre>
+$ curl 'https://url2mda.sno.ai/?url=https://example.com/blog&subpages=true'</code></pre>
                             </li>
                              <li>
                                 <code class="font-semibold text-white bg-gray-700 px-1 rounded">llmFilter</code> (boolean, default: <code class="text-white">false</code>): 
                                 Processes the extracted markdown through an LLM to filter out boilerplate, ads, and other non-essential content.
                                  <pre class="code-block mt-1"><code># Example (curl)
-$ curl 'https://url2md.sno.ai/?url=https://example.com&llmFilter=true'</code></pre>
+$ curl 'https://url2mda.sno.ai/?url=https://example.com&llmFilter=true'</code></pre>
                             </li>
                         </ul>
                     </div>

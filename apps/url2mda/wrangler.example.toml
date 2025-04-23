@@ -16,7 +16,7 @@ tag = "v1" # Should be unique for each entry
 new_classes = ["Browser"] # Array of new classes
 
 [[kv_namespaces]]
-binding= "MD_CACHE"
+binding= "MDA_CACHE"
 id = "YOUR_CLOUDFLARE_KV_NAMESPACE_ID"
 preview_id = "YOUR_CLOUDFLARE_KV_NAMESPACE_ID" 
 
@@ -24,7 +24,7 @@ preview_id = "YOUR_CLOUDFLARE_KV_NAMESPACE_ID"
 name = "RATELIMITER"
 type = "ratelimit"
 namespace_id = "1001"
-simple = { limit = 30, period = 60 } # 10 requests per 60 seconds
+simple = { limit = 30, period = 60 } # 30 requests per 60 seconds
 
 
 [ai]

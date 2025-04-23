@@ -3,7 +3,7 @@
 // Runtime types generated with workerd@1.20250416.0 2023-09-04 nodejs_compat
 declare namespace Cloudflare {
 	interface Env {
-		MD_CACHE: KVNamespace;
+		MDA_CACHE: KVNamespace;
 		BROWSER: DurableObjectNamespace<import("./src/index").Browser>;
 		RATELIMITER: RateLimit;
 		MYBROWSER: Fetcher;

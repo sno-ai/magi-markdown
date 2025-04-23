@@ -12,7 +12,7 @@ import { TWITTER_TIMEOUT, LOAD_MORE_TWEETS_SCROLL_AMOUNT, LOAD_MORE_TWEETS_SCROL
 async function getTweet(tweetID: string, env: Env): Promise<Tweet | null> {
 	// Use cache first
 	const cacheKey = `Twitter:${tweetID}`;
-	const cacheFind = await env.MD_CACHE.get(cacheKey + ':raw');
+	const cacheFind = await env.MDA_CACHE.get(cacheKey + ':raw');
 	if (cacheFind) {
 		console.log(`[Twitter] Using cached raw tweet data for ${tweetID}`);
 		try {
@@ -49,7 +49,7 @@ async function getTweet(tweetID: string, env: Env): Promise<Tweet | null> {
 		const data = (await resp.json()) as Tweet;
 
 		// Cache the raw tweet data
-		await env.MD_CACHE.put(cacheKey + ':raw', JSON.stringify(data), { expirationTtl: 3600 });
+		await env.MDA_CACHE.put(cacheKey + ':raw', JSON.stringify(data), { expirationTtl: 3600 });
 		console.log(`[Twitter] Cached raw tweet data for ${tweetID}`);
 
 		return data;
@@ -68,7 +68,7 @@ async function getTweet(tweetID: string, env: Env): Promise<Tweet | null> {
  */
 export async function handleTwitterProfilePage(url: string, browser: PuppeteerBrowser, env: Env): Promise<{ url: string, md: string, error?: boolean }> {
 	const cacheKey = `TwitterProfile:${url}`;
-	const cached = await env.MD_CACHE.get(cacheKey);
+	const cached = await env.MDA_CACHE.get(cacheKey);
 	if (cached) {
 		console.log(`[Twitter] Using cached profile content for ${url}`);
 		return { url, md: cached };
@@ -147,7 +147,7 @@ export async function handleTwitterProfilePage(url: string, browser: PuppeteerBr
 		}
 		profileMd += `\n\nProfile URL: ${url}`;
 
-		await env.MD_CACHE.put(cacheKey, profileMd, { expirationTtl: 1800 }); // Cache profile for 30 mins
+		await env.MDA_CACHE.put(cacheKey, profileMd, { expirationTtl: 1800 }); // Cache profile for 30 mins
 		console.log(`[Twitter] Cached profile content for ${url}`);
 		return { url, md: profileMd };
 
@@ -180,7 +180,7 @@ export async function handleTwitterTweetPage(url: string, env: Env): Promise<{ u
 	}
 
 	const cacheKey = `TwitterTweet:${tweetID}`;
-	const cachedMd = await env.MD_CACHE.get(cacheKey);
+	const cachedMd = await env.MDA_CACHE.get(cacheKey);
 	if (cachedMd) {
 		console.log(`[Twitter] Using cached tweet content for ${tweetID}`);
 		return { url, md: cachedMd };
@@ -199,9 +199,9 @@ export async function handleTwitterTweetPage(url: string, env: Env): Promise<{ u
 	const tweetMd = `## Tweet from @${tweet.user?.name ?? tweet.user?.screen_name ?? 'Unknown'} (${new Date(tweet.created_at).toLocaleString()})\n\n${tweet.text}\n\n${tweet.photos ? tweet.photos.map((photo) => `![Image](${photo.url})`).join('\n') : ''}\n\n**Stats:** Likes: ${tweet.favorite_count ?? 0}, Replies/Retweets: ${tweet.conversation_count ?? 0}\n\n**Tweet URL:** ${url}`;
 	// Removed raw JSON from default output for cleaner MD
 	// Add raw data to cache if needed for debugging:
-	// await env.MD_CACHE.put(cacheKey + ':raw', JSON.stringify(tweet), { expirationTtl: 3600 });
+	// await env.MDA_CACHE.put(cacheKey + ':raw', JSON.stringify(tweet), { expirationTtl: 3600 });
 
-	await env.MD_CACHE.put(cacheKey, tweetMd, { expirationTtl: 3600 }); // Cache formatted tweet for 1 hour
+	await env.MDA_CACHE.put(cacheKey, tweetMd, { expirationTtl: 3600 }); // Cache formatted tweet for 1 hour
 	console.log(`[Twitter] Cached formatted tweet content for ${tweetID}`);
 
 	return { url, md: tweetMd };
