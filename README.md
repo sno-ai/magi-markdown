@@ -102,6 +102,11 @@ Provides structured metadata using YAML syntax, enclosed by `---` delimiters.
 | `doc-id`            | `string`      | A unique identifier for this document (UUID format recommended). Crucial for relationships. | `"38f5a922-81b2-4f1a-8d8c-3a5be4ea7511"` |
 | `title`         | `string`      | The main title of the document.                                             | `"Introduction to MAGI"`      |
 | `description`   | `string`      | A brief summary or abstract of the document's content.                      | `"Explains the MAGI format."` |
+| `author`        | `string`      | The primary author's name.                                                   | `"Jane Doe"`                  |
+| `author-id`     | `string`      | Unique identifier for the author (CUID2 or UUID recommended).               | `"usr_abcdef12345"`         |
+| `image`         | `string`      | URL for a primary cover image associated with the document.                 | `"https://example.com/cover.jpg"` |
+| `images-list`        | `list[string]`| URLs for additional images associated with the document.                    | `["https://.../img1.jpg"]` |
+| `published-date`  | `string`        | ISO 8601 timestamp when the document was originally published or made public. | `"2024-01-10T08:00:00Z"`              |
 | `tags`          | `list[string]`| Keywords or categories for classification and retrieval.                    | `["markdown", "ai", "rag"]` |
 | `created-date`  | `string`        | ISO 8601 timestamp (date and time with timezone) when the document was originally created. | `"2024-01-15T09:00:00Z"`              |
 | `updated-date`  | `string`        | ISO 8601 timestamp when the document was last significantly updated.      | `"2024-06-01T15:30:00Z"`              |
