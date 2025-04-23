@@ -44,9 +44,16 @@ Embeds instructions for AI processing within standard Markdown fenced code block
 | `auto-run`   | `boolean` | Hint indicating if an automated processing agent should execute this instruction without explicit user trigger. | `true`                      | Optional          | Default is usually `false`                 |
 | `provider`   | `string`  | Suggests the target AI provider (e.g., "openai", "anthropic", "google", "local-llm"). | `"openai"`                | Optional          |                                            |
 | `model-name` | `string`  | Suggests the target model name (e.g., "gpt-4o", "claude-3-opus-20240229"). | `"gpt-4o"`                | Optional          |                                            |
+| `system-prompt`| `string`  | Optional system-level instructions or context for the AI model.        | `"Act as a helpful assistant."` | Optional          | Prepended or handled specially by the runtime |
 | `parameters` | `object`  | A JSON object containing provider-specific parameters (e.g., temperature, max tokens). | `{"temperature": 0.7}` | Optional          | Passed directly to the model API       |
+| `retry-times`| `integer` | Optional hint for the maximum number of retry attempts on failure.       | `3`                         | Optional          | Runtime should interpret this hint. Default behavior is runtime-specific. |
 | `runtime-env`| `string`  | Suggests the ideal runtime context or endpoint for execution (e.g., "server", "browser", "edge", API URL). | `"server"`                | Optional          | Hint for the processing system           |
-| `output-format`| `string`| Desired format for the output (e.g., "markdown", "text", "json", "image-url"). | `"markdown"`              | Optional          | Processor should attempt to conform      |
+| `output-format`| `string`| Desired format for the output (e.g., "markdown", "text", "json", "image-url"). | `"markdown"`              | Optional          | Processor should attempt to conform. Implied "json" if `output-schema` is used. |
+| `output-schema`| `object`  | Optional JSON Schema object defining the expected structure of the output. | `{"type": "object", ...}` | Optional          | Strongly implies `output-format: "json"`. Used for structured data extraction. |
+| `stream`     | `boolean` | Optional hint to the runtime to stream the response if possible.        | `true`                      | Optional          | Default is `false`. Primarily for text output. |
+| `interactive-type` | `string` | Type of interactive component to render if `auto-run` is false (e.g., "button", "inputbox"). | `"button"` | Optional | Used for client-side triggered execution. If "inputbox", an input field and submit button (using `interactive-label`) are rendered. |
+| `interactive-label`| `string` | Label text for the interactive component (e.g., button text, typically for the submit button). | `"Run Summary"` | Optional | Used when `interactive-type` is specified. |
+| `interactive-placeholder` | `string` | Placeholder text for the input field when `interactive-type` is "inputbox". | `"Enter your query..."` | Optional | Used only when `interactive-type` is "inputbox". |
 
 **Processing Hint:**
 
