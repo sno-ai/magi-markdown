@@ -99,3 +99,4 @@ apps/url2aimd/wrangler.toml
 .cursorignore
 .cursor-update-log.md
 
+wrangler.toml
