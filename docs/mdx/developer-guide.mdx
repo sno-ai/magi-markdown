@@ -582,7 +582,6 @@ curl -s -X POST "$WORKER_URL" \\
   -H "Content-Type: application/json" \\
   -d '{
     "url": "'"$TARGET_URL"'",
-    "htmlDetails": false,    # Keep Markdown clean
     "subpages": false,       # Convert only the specified URL
     "llmFilter": false       # Don't use experimental LLM filtering
   }' | jq '.mdaContent' # Extract the MAGI string from the JSON response
@@ -600,7 +599,6 @@ curl -s -X POST "$WORKER_URL" \\
   -H "Content-Type: application/json" \\
   -d '{
     "url": "https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API",
-    "htmlDetails": true,  # Include more HTML tag details in conversion
     "llmFilter": true   # Attempt LLM-based content refinement (requires setup)
   }' | jq '.mdaContent'
 ```
