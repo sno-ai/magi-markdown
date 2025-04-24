@@ -12,53 +12,66 @@ This service fetches content from any URL and converts it to a well-structured M
 
 ## Usage
 
-The service supports both single page conversion and recursive crawling of websites, with configurable depth and filtering options.
+The service converts web pages to MAGI format. It accepts GET requests with parameters specified in the query string.
 
-### API Endpoints
+### Requesting a Single Page Conversion
 
-- **POST /api/url**: Convert a single URL to MAGI format
-- **POST /api/crawl**: Crawl a website and convert multiple pages
+Make a `GET` request to the service endpoint.
 
-## Parameters
+**Required Query Parameter:**
 
-### Single URL Conversion
+- `url`: The full URL of the page to convert (e.g., `https://example.com/page`).
 
-```json
-{
-  "url": "https://example.com/page",
-  "options": {
-    "format": "json",           // "json" or "text" response format
-    "waitFor": 1000,            // milliseconds to wait for dynamic content
-    "includeScreenshot": false, // include page screenshot
-    "mobile": false,            // use mobile viewport
-    "onlyMainContent": true     // extract main content only (excludes navigation, etc.)
-  }
-}
+**Optional Query Parameters:**
+
+- `nocache=true`: Bypass the cache and fetch a fresh version of the page (default: `false`).
+- `llmFilter=true`: Apply an LLM-based filter to refine the extracted content (requires appropriate backend setup, default: `false`).
+
+**Response Format:**
+
+- Set the `Content-Type` header to `application/json` for a JSON response containing the MAGI document and metadata.
+- Set the `Content-Type` header to `text/plain` for a plain text response containing only the MAGI document.
+
+**Example (Single Page, JSON response):**
+
+```
+GET /?url=https://example.com/page
+Content-Type: application/json
 ```
 
-### Website Crawling
+**Example (Single Page, Text response):**
 
-```json
-{
-  "url": "https://example.com",
-  "options": {
-    "format": "json",           // "json" or "text" response format
-    "waitFor": 1000,            // milliseconds to wait for dynamic content
-    "maxDepth": 2,              // maximum crawl depth
-    "limit": 10,                // maximum number of pages to crawl
-    "includePaths": [           // only crawl URLs matching these paths
-      "/blog/",
-      "/docs/"
-    ],
-    "excludePaths": [           // exclude URLs matching these paths
-      "/api/",
-      "/login/"
-    ],
-    "onlyMainContent": true,    // extract main content only
-    "deduplicateSimilarURLs": true  // remove similar URLs during crawl
-  }
-}
 ```
+GET /?url=https://example.com/page
+Content-Type: text/plain
+```
+
+### Requesting a Website Crawl
+
+Make a `GET` request to the service endpoint with the `subpages` parameter.
+
+**Required Query Parameters:**
+
+- `url`: The starting URL for the crawl (e.g., `https://example.com`).
+- `subpages=true`: Enable crawling of subpages linked from the starting URL.
+
+**Optional Query Parameters:**
+
+- `nocache=true`: Bypass the cache for all pages during the crawl (default: `false`).
+- `llmFilter=true`: Apply LLM filtering to each crawled page (default: `false`).
+
+**Response Format:**
+
+- Crawling currently only supports the `application/json` response format. Set the `Content-Type` header accordingly. The response will be a JSON array where each element represents a crawled page.
+
+**Example (Crawl, JSON response):**
+
+```
+GET /?url=https://example.com&subpages=true&llmFilter=true
+Content-Type: application/json
+```
+
+*(Note: Advanced crawl options like `maxDepth`, `limit`, `includePaths`, `excludePaths` mentioned previously are not currently implemented via URL parameters in the core request handler.)*
 
 ## MAGI Format Features
 

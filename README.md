@@ -291,7 +291,6 @@ curl -X POST https://<your-worker-domain>/convert \
   -H "Content-Type: application/json" \
   -d '{
     "url": "https://example.com",
-    "htmlDetails": true,    # Include detailed HTML tags
     "subpages": false,       # Set to true to crawl subpages (limit 10)
     "llmFilter": true       # Use LLM to refine content (requires AI binding)
   }'
