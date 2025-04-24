@@ -10,12 +10,11 @@ export async function crawlSubpages(
   this: {
     browser?: PuppeteerBrowser;  // Make browser optional to match Browser class
     extractLinks: (page: Page, baseUrl: string) => Promise<string[]>;
-    getWebsiteMarkdown: (options: { urls: string[]; enableDetailedResponse: boolean }) => Promise<Array<{ url: string; md: string; error?: boolean; status?: number; errorDetails?: string }>>;
+    getWebsiteMarkdown: (options: { urls: string[] }) => Promise<Array<{ url: string; md: string; error?: boolean; status?: number; errorDetails?: string }>>;
     llmFilter: boolean;
     env: Env;
   },
-  baseUrl: string, 
-  enableDetailedResponse: boolean, 
+  baseUrl: string,
   contentType: string
 ): Promise<Response> {
   let page: Page | null = null;
@@ -40,7 +39,6 @@ export async function crawlSubpages(
     
     const results = await this.getWebsiteMarkdown({
       urls: allUrls,
-      enableDetailedResponse,
     });
 
     // Apply LLM filtering if enabled (on results that use the default handler)

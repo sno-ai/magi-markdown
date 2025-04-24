@@ -7,11 +7,10 @@ import { SIMPLE_CONTENT_MAX_LENGTH } from '../constants';
  * Uses Readability.js and TurndownService.
  * Provides fallbacks if libraries fail.
  * @param url The URL to process.
- * @param enableDetailedResponse Whether to use detailed mode (full page) or Readability mode.
  * @param browser The Puppeteer browser instance.
  * @returns Markdown string.
  */
-export async function handleDefaultPage(url: string, enableDetailedResponse: boolean, browser: PuppeteerBrowser): Promise<string> {
+export async function handleDefaultPage(url: string, browser: PuppeteerBrowser): Promise<string> {
 	// Ensure SIMPLE_CONTENT_MAX_LENGTH is defined even if import fails
 	const MAX_CONTENT_LENGTH = SIMPLE_CONTENT_MAX_LENGTH || 10000;
 	
@@ -184,7 +183,7 @@ export async function handleDefaultPage(url: string, enableDetailedResponse: boo
 
 		// Evaluate page content using Readability and Turndown
 		console.log(`[DefaultHandler] Evaluating page content using libraries for ${url}`);
-		const md = await page.evaluate((detailed, maxLength) => {
+		const md = await page.evaluate((maxLength) => {
 			try {
 				if (typeof (globalThis as any).Readability !== 'function' || typeof (globalThis as any).TurndownService !== 'function') {
 					throw new Error('Readability or TurndownService not available');
@@ -402,28 +401,12 @@ export async function handleDefaultPage(url: string, enableDetailedResponse: boo
 				
 				let contentToConvert = '';
 
-				if (detailed) {
-					console.log('[DefaultHandler Eval] Using detailed mode (full document body)');
-					// Clone to avoid modifying the live DOM, remove scripts/styles
-					const docClone = document.cloneNode(true) as Document;
-					docClone.querySelectorAll('script, style, iframe, noscript, svg, header, footer, nav').forEach(el => el.remove());
-					contentToConvert = docClone.body ? docClone.body.innerHTML : '';
-				} else {
-					console.log('[DefaultHandler Eval] Using Readability mode');
-					const reader = new (globalThis as any).Readability(document.cloneNode(true), {
-						// Adjust parameters as needed
-						// charThreshold: 250, // Default is 500, might reduce for more content
-						// keepClasses: true, // Useful for debugging, maybe disable for cleaner output
-					});
-					const article = reader.parse();
-					if (!article || !article.content) {
-						console.warn('[DefaultHandler Eval] Readability parsing failed or returned no content.');
-						// Fallback within evaluate: use body text
-						contentToConvert = document.body ? document.body.innerHTML : ''; 
-					} else {
-						contentToConvert = article.content;
-					}
-				}
+				// Always use detailed mode (full document body)
+				console.log('[DefaultHandler Eval] Using detailed mode (full document body)');
+				// Clone to avoid modifying the live DOM, remove scripts/styles
+				const docClone = document.cloneNode(true) as Document;
+				docClone.querySelectorAll('script, style, iframe, noscript, svg, header, footer, nav').forEach(el => el.remove());
+				contentToConvert = docClone.body ? docClone.body.innerHTML : '';
 
 				if (!contentToConvert) {
 					console.warn('[DefaultHandler Eval] No content identified for conversion, using innerText fallback.');
@@ -442,7 +425,7 @@ export async function handleDefaultPage(url: string, enableDetailedResponse: boo
 				const content = document.body ? document.body.innerText : 'Could not access body text.';
 				return `## ${title}\n\n(Evaluation Error: ${evalError instanceof Error ? evalError.message : String(evalError)})\n\n${content.slice(0, maxLength)}`;
 			}
-		}, enableDetailedResponse, MAX_CONTENT_LENGTH);
+		}, MAX_CONTENT_LENGTH);
 
 		console.log(`[DefaultHandler] Page evaluation completed for ${url}. Markdown length: ${md.length}`);
 		
