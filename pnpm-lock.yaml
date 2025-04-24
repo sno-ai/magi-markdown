@@ -12,7 +12,7 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2
       '@types/node':
-        specifier: ^20.12.12
+        specifier: ^20.17.30
         version: 20.17.30
       react-tweet:
         specifier: ^3.2.2
@@ -25,7 +25,7 @@ importers:
         specifier: ^5.0.5
         version: 5.0.5
       cspell:
-        specifier: ^8.8.1
+        specifier: ^8.19.0
         version: 8.19.0
       markdownlint-cli:
         specifier: ^0.41.0
@@ -34,20 +34,20 @@ importers:
         specifier: ^4.0.491
         version: 4.0.491(@types/node@20.17.30)(@types/react@19.1.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.8.3)
       prettier:
-        specifier: ^3.2.5
+        specifier: ^3.5.3
         version: 3.5.3
       tsx:
-        specifier: ^4.10.5
+        specifier: ^4.19.3
         version: 4.19.3
       typescript:
-        specifier: ^5.4.5
+        specifier: ^5.8.3
         version: 5.8.3
       vitest:
-        specifier: ^1.6.0
+        specifier: ^1.6.1
         version: 1.6.1(@types/node@20.17.30)
       wrangler:
-        specifier: ^3.57.0
-        version: 3.114.6(@cloudflare/workers-types@4.20250418.0)
+        specifier: ^3.114.7
+        version: 3.114.7(@cloudflare/workers-types@4.20250418.0)
 
 packages:
 
@@ -4242,8 +4242,8 @@ packages:
     engines: {node: '>=16'}
     hasBin: true
 
-  wrangler@3.114.6:
-    resolution: {integrity: sha512-05Ov/Bg8BQEy+/x/aRTeEUiXYspCiE0wmdgg4TIQwYLeEZaoBLE6KhqxEiLd8WNea0IRpzpBQOtAZ64Tjl0znQ==}
+  wrangler@3.114.7:
+    resolution: {integrity: sha512-awyHVA9JwcEpyysh7Kn69NoIe2SwXYt8pOjNX3p/4RsOa68qtct+QbhUCwPFPyDDH9lg1VgvTjCFfFbXBLMk6w==}
     engines: {node: '>=16.17.0'}
     hasBin: true
     peerDependencies:
@@ -9523,7 +9523,7 @@ snapshots:
       '@cloudflare/workerd-linux-arm64': 1.20250408.0
       '@cloudflare/workerd-windows-64': 1.20250408.0
 
-  wrangler@3.114.6(@cloudflare/workers-types@4.20250418.0):
+  wrangler@3.114.7(@cloudflare/workers-types@4.20250418.0):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.3.4
       '@cloudflare/unenv-preset': 2.0.2(unenv@2.0.0-rc.14)(workerd@1.20250408.0)

@@ -8,18 +8,18 @@
 	"devDependencies": {
 		"@types/jsdom": "^21.1.7",
 		"@types/turndown": "^5.0.5",
-		"cspell": "^8.8.1",
+		"cspell": "^8.19.0",
 		"markdownlint-cli": "^0.41.0",
 		"mintlify": "^4.0.491",
-		"prettier": "^3.2.5",
-		"tsx": "^4.10.5",
-		"typescript": "^5.4.5",
-		"vitest": "^1.6.0",
-		"wrangler": "^3.57.0"
+		"prettier": "^3.5.3",
+		"tsx": "^4.19.3",
+		"typescript": "^5.8.3",
+		"vitest": "^1.6.1",
+		"wrangler": "^3.114.7"
 	},
 	"dependencies": {
 		"@cloudflare/puppeteer": "^1.0.2",
-		"@types/node": "^20.12.12",
+		"@types/node": "^20.17.30",
 		"react-tweet": "^3.2.2"
 	}
 }

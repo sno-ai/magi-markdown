@@ -2,6 +2,9 @@
 import puppeteer from '@cloudflare/puppeteer';
 import type { Browser as PuppeteerBrowser, Page } from '@cloudflare/puppeteer';
 
+import { convertToMagiFormat } from './magi-util/convert-magi';
+import { applyLlmFilter } from './llm-process/llm-filter';
+
 import { html } from './response';
 import type { Env } from './types';
 import { isValidUrl } from './utils';
@@ -168,7 +171,7 @@ export class Browser {
 		} finally {
 			// Reset keptAliveInSeconds after processing a request
 			this.keptAliveInSeconds = 0;
-			console.log("[DO] Reset keptAliveInSeconds counter.");
+			// console.log("[DO] Reset keptAliveInSeconds counter.");
 			// Ensure alarm is set to keep the DO alive or eventually shut down the browser
 			this.ensureAlarmIsSet();
 		}
@@ -185,7 +188,7 @@ export class Browser {
 	async ensureBrowser(): Promise<boolean> {
 		let retries = 3;
 		while (retries > 0) {
-			if (!this.browser || !this.browser.isConnected()) {
+			if (!this.browser || !(await this.isBrowserConnected())) {
 				console.log(`[DO Browser] Browser not connected or initialized. Attempting to launch (Retries left: ${retries})...`);
 				try {
 					this.browser = await puppeteer.launch(this.env.MYBROWSER);
@@ -227,6 +230,18 @@ export class Browser {
 		return false; // Should not be reached if retries > 0
 	}
 
+	async isBrowserConnected(): Promise<boolean> {
+		if (!this.browser) return false;
+		try {
+			// Try to get browser version as a lightweight operation to check connection
+			await this.browser.version();
+			return true;
+		} catch (e) {
+			console.log("[DO Browser] Browser connection check failed:", e);
+			return false;
+		}
+	}
+
 	async crawlSubpages(baseUrl: string, enableDetailedResponse: boolean, contentType: string): Promise<Response> {
 		let page: Page | null = null;
 		try {
@@ -243,21 +258,27 @@ export class Browser {
 			const uniqueLinks = Array.from(new Set(links)).slice(0, 10); // Limit to 10 unique links
 			console.log(`[DO Crawl] Processing ${uniqueLinks.length} unique subpages.`);
 
-			const results = await this.getWebsiteMarkdown({ // Changed variable name to 'results'
+			const results = await this.getWebsiteMarkdown({
 				urls: uniqueLinks,
 				enableDetailedResponse,
-				// classThis: this, // No longer needed as getWebsiteMarkdown is part of the class
-				// env: this.env, // No longer needed
+			});
+
+			// Convert all results to MAGI format
+			const magiResults = results.map(result => {
+				if (!result.error) {
+					result.md = convertToMagiFormat(result.url, result.md);
+				}
+				return result;
 			});
 
 			let status = 200;
-			if (results.some((item) => item.error && item.md === 'Rate limit exceeded')) {
+			if (magiResults.some((item) => item.error && item.md === 'Rate limit exceeded')) {
 				console.warn(`[DO Crawl] Rate limit hit during subpage processing for ${baseUrl}`);
 				status = 429;
 			}
 
-			console.log(`[DO Crawl] Finished crawl for ${baseUrl}. Returning ${results.length} results with status ${status}.`);
-			return new Response(JSON.stringify(results), {
+			console.log(`[DO Crawl] Finished crawl for ${baseUrl}. Returning ${magiResults.length} results with status ${status}.`);
+			return new Response(JSON.stringify(magiResults), {
 				status: status,
 				headers: { 'Content-Type': 'application/json' }
 			});
@@ -278,14 +299,13 @@ export class Browser {
 		}
 	}
 
+
 	async processSinglePage(url: string, enableDetailedResponse: boolean, contentType: string): Promise<Response> {
 		try {
 			console.log(`[DO SinglePage] Processing URL: ${url}`);
-			const results = await this.getWebsiteMarkdown({ // Changed variable name
+			const results = await this.getWebsiteMarkdown({
 				urls: [url],
 				enableDetailedResponse,
-				// classThis: this, // No longer needed
-				// env: this.env, // No longer needed
 			});
 
 			const result = results[0]; // Get the single result
@@ -297,6 +317,10 @@ export class Browser {
 			console.log(`[DO SinglePage] Finished processing ${url}. Status: ${status}, ContentType: ${contentType}`);
 			
 			if (contentType === 'json') {
+				// Convert to MAGI format for JSON output as well
+				if (!result.error) {
+					result.md = convertToMagiFormat(url, result.md);
+				}
 				// Always return array for JSON, even with errors
 				return new Response(JSON.stringify(results), {
 					status: status,
@@ -314,9 +338,10 @@ export class Browser {
 					status: status,
 					headers: { 'Content-Type': 'application/json' }
 				});
-			} else {
-					// Successful text response
-					return new Response(result.md, {
+				} else {
+					// Successful text response - convert to MAGI format
+					const magiContent = convertToMagiFormat(url, result.md);
+					return new Response(magiContent, {
 						status: status,
 						headers: { 'Content-Type': 'text/plain;charset=UTF-8' }
 					});
@@ -448,7 +473,7 @@ export class Browser {
 								} else if (this.llmFilter && !result.error) {
 									// Apply LLM Filter ONLY if default fetch was successful and filter is enabled
 									console.log(`[DO GetMarkdown] Applying LLM filter for: ${url}`);
-									result.md = await this.applyLlmFilter(md);
+									result.md = await applyLlmFilter(md, this.env);
 								}
 								// Cache the final result (original, error, or filtered) for default pages
 								if (!result.error) {
@@ -488,36 +513,7 @@ export class Browser {
 		}
 	}
 
-	/**
-	 * Applies LLM filtering to the provided markdown content.
-	 */
-	async applyLlmFilter(md: string): Promise<string> {
-		try {
-			console.log(`[DO LLM Filter] Running LLM filter on content (length: ${md.length})`);
-			const answer = (await this.env.AI.run('@cf/qwen/qwen1.5-14b-chat-awq', {
-				prompt:
-					`You are an AI assistant that converts webpage content to markdown while filtering out unnecessary information like ads, navigation, footers, and irrelevant sidebars. Focus on the main content.
-                    Keep important elements like titles, headings, text, lists, and code blocks.
-                    Remove inappropriate content.
-                    If unsure about including something, err on the side of keeping it.
-                    Return only the cleaned markdown content, without any introductory text, explanations, or markdown fences (\`\`\`).
-                    Input:\n${md}
-                    Cleaned Markdown Output:`,
-			})) as { response: string };
 
-			console.log(`[DO LLM Filter] Filtered content length: ${answer.response.length}`);
-			// Basic check if filtering significantly reduced content, might indicate issues
-			if (md.length > 100 && answer.response.length < md.length * 0.1) {
-				console.warn('[DO LLM Filter] LLM filter drastically reduced content size. Check output quality.');
-			}
-			// Trim potential leading/trailing whitespace or newlines from LLM output
-			return answer.response.trim();
-		} catch (error) {
-			console.error('[DO LLM Filter] Error during LLM filtering:', error);
-			// Return original markdown if filtering fails
-			return md;
-		}
-	}
 
 	/**
 	 * Builds the HTML response for the help page.
@@ -534,29 +530,29 @@ export class Browser {
 	 * Used to keep the browser alive or shut it down after inactivity.
 	 */
 	async alarm() {
-		console.log(`[DO Alarm] Alarm triggered. keptAliveInSeconds: ${this.keptAliveInSeconds}`);
+		// console.log(`[DO Alarm] Alarm triggered. keptAliveInSeconds: ${this.keptAliveInSeconds}`);
 		try {
 			this.keptAliveInSeconds += 10; // Increment by alarm interval (10 seconds)
 
 			if (this.keptAliveInSeconds < KEEP_BROWSER_ALIVE_IN_SECONDS) {
 				// Browser is active and recent; set the alarm again
-				console.log(`[DO Alarm] Keep-alive threshold not reached (${this.keptAliveInSeconds}s < ${KEEP_BROWSER_ALIVE_IN_SECONDS}s). Setting alarm again.`);
+				// console.log(`[DO Alarm] Keep-alive threshold not reached (${this.keptAliveInSeconds}s < ${KEEP_BROWSER_ALIVE_IN_SECONDS}s). Setting alarm again.`);
 				await this.storage.setAlarm(Date.now() + TEN_SECONDS);
 			} else {
 				// Inactivity threshold reached; shut down the browser
-				console.log(`[DO Alarm] Keep-alive threshold reached (${this.keptAliveInSeconds}s >= ${KEEP_BROWSER_ALIVE_IN_SECONDS}s). Shutting down browser.`);
+				// console.log(`[DO Alarm] Keep-alive threshold reached (${this.keptAliveInSeconds}s >= ${KEEP_BROWSER_ALIVE_IN_SECONDS}s). Shutting down browser.`);
 				if (this.browser) {
-					console.log("[DO Alarm] Closing browser instance...");
+					// console.log("[DO Alarm] Closing browser instance...");
 					try {
 					await this.browser.close();
-						console.log("[DO Alarm] Browser instance closed successfully.");
+						// console.log("[DO Alarm] Browser instance closed successfully.");
 					} catch (closeError) {
 						console.error("[DO Alarm] Error closing browser instance:", closeError);
 					}
 					this.browser = undefined; // Clear the browser instance variable
 				}
 				// Do not set the alarm again; it will be set on the next fetch request
-				console.log("[DO Alarm] Browser shut down. Alarm will be reset on next request.");
+				// console.log("[DO Alarm] Browser shut down. Alarm will be reset on next request.");
 			}
 			// Persist the updated keptAliveInSeconds count
 			await this.storage.put("keptAliveInSeconds", this.keptAliveInSeconds);
