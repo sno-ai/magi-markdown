@@ -54,4 +54,36 @@ fs.readdirSync(docsDir).forEach(file => {
   }
 });
 
-console.log('MDX sync complete.'); 
+console.log('MDX Docs sync complete.');
+
+// Additional: Sync CHANGELOG.md to docs/changelog/log.mdx
+const rootChangelog = path.join(__dirname, '../CHANGELOG.md');
+const changelogTargetDir = path.join(docsDir, 'changelog');
+const changelogTarget = path.join(changelogTargetDir, 'log.mdx');
+
+try {
+  if (fs.existsSync(rootChangelog)) {
+    if (!fs.existsSync(changelogTargetDir)) {
+      fs.mkdirSync(changelogTargetDir, { recursive: true });
+    }
+    const changelogContent = fs.readFileSync(rootChangelog, 'utf8');
+    let shouldWrite = true;
+    if (fs.existsSync(changelogTarget)) {
+      const existingChangelog = fs.readFileSync(changelogTarget, 'utf8');
+      if (existingChangelog === changelogContent) {
+        shouldWrite = false;
+        console.log('  Skipping CHANGELOG.md (content identical).');
+      }
+    }
+    if (shouldWrite) {
+      fs.writeFileSync(changelogTarget, changelogContent, 'utf8');
+      console.log(`  Synced CHANGELOG.md to ${changelogTarget}`);
+    }
+  } else {
+    console.warn('CHANGELOG.md not found in project root.');
+  }
+} catch (error) {
+  console.error('  Error syncing CHANGELOG.md:', error);
+} 
+
+console.log('Change Log Sync complete.');
