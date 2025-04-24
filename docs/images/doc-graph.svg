@@ -1,0 +1,105 @@
+<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="800" height="500" fill="#f8f9fa" rx="10" ry="10" />
+  
+  <!-- Title -->
+  <text x="400" y="40" font-family="Arial, sans-serif" font-size="24" fill="#333" text-anchor="middle" font-weight="bold">MAGI: Knowledge Graph Construction</text>
+  
+  <!-- Document Nodes -->
+  <!-- Central Document -->
+  <circle cx="400" cy="250" r="60" fill="#e3f2fd" stroke="#2196f3" stroke-width="3" />
+  <text x="400" y="245" font-family="Arial, sans-serif" font-size="14" fill="#0d47a1" text-anchor="middle" font-weight="bold">Research Paper</text>
+  <text x="400" y="265" font-family="Arial, sans-serif" font-size="10" fill="#333" text-anchor="middle">doc-id: "research-001"</text>
+  
+  <!-- Supporting Documents -->
+  <circle cx="250" cy="150" r="50" fill="#e8f5e9" stroke="#4caf50" stroke-width="2" />
+  <text x="250" y="145" font-family="Arial, sans-serif" font-size="12" fill="#1b5e20" text-anchor="middle" font-weight="bold">Data Set</text>
+  <text x="250" y="165" font-family="Arial, sans-serif" font-size="9" fill="#333" text-anchor="middle">doc-id: "data-123"</text>
+  
+  <circle cx="550" cy="150" r="50" fill="#e8f5e9" stroke="#4caf50" stroke-width="2" />
+  <text x="550" y="145" font-family="Arial, sans-serif" font-size="12" fill="#1b5e20" text-anchor="middle" font-weight="bold">Methods</text>
+  <text x="550" y="165" font-family="Arial, sans-serif" font-size="9" fill="#333" text-anchor="middle">doc-id: "methods-456"</text>
+  
+  <!-- Related Documents -->
+  <circle cx="200" cy="350" r="40" fill="#fff8e1" stroke="#ffc107" stroke-width="2" />
+  <text x="200" y="345" font-family="Arial, sans-serif" font-size="11" fill="#ff6f00" text-anchor="middle" font-weight="bold">Prior Study</text>
+  <text x="200" y="360" font-family="Arial, sans-serif" font-size="8" fill="#333" text-anchor="middle">doc-id: "prior-789"</text>
+  
+  <circle cx="600" cy="350" r="40" fill="#fff8e1" stroke="#ffc107" stroke-width="2" />
+  <text x="600" y="345" font-family="Arial, sans-serif" font-size="11" fill="#ff6f00" text-anchor="middle" font-weight="bold">Follow-up</text>
+  <text x="600" y="360" font-family="Arial, sans-serif" font-size="8" fill="#333" text-anchor="middle">doc-id: "follow-012"</text>
+  
+  <!-- Competing Documents -->
+  <circle cx="150" cy="250" r="35" fill="#f3e5f5" stroke="#9c27b0" stroke-width="2" />
+  <text x="150" y="245" font-family="Arial, sans-serif" font-size="10" fill="#4a148c" text-anchor="middle" font-weight="bold">Contradicts</text>
+  <text x="150" y="260" font-family="Arial, sans-serif" font-size="7" fill="#333" text-anchor="middle">doc-id: "contra-345"</text>
+  
+  <circle cx="650" cy="250" r="35" fill="#f3e5f5" stroke="#9c27b0" stroke-width="2" />
+  <text x="650" y="245" font-family="Arial, sans-serif" font-size="10" fill="#4a148c" text-anchor="middle" font-weight="bold">Extends</text>
+  <text x="650" y="260" font-family="Arial, sans-serif" font-size="7" fill="#333" text-anchor="middle">doc-id: "extend-678"</text>
+  
+  <!-- Supporting Documents -->
+  <circle cx="300" cy="400" r="30" fill="#ffebee" stroke="#f44336" stroke-width="2" />
+  <text x="300" y="395" font-family="Arial, sans-serif" font-size="9" fill="#b71c1c" text-anchor="middle" font-weight="bold">Citation 1</text>
+  <text x="300" y="408" font-family="Arial, sans-serif" font-size="7" fill="#333" text-anchor="middle">doc-id: "cite-901"</text>
+  
+  <circle cx="500" cy="400" r="30" fill="#ffebee" stroke="#f44336" stroke-width="2" />
+  <text x="500" y="395" font-family="Arial, sans-serif" font-size="9" fill="#b71c1c" text-anchor="middle" font-weight="bold">Citation 2</text>
+  <text x="500" y="408" font-family="Arial, sans-serif" font-size="7" fill="#333" text-anchor="middle">doc-id: "cite-234"</text>
+  
+  <!-- Connection Lines -->
+  <!-- Research Paper to Data connections -->
+  <line x1="353" y1="212" x2="290" y2="175" stroke="#4caf50" stroke-width="2" />
+  <polygon points="293,170 280,168 285,180" fill="#4caf50" />
+  <text x="310" y="185" font-family="Arial, sans-serif" font-size="9" fill="#1b5e20" transform="rotate(-30, 310, 185)">uses-data</text>
+  
+  <!-- Research Paper to Methods connections -->
+  <line x1="447" y1="212" x2="510" y2="175" stroke="#4caf50" stroke-width="2" />
+  <polygon points="507,170 520,168 515,180" fill="#4caf50" />
+  <text x="490" y="185" font-family="Arial, sans-serif" font-size="9" fill="#1b5e20" transform="rotate(30, 490, 185)">uses-methods</text>
+  
+  <!-- Research Paper to Prior Study -->
+  <line x1="350" y1="285" x2="235" y2="330" stroke="#ffc107" stroke-width="2" />
+  <polygon points="242,335 230,340 232,325" fill="#ffc107" />
+  <text x="280" y="320" font-family="Arial, sans-serif" font-size="9" fill="#ff6f00" transform="rotate(-30, 280, 320)">builds-on</text>
+  
+  <!-- Research Paper to Follow-up -->
+  <line x1="450" y1="285" x2="565" y2="330" stroke="#ffc107" stroke-width="2" />
+  <polygon points="558,335 570,340 568,325" fill="#ffc107" />
+  <text x="525" y="320" font-family="Arial, sans-serif" font-size="9" fill="#ff6f00" transform="rotate(30, 520, 320)">leads-to</text>
+  
+  <!-- Research Paper to Contradicts -->
+  <line x1="340" y1="250" x2="185" y2="250" stroke="#9c27b0" stroke-width="2" stroke-dasharray="5,3" />
+  <polygon points="190,245 180,250 190,255" fill="#9c27b0" />
+  <text x="265" y="240" font-family="Arial, sans-serif" font-size="9" fill="#4a148c">contradicts</text>
+  
+  <!-- Research Paper to Extends -->
+  <line x1="460" y1="250" x2="615" y2="250" stroke="#9c27b0" stroke-width="2" stroke-dasharray="5,3" />
+  <polygon points="610,245 620,250 610,255" fill="#9c27b0" />
+  <text x="535" y="240" font-family="Arial, sans-serif" font-size="9" fill="#4a148c">extends</text>
+  
+  <!-- Research Paper to Citations -->
+  <line x1="370" y1="300" x2="320" y2="370" stroke="#f44336" stroke-width="2" />
+  <polygon points="325,365 315,375 315,365" fill="#f44336" />
+  <text x="340" y="345" font-family="Arial, sans-serif" font-size="9" fill="#b71c1c" transform="rotate(-45, 340, 345)">cites</text>
+  
+  <line x1="430" y1="300" x2="480" y2="370" stroke="#f44336" stroke-width="2" />
+  <polygon points="475,365 485,375 485,365" fill="#f44336" />
+  <text x="460" y="345" font-family="Arial, sans-serif" font-size="9" fill="#b71c1c" transform="rotate(45, 460, 345)">cites</text>
+  
+  <!-- Legend -->
+  <rect x="600" y="60" width="180" height="80" fill="#ffffff" stroke="#9e9e9e" stroke-width="1" rx="5" ry="5" />
+  <text x="690" y="80" font-family="Arial, sans-serif" font-size="12" fill="#333" text-anchor="middle" font-weight="bold">Relationship Types</text>
+  
+  <line x1="620" y1="100" x2="640" y2="100" stroke="#4caf50" stroke-width="2" />
+  <text x="645" y="104" font-family="Arial, sans-serif" font-size="10" fill="#333">uses</text>
+  
+  <line x1="620" y1="120" x2="640" y2="120" stroke="#ffc107" stroke-width="2" />
+  <text x="645" y="124" font-family="Arial, sans-serif" font-size="10" fill="#333">temporal</text>
+  
+  <line x1="700" y1="100" x2="720" y2="100" stroke="#9c27b0" stroke-width="2" stroke-dasharray="5,3" />
+  <text x="730" y="104" font-family="Arial, sans-serif" font-size="10" fill="#333">logical</text>
+  
+  <line x1="700" y1="120" x2="720" y2="120" stroke="#f44336" stroke-width="2" />
+  <text x="730" y="124" font-family="Arial, sans-serif" font-size="10" fill="#333">citation</text>
+</svg>

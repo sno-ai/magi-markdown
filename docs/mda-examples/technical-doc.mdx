@@ -1,0 +1,28 @@
+---
+doc-id: c5a6b7d8-1e2f-3a4b-5c6d-7e8f9a0b1c2d # UUID Recommended
+title: AIMD Technical Specification Overview
+description: Sample technical document demonstrating basic footnote relationships in AIMD.
+tags:
+  - technical
+  - specification
+  - aimd-example
+created-date: 2024-07-26T11:05:00Z # ISO 8601 Format
+---
+
+# AIMD Technical Specification
+
+The AI Markdown (AIMD) format extends standard Markdown with optional structured metadata[^fm] and embedded AI instruction blocks[^ai]. It also supports defining explicit relationships between documents using footnotes[^kg] to enable knowledge graph construction.
+
+## Core Components Covered
+
+1. **Front Matter**: Provides document-level metadata such as `doc-id`, `title`, and `tags`[^fm].
+2. **`ai-script` Blocks**: Allows embedding JSON-based AI instructions within the content[^ai].
+3. **Footnote Relationships**: Defines machine-readable links to other documents[^kg].
+
+---
+
+## Footnote Definitions
+
+[^fm]: `{"rel-type":"related","doc-id":"uuid-schema-spec-frontmatter","rel-desc":"See Front Matter schema for field details"}`
+[^ai]: `{"rel-type":"child","doc-id":"uuid-schema-spec-ai-script","rel-desc":"Detailed AI Script Block specification"}`
+[^kg]: `{"rel-type":"related","doc-id":"uuid-concept-knowledge-graph","rel-desc":"Overview of Knowledge Graph integration"}`

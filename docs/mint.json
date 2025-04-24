@@ -1,0 +1,88 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "MAGI (Markdown for AI Agents)",
+  "logo": {
+    "dark": "/logo/dark.svg",
+    "light": "/logo/light.svg"
+  },
+  "favicon": "/favicon.png",
+  "colors": {
+    "primary": "#1E3A8A",
+    "light": "#3B82F6",
+    "dark": "#1E3A8A",
+    "anchors": {
+      "from": "#1E3A8A",
+      "to": "#3B82F6"
+    }
+  },
+  "topbarLinks": [
+    {
+      "name": "Support",
+      "url": "mailto:info@sno.ai"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Dashboard",
+    "url": "https://magi-mda.org"
+  },
+  "tabs": [
+    {
+      "name": "MAGI Markdown",
+      "url": "/"
+    },
+    {
+      "name": "Documentation",
+      "url": "/mdx"
+    },
+    {
+      "name": "Changelog",
+      "url": "changelog/log"
+    },
+    {
+      "name": "MDA Examples",
+      "url": "mda-examples"
+    }
+  ],
+  "anchors": [
+    {
+      "name": "Github",
+      "icon": "github",
+      "url": "https://github.com/snoai/"
+    },
+    {
+      "name": "X (Twitter)",
+      "icon": "twitter",
+      "url": "https://x.com/snoai"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Get Started",
+      "pages": ["introduction", "quickstart"]
+    },
+    {
+      "group": "Documentation",
+      "pages": ["mdx/overview", "mdx/architecture", "mdx/developer-guide", "mdx/specification"]
+    },
+    {
+      "group": "Changelog",
+      "pages": [
+        "changelog/log"
+      ]
+    },
+    {
+      "group": "MDA Examples",
+      "pages": [
+        "mda-examples/simple-meeting-minutes",
+        "mda-examples/technical-doc",
+        "mda-examples/technical-doc-2",
+        "mda-examples/dynamic-content-generation"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "x": "https://x.com/snoai",
+    "github": "https://github.com/snoai",
+    "linkedin": "https://www.linkedin.com/company/sno-ai"
+  }
+}
