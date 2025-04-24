@@ -114,14 +114,27 @@ export class Browser {
 
 			// Parse URL and parameters
 			const urlParams = new URL(request.url).searchParams;
-			const url = urlParams.get('url');
+			let url = urlParams.get('url');
 			const htmlDetails = urlParams.get('htmlDetails') === 'true';
 			const crawlSubpages = urlParams.get('subpages') === 'true';
+			const noCache = urlParams.get('nocache') === 'true';
 			const contentType = request.headers.get('content-type') === 'application/json' ? 'json' : 'text';
 			this.token = request.headers.get('Authorization')?.replace('Bearer ', '') ?? '';
 			this.llmFilter = urlParams.get('llmFilter') === 'true';
 
-			// console.log(`[DO] Request Params: url=${url}, htmlDetails=${htmlDetails}, crawlSubpages=${crawlSubpages}, contentType=${contentType}, llmFilter=${this.llmFilter}`);
+			console.log(`[DO] Request Params: url=${url}, htmlDetails=${htmlDetails}, crawlSubpages=${crawlSubpages}, nocache=${noCache}, contentType=${contentType}, llmFilter=${this.llmFilter}`);
+
+			// If nocache is true, append it to the URL for proper cache handling in downstream methods
+			if (url && noCache) {
+				try {
+					const urlObj = new URL(url);
+					urlObj.searchParams.set('nocache', 'true');
+					url = urlObj.toString();
+					console.log(`[DO] Modified URL with nocache parameter: ${url}`);
+				} catch (e) {
+					console.error(`[DO] Error appending nocache to URL: ${e}`);
+				}
+			}
 
 			// Input Validation
 			if (contentType === 'text' && crawlSubpages) {
@@ -243,6 +256,10 @@ export class Browser {
 			return true;
 		} catch (e) {
 			console.log("[DO Browser] Browser connection check failed:", e);
+			console.error("[DO Browser] Browser connection detailed error:", {
+				message: e instanceof Error ? e.message : String(e),
+				stack: e instanceof Error ? e.stack : undefined
+			});
 			return false;
 		}
 	}
@@ -252,7 +269,9 @@ export class Browser {
 
 	async processSinglePage(url: string, enableDetailedResponse: boolean, contentType: string): Promise<Response> {
 		try {
-			console.log(`[DO SinglePage] Processing URL: ${url}`);
+			// Check if nocache parameter is present
+			const hasNocache = url.includes('nocache');
+			console.log(`[DO SinglePage] Processing URL: ${url}${hasNocache ? ' with nocache parameter' : ''}`);
 			const results = await this.getWebsiteMarkdown({
 				urls: [url],
 				enableDetailedResponse,
@@ -373,7 +392,7 @@ export class Browser {
 						console.log(`[DO GetMarkdown] Processing URL: ${url}`);
 						const cacheIdBase = url + (enableDetailedResponse ? '-detailed' : '') + (this.llmFilter ? '-llm' : '');
 
-						let result: { url: string; md: string; error?: boolean; status?: number; errorDetails?: string };
+						let result: { url: string; md: string; error?: boolean; status?: number; errorDetails?: string } | undefined;
 
 						// --- URL Routing --- 
 						if (url.includes('youtube.com/watch') || url.includes('youtu.be/')) {
@@ -405,13 +424,25 @@ export class Browser {
 						} else { // Default handler for other URLs
 							console.log(`[DO GetMarkdown] Routing to default page handler for: ${url}`);
 							// Check cache for default pages
+							const urlObj = new URL(url);
+							const shouldSkipCache = urlObj.searchParams.has('nocache') || url.includes('nocache=true');
 							const cacheKey = `Default:${cacheIdBase}`;
-							const cached = await this.env.MDA_CACHE.get(cacheKey);
-							if (cached) {
-								console.log(`[DO GetMarkdown] Using cached content for default URL: ${url}`);
-								result = { url, md: cached };
+							
+							if (shouldSkipCache) {
+								console.log(`[DO GetMarkdown] nocache parameter detected in URL: ${url}, clearing cache`);
+								// Delete the cache entry if nocache is specified
+								await this.env.MDA_CACHE.delete(cacheKey);
+								console.log(`[DO GetMarkdown] Cache cleared for key: ${cacheKey}, will fetch fresh content`);
 							} else {
-								console.log(`[DO GetMarkdown] No cache for default URL: ${url}, fetching...`);
+								const cachedData = await this.env.MDA_CACHE.get(cacheKey);
+								if (cachedData) {
+									console.log(`[DO GetMarkdown] Using cached content for default URL: ${url}`);
+									result = { url, md: cachedData as string };
+								}
+							}
+							
+							if (!result) {
+								console.log(`[DO GetMarkdown] ${shouldSkipCache ? 'Fetching fresh content (nocache)' : 'No cache available, fetching new content'} for URL: ${url}`);
 								const md = await handleDefaultPage(url, enableDetailedResponse, this.browser!);
 								result = { url, md }; // Assume success initially
 								// Check if the handler returned an error message
