@@ -43,13 +43,19 @@ export const html = `<!DOCTYPE html>
                     function redirectToMD(event) {
                         event.preventDefault();
                         const url = document.getElementById('urlInput').value;
-                        const enableDetailed = document.getElementById('enableDetailedCheckbox').checked;
-                        let redirectUrl = '/?url=' + encodeURIComponent(url);
-                        // Always include enableDetailedResponse based on checkbox state
-                        redirectUrl += '&enableDetailedResponse=' + enableDetailed;
+                        const enableSubpages = document.getElementById('enableSubpagesCheckbox').checked;
+                        const enableLlmFilter = document.getElementById('enableLlmFilterCheckbox').checked;
                         
-                        // You might want to add logic here to get values for subpages/llmFilter if you add controls for them
-                        // For now, they are only controllable via query params
+                        let redirectUrl = '/?url=' + encodeURIComponent(url);
+                        
+                        // Add the parameters based on checkbox state
+                        if (enableSubpages) {
+                            redirectUrl += '&subpages=true';
+                        }
+                        
+                        if (enableLlmFilter) {
+                            redirectUrl += '&llmFilter=true';
+                        }
 
                         window.location.href = redirectUrl;
                     }
@@ -64,9 +70,15 @@ export const html = `<!DOCTYPE html>
                         Convert
                     </button>
                 </form>
-                 <div class="flex items-center space-x-2 pt-2">
-                    <input id="enableDetailedCheckbox" type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded bg-gray-700 border-gray-600">
-                    <label for="enableDetailedCheckbox" class="text-sm font-medium text-gray-300">Enable Detailed Response (capture full page structure)</label>
+                <div class="flex flex-col sm:flex-row sm:space-x-6 pt-2">
+                    <div class="flex items-center space-x-2">
+                        <input id="enableSubpagesCheckbox" type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded bg-gray-700 border-gray-600">
+                        <label for="enableSubpagesCheckbox" class="text-sm font-medium text-gray-300">Enable Subpages (crawl up to 10 linked pages)</label>
+                    </div>
+                    <div class="flex items-center space-x-2 mt-2 sm:mt-0">
+                        <input id="enableLlmFilterCheckbox" type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded bg-gray-700 border-gray-600">
+                        <label for="enableLlmFilterCheckbox" class="text-sm font-medium text-gray-300">Enable LLM Filter (improve content quality)</label>
+                    </div>
                 </div>
 
                 <!-- Usage Examples -->
@@ -136,15 +148,10 @@ except requests.exceptions.RequestException as e:
                     <div>
                         <h3 class="text-lg font-semibold text-blue-100 mb-2">Optional:</h3>
                         <ul class="list-disc list-inside space-y-3 text-blue-100">
-                            <li>
-                                <code class="font-semibold text-white bg-gray-700 px-1 rounded">enableDetailedResponse</code> (boolean, default: <code class="text-white">false</code>): 
-                                Captures more of the raw page structure instead of relying solely on Readability.js for main content extraction.
-                                <pre class="code-block mt-1"><code># Example (curl)
-$ curl 'https://url2mda.sno.ai/?url=https://example.com&enableDetailedResponse=true'</code></pre>
-                            </li>
                              <li>
                                 <code class="font-semibold text-white bg-gray-700 px-1 rounded">subpages</code> (boolean, default: <code class="text-white">false</code>): 
                                 Attempts to crawl and return markdown for up to 10 linked subpages found on the provided URL.
+                                When using text response format, all subpages will be combined into a single document with sections.
                                  <pre class="code-block mt-1"><code># Example (curl)
 $ curl 'https://url2mda.sno.ai/?url=https://example.com/blog&subpages=true'</code></pre>
                             </li>
@@ -162,8 +169,17 @@ $ curl 'https://url2mda.sno.ai/?url=https://example.com&llmFilter=true'</code></
                 <div class="pt-4">
                      <h2 class="text-2xl font-bold text-white mb-3">Response Types</h2>
                      <ul class="list-disc list-inside space-y-2 text-blue-100">
-                        <li>Default: Returns plain text markdown (<code class="text-white bg-gray-700 px-1 rounded">Content-Type: text/plain</code>).</li>
-                        <li>Use <code class="text-white bg-gray-700 px-1 rounded">Accept: application/json</code> header for JSON response containing the markdown under a <code class="text-white bg-gray-700 px-1 rounded">markdown</code> key.</li>
+                        <li>Default: Returns plain text markdown (<code class="text-white bg-gray-700 px-1 rounded">Content-Type: text/plain</code>).
+                          <ul class="list-disc list-inside ml-6 mt-1">
+                            <li class="text-sm">With <code class="text-white bg-gray-700 px-1 rounded">subpages=true</code>: Returns a single combined document with sections for each subpage.</li>
+                          </ul>
+                        </li>
+                        <li>Use <code class="text-white bg-gray-700 px-1 rounded">Content-Type: application/json</code> header for JSON response.
+                          <ul class="list-disc list-inside ml-6 mt-1">
+                            <li class="text-sm">For single page: Returns a JSON object with the URL and markdown content.</li>
+                            <li class="text-sm">With <code class="text-white bg-gray-700 px-1 rounded">subpages=true</code>: Returns a JSON array where each object represents a page.</li>
+                          </ul>
+                        </li>
                     </ul>
                 </div>
             </div>

@@ -115,14 +115,13 @@ export class Browser {
 			// Parse URL and parameters
 			const urlParams = new URL(request.url).searchParams;
 			let url = urlParams.get('url');
-			const htmlDetails = urlParams.get('htmlDetails') === 'true';
 			const crawlSubpages = urlParams.get('subpages') === 'true';
 			const noCache = urlParams.get('nocache') === 'true';
 			const contentType = request.headers.get('content-type') === 'application/json' ? 'json' : 'text';
 			this.token = request.headers.get('Authorization')?.replace('Bearer ', '') ?? '';
 			this.llmFilter = urlParams.get('llmFilter') === 'true';
 
-			console.log(`[DO] Request Params: url=${url}, htmlDetails=${htmlDetails}, crawlSubpages=${crawlSubpages}, nocache=${noCache}, contentType=${contentType}, llmFilter=${this.llmFilter}`);
+			console.log(`[DO] Request Params: url=${url}, crawlSubpages=${crawlSubpages}, nocache=${noCache}, contentType=${contentType}, llmFilter=${this.llmFilter}`);
 
 			// If nocache is true, append it to the URL for proper cache handling in downstream methods
 			if (url && noCache) {
@@ -137,14 +136,6 @@ export class Browser {
 			}
 
 			// Input Validation
-			if (contentType === 'text' && crawlSubpages) {
-				console.error("[DO] Invalid parameter combination: text content type with crawl subpages");
-				return new Response(JSON.stringify({ error: 'Error: Crawl subpages can only be enabled with JSON content type' }), { 
-					status: 400,
-					headers: { 'Content-Type': 'application/json' }
-				});
-			}
-
 			if (!url) {
 				console.log("[DO] No URL provided, returning help page.");
 				return this.buildHelpResponse();
@@ -172,10 +163,10 @@ export class Browser {
 			// Process request
 			if (crawlSubpages) {
 				console.log(`[DO] Starting subpage crawl for: ${url}`);
-				return this.crawlSubpages(url, htmlDetails, contentType);
+				return this.crawlSubpages(url, contentType);
 			} else {
 				console.log(`[DO] Processing single page: ${url}`);
-				return this.processSinglePage(url, htmlDetails, contentType);
+				return this.processSinglePage(url, contentType);
 			}
 		} catch (error) {
 			console.error('[DO] Error in Browser.fetch:', error);
@@ -264,17 +255,13 @@ export class Browser {
 		}
 	}
 
-	
-
-
-	async processSinglePage(url: string, enableDetailedResponse: boolean, contentType: string): Promise<Response> {
+	async processSinglePage(url: string, contentType: string): Promise<Response> {
 		try {
 			// Check if nocache parameter is present
 			const hasNocache = url.includes('nocache');
 			console.log(`[DO SinglePage] Processing URL: ${url}${hasNocache ? ' with nocache parameter' : ''}`);
 			const results = await this.getWebsiteMarkdown({
 				urls: [url],
-				enableDetailedResponse,
 			});
 
 			const result = results[0]; // Get the single result
@@ -362,11 +349,10 @@ export class Browser {
 	/**
 	 * Orchestrates fetching markdown for multiple URLs, routing to specific handlers.
 	 */
-	async getWebsiteMarkdown({ urls, enableDetailedResponse }: {
+	async getWebsiteMarkdown({ urls }: {
 		urls: string[];
-		enableDetailedResponse: boolean;
 	}): Promise<{ url: string; md: string; error?: boolean; status?: number; errorDetails?: string }[]> {
-		console.log(`[DO GetMarkdown] Processing ${urls.length} URLs. Detailed: ${enableDetailedResponse}, LLM Filter: ${this.llmFilter}`);
+		console.log(`[DO GetMarkdown] Processing ${urls.length} URLs. LLM Filter: ${this.llmFilter}`);
 		try {
 			const isBrowserActive = await this.ensureBrowser();
 			if (!isBrowserActive) {
@@ -390,7 +376,7 @@ export class Browser {
 						// --- End Rate Limiting Check ---
 
 						console.log(`[DO GetMarkdown] Processing URL: ${url}`);
-						const cacheIdBase = url + (enableDetailedResponse ? '-detailed' : '') + (this.llmFilter ? '-llm' : '');
+						const cacheIdBase = url + (this.llmFilter ? '-llm' : '');
 
 						let result: { url: string; md: string; error?: boolean; status?: number; errorDetails?: string } | undefined;
 
@@ -414,7 +400,7 @@ export class Browser {
 								result = await handleTwitterTweetPage(url, this.env);
 							} else {
 								console.warn(`[DO GetMarkdown] Could not determine Twitter URL type: ${url}. Falling back to default.`);
-								result = { url, md: await handleDefaultPage(url, enableDetailedResponse, this.browser!), error: false }; // Assume no error initially for default
+								result = { url, md: await handleDefaultPage(url, this.browser!), error: false }; // Assume no error initially for default
 							}
 
 						} else if (url.includes('reddit.com/r/')) {
@@ -443,7 +429,7 @@ export class Browser {
 							
 							if (!result) {
 								console.log(`[DO GetMarkdown] ${shouldSkipCache ? 'Fetching fresh content (nocache)' : 'No cache available, fetching new content'} for URL: ${url}`);
-								const md = await handleDefaultPage(url, enableDetailedResponse, this.browser!);
+								const md = await handleDefaultPage(url, this.browser!);
 								result = { url, md }; // Assume success initially
 								// Check if the handler returned an error message
 								if (md.startsWith('## Error')) {
@@ -493,8 +479,6 @@ export class Browser {
 			}));
 		}
 	}
-
-
 
 	/**
 	 * Builds the HTML response for the help page.
