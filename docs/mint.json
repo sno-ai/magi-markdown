@@ -17,7 +17,7 @@
   },
   "topbarLinks": [
     {
-      "name": "Support",
+      "name": "Contact",
       "url": "mailto:info@sno.ai"
     }
   ],
@@ -47,7 +47,7 @@
     {
       "name": "Github",
       "icon": "github",
-      "url": "https://github.com/snoai/"
+      "url": "https://github.com/snoai/magi-markdown"
     },
     {
       "name": "X (Twitter)",

@@ -1,0 +1,108 @@
+---
+title: "Introduction"
+description: "MAGI: Bridging human content and AI processing with context-rich Markdown."
+---
+
+We've all seen the power of Large Language Models (LLMs) and AI agents. But feeding them content effectively? That's a different story. Standard formats often fall short, stripping away vital context needed for reliable AI processing, especially for complex documents or web pages.
+
+Converting content to plain text for Retrieval-Augmented Generation (RAG) or agent workflows can lose crucial structure and metadata, leading to imprecise results.
+
+Introducing **MAGI (Markdown for Agent Guidance & Instruction)**. An _AI-native_, _human-readable_, and _extensible_ Markdown format designed to solve this.
+
+## Why MAGI?
+
+### The Problem
+
+... so you want your AI to *really* understand your content. Let's walk through the usual struggle:
+
+<Steps>
+  <Step title="Just use Plain Text?">
+    <Warning>
+      Stripping content down seems easy, but...
+      - Where did that table structure go?
+      - What was the original source URL?
+      - How does this document relate to others?
+      - How do I tell the AI *how* to process this specific section?
+      - Oops, lost all the metadata (author, date, purpose).
+    </Warning>
+  </Step>
+  <Step title="Maybe HTML directly?">
+    <Note>
+      HTML is structured, but often noisy for LLMs:
+      - Full of tags irrelevant to the core meaning.
+      - Doesn't explicitly define inter-document relationships.
+      - No standard way to embed processing instructions for the AI.
+      - Can be complex to parse reliably.
+    </Note>
+  </Step>
+  <Step title="Building custom pre-processing pipelines?">
+     <Card title="The Engineering Overhead">
+       - Complex parsers for different formats (PDF, DOCX, HTML).
+       - Heuristics for extracting metadata (often inaccurate).
+       - Separate systems for managing relationships.
+       - Ad-hoc methods for passing instructions to the LLM.
+       - Constant maintenance as source formats change.
+     </Card>
+  </Step>
+</Steps>
+
+And you find yourself asking...
+
+> "Isn't there a simpler way to make content both human-readable *and* AI-ready?"
+
+### The Solution: MAGI
+
+MAGI extends standard Markdown, keeping it readable while adding optional, structured layers for AI.
+
+<CardGroup cols="2">
+  <Card title="Structured Metadata" icon="list">
+    <div className="text-emerald-700 space-y-1">
+    - YAML Front Matter for rich context.
+    - Define `doc-id`, `title`, `tags`, `purpose`, dates, etc.
+    - Essential for classification and retrieval.
+    </div>
+  </Card>
+  <Card title="Embedded AI Instructions" icon="code">
+    <div className="text-emerald-700 space-y-1">
+    - Use `ai-script` blocks for direct commands.
+    - Guide summarization, analysis, model choice.
+    - Control processing within the content itself.
+    </div>
+  </Card>
+  <Card title="Explicit Relationships" icon="link">
+    <div className="text-emerald-700 space-y-1">
+    - Define document links using Markdown footnotes.
+    - Specify types: `parent`, `child`, `cites`, `related`.
+    - Build knowledge graphs automatically.
+    </div>
+  </Card>
+  <Card title="Human & Machine Friendly" icon="circle-check">
+    <div className="text-emerald-700 space-y-1">
+    - Remains standard Markdown for readability.
+    - Legacy renderers see normal text/code blocks.
+    - MAGI-aware processors unlock AI potential.
+    - Optional components: Use only what you need.
+    </div>
+  </Card>
+</CardGroup>
+
+Stop fighting content conversion. Focus on building intelligent applications while MAGI provides the AI-ready foundation.
+
+## Use Cases
+
+What can you build with MAGI?
+
+<CardGroup cols="2">
+  <Card title="Enhanced RAG Systems" icon="magnifying-glass">
+    Improve retrieval accuracy by leveraging metadata and relationships for more context-aware results.
+  </Card>
+  <Card title="Multi-Agent Orchestration" icon="user-group">
+    Coordinate different AI agents working on the same content using embedded `ai-script` instructions tailored for each agent.
+  </Card>
+  <Card title="Dynamic Documentation" icon="document">
+    Create living documents where AI instructions can trigger updates or checks, and relationships track versions.
+  </Card>
+  <Card title="Knowledge Graph Construction" icon="share">
+    Automatically build and maintain knowledge graphs directly from your content's defined relationships.
+  </Card>
+</CardGroup>

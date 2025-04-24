@@ -1,0 +1,90 @@
+---
+title: "Getting Started"
+description: "Start using MAGI Markdown in under 5 minutes"
+---
+
+To start working with MAGI, you'll need:
+
+1. A basic understanding of Markdown
+2. A text editor for creating .mda files
+3. Optionally, the url2mda tool to convert web content to MAGI format
+### Understanding MAGI Components
+<AccordionGroup>
+  <Accordion title="Understanding MAGI Components" icon="file-code">
+    MAGI has three optional components that enhance standard Markdown:
+    
+    1. **YAML Front Matter**: Provides structured metadata (like `title`, `doc-id`).
+    2. **ai-script blocks**: Embeds JSON instructions for AI/LLM processing.
+    3. **Footnotes with JSON**: Defines typed relationships between documents (e.g., `[^ref1]: {"rel-type": ...}`).
+    
+    ![MAGI Components](/images/three-parts.svg)
+    
+    Each component is optional - use only what you need.
+  </Accordion>
+</AccordionGroup>
+## Creating a Simple MAGI File
+
+Create a file with the `.mda` extension. Here's an example structure:
+
+```markdown
+---
+doc-id: "example-123"
+title: "My First MAGI Document"
+description: "A simple example of MAGI format"
+tags: ["example", "getting-started"]
+created-date: "2024-06-10T10:00:00Z"
+---
+
+# Hello MAGI
+
+This is standard Markdown content.
+
+(Your ai-script block would go here - see below)
+
+This document is related to our documentation[^ref1].
+
+[^ref1]: See JSON definition below.
+
+```
+### Adding AI Instructions
+
+Inside your `.mda` file, you can add an `ai-script` block like this:
+
+```ai-script
+{
+  "script-id": "summary-request",
+  "prompt": "Summarize this document briefly.",
+  "priority": "medium",
+  "auto-run": true
+}
+```
+
+## Convert Web Content with url2mda
+
+The easiest way to test MAGI is with our url2mda service, which converts web pages to MAGI format:
+
+```bash
+curl -X POST https://url2mda.sno.ai/convert \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com",
+    "htmlDetails": true,
+    "subpages": false
+  }'
+```
+
+Try it out in your browser: [https://url2mda.sno.ai](https://url2mda.sno.ai)
+
+## Explore the Open Source Toolkit
+
+MAGI is fully open source and includes tools like url2mda that you can run locally:
+
+1. Clone the repository: `git clone https://github.com/snoai/magi-markdown`
+2. Navigate to the url2mda directory: `cd magi-markdown/apps/url2mda`
+3. Install dependencies: `pnpm install`
+4. Run locally: `pnpm dev`
+
+View MDA examples in the `docs/mda-examples` directory to see MAGI in action for various use cases.
+
+You're now ready to create AI-friendly content with MAGI.
+That's it! You're now ready to create AI-friendly content with MAGI.

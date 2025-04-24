@@ -78,6 +78,12 @@ More standard Markdown content...
 
 ---
 
+# Quick Start: Try MAGI Instantly
+
+Want to see MAGI in action right away? Use the hosted [url2mda.sno.ai](https://url2mda.sno.ai) service to instantly convert any public web page into MAGI format. Just paste a URL and get a MAGI `.mda` file—no install required!
+
+For more details, guides, and examples, visit the official documentation at [docs.magi-mda.org](https://docs.magi-mda.org).
+
 ## MAGI vs. Other Formats
 
 While other approaches exist to make content LLM-friendly, MAGI offers unique advantages:
@@ -358,3 +364,9 @@ We welcome contributions! Please fork, make changes, and open a pull request. Di
 ## License
 
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+
+## Quick Start: Try MAGI Instantly
+
+Want to see MAGI in action right away? Use the hosted [url2mda.sno.ai](https://url2mda.sno.ai) service to instantly convert any public web page into MAGI format. Just paste a URL and get a MAGI `.mda` file—no install required!
+
+For more details, guides, and examples, visit the official documentation at [docs.magi-mda.org](https://docs.magi-mda.org).
