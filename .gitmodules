@@ -1,0 +1,3 @@
+[submodule "apps/url2mda"]
+	path = apps/url2mda
+	url = https://github.com/snoai/url2mda.git
