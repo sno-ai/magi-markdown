@@ -20,8 +20,8 @@ import {
 // Main Cloudflare Worker entry point
 export default {
 	async fetch(request: Request, env: Env) {
-		console.log("\n");
-		console.log("🚀🚀🚀 ---> Worker Fetch Handler Entered <--- 🚀🚀🚀");
+		// console.log("\n");
+		// console.log("🚀🚀🚀 ---> Worker Fetch Handler Entered <--- 🚀🚀🚀");
 		try {
 			// Rate Limiting (apply before routing to Durable Object)
 			const ip = request.headers.get('cf-connecting-ip');
@@ -41,14 +41,14 @@ export default {
 			}
 
 			// Route to Durable Object
-			console.log("[Worker] Getting Durable Object ID");
+			// console.log("[Worker] Getting Durable Object ID");
 			const id = env.BROWSER.idFromName('browser');
-			console.log(`[Worker] Durable Object ID: ${id}`);
-			console.log("[Worker] Getting Durable Object instance");
+			// console.log(`[Worker] Durable Object ID: ${id}`);
+			// console.log("[Worker] Getting Durable Object instance");
 			const obj = env.BROWSER.get(id);
-			console.log("[Worker] Forwarding request to Durable Object");
+			// console.log("[Worker] Forwarding request to Durable Object");
 			const resp = await obj.fetch(request.url, { headers: request.headers });
-			console.log("[Worker] Received response from Durable Object");
+			// console.log("[Worker] Received response from Durable Object");
 			return resp;
 		} catch (error) {
 			console.error('[Worker] Error in main fetch handler:', error);
@@ -92,7 +92,7 @@ export class Browser {
 
 	// Main fetch handler for the Durable Object
 	async fetch(request: Request): Promise<Response> {
-		console.log("\n🚀🚀🚀 ---> DO Fetch Handler Entered <--- 🚀🚀🚀");
+		// console.log("\n🚀🚀🚀 ---> DO Fetch Handler Entered <--- 🚀🚀🚀");
 		try {
 			this.request = request;
 
@@ -113,7 +113,7 @@ export class Browser {
 			this.token = request.headers.get('Authorization')?.replace('Bearer ', '') ?? '';
 			this.llmFilter = urlParams.get('llmFilter') === 'true';
 
-			console.log(`[DO] Request Params: url=${url}, htmlDetails=${htmlDetails}, crawlSubpages=${crawlSubpages}, contentType=${contentType}, llmFilter=${this.llmFilter}`);
+			// console.log(`[DO] Request Params: url=${url}, htmlDetails=${htmlDetails}, crawlSubpages=${crawlSubpages}, contentType=${contentType}, llmFilter=${this.llmFilter}`);
 
 			// Input Validation
 			if (contentType === 'text' && crawlSubpages) {
@@ -340,7 +340,7 @@ export class Browser {
 
 	async extractLinks(page: Page, baseUrl: string): Promise<string[]> {
 		try {
-			console.log(`[DO LinkExtract] Extracting links from ${baseUrl}`);
+			// console.log(`[DO LinkExtract] Extracting links from ${baseUrl}`);
 			return await page.evaluate((base) => {
 				// Ensure base ends with / for correct startsWith check
 				const normalizedBase = base.endsWith('/') ? base : base + '/';
