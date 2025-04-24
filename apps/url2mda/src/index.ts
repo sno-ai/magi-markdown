@@ -4,6 +4,7 @@ import type { Browser as PuppeteerBrowser, Page } from '@cloudflare/puppeteer';
 
 import { convertToMagiFormat } from './magi-util/convert-magi';
 import { applyLlmFilter } from './llm-process/llm-filter';
+import { crawlSubpages } from './handlers/crawl-subpages';
 
 import { html } from './response';
 import type { Env } from './types';
@@ -76,6 +77,10 @@ export class Browser {
 	request?: Request; // Made optional
 	llmFilter: boolean;
 	token: string;
+
+	// Correctly bind the crawlSubpages method
+	// Define crawlSubpages as a property to avoid linter errors
+	crawlSubpages = crawlSubpages;
 
 	constructor(state: DurableObjectState, env: Env) {
 		this.state = state;
@@ -242,62 +247,7 @@ export class Browser {
 		}
 	}
 
-	async crawlSubpages(baseUrl: string, enableDetailedResponse: boolean, contentType: string): Promise<Response> {
-		let page: Page | null = null;
-		try {
-			console.log(`[DO Crawl] Starting crawl for base URL: ${baseUrl}`);
-			page = await this.browser!.newPage();
-			console.log(`[DO Crawl] Navigating to base URL: ${baseUrl}`);
-			await page.goto(baseUrl, { waitUntil: 'networkidle0' });
-			console.log(`[DO Crawl] Extracting links from: ${baseUrl}`);
-			const links = await this.extractLinks(page, baseUrl);
-			console.log(`[DO Crawl] Found ${links.length} links on ${baseUrl}.`);
-			await page.close(); // Close the page used for link extraction
-			page = null; // Ensure page is marked as closed
-
-			const uniqueLinks = Array.from(new Set(links)).slice(0, 10); // Limit to 10 unique links
-			console.log(`[DO Crawl] Processing ${uniqueLinks.length} unique subpages.`);
-
-			const results = await this.getWebsiteMarkdown({
-				urls: uniqueLinks,
-				enableDetailedResponse,
-			});
-
-			// Convert all results to MAGI format
-			const magiResults = results.map(result => {
-				if (!result.error) {
-					result.md = convertToMagiFormat(result.url, result.md);
-				}
-				return result;
-			});
-
-			let status = 200;
-			if (magiResults.some((item) => item.error && item.md === 'Rate limit exceeded')) {
-				console.warn(`[DO Crawl] Rate limit hit during subpage processing for ${baseUrl}`);
-				status = 429;
-			}
-
-			console.log(`[DO Crawl] Finished crawl for ${baseUrl}. Returning ${magiResults.length} results with status ${status}.`);
-			return new Response(JSON.stringify(magiResults), {
-				status: status,
-				headers: { 'Content-Type': 'application/json' }
-			});
-		} catch (error) {
-			console.error(`[DO Crawl] Error crawling subpages for ${baseUrl}:`, error);
-			return new Response(JSON.stringify({ 
-				error: 'Failed to crawl subpages',
-				message: error instanceof Error ? error.message : String(error),
-				url: baseUrl
-			}), { 
-				status: 500,
-				headers: { 'Content-Type': 'application/json' }
-			});
-		} finally {
-			if (page) {
-				try { await page.close(); } catch (e) { console.error("[DO Crawl] Error closing page in finally block:", e); }
-			}
-		}
-	}
+	
 
 
 	async processSinglePage(url: string, enableDetailedResponse: boolean, contentType: string): Promise<Response> {
