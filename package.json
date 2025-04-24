@@ -8,15 +8,15 @@
 	"devDependencies": {
 		"@types/jsdom": "^21.1.7",
 		"@types/turndown": "^5.0.5",
-		"cspell": "^8.19.0",
+		"cspell": "^8.19.2",
+		"esbuild": "^0.25.3",
 		"markdownlint-cli": "^0.41.0",
-		"mintlify": "^4.0.491",
+		"mintlify": "^4.0.505",
 		"prettier": "^3.5.3",
 		"tsx": "^4.19.3",
 		"typescript": "^5.8.3",
 		"vitest": "^1.6.1",
-		"wrangler": "^3.114.7",
-		"esbuild": ">=0.25.0"
+		"wrangler": "^3.114.7"
 	},
 	"dependencies": {
 		"@cloudflare/puppeteer": "^1.0.2",
