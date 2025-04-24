@@ -6,7 +6,7 @@ export const html = `<!DOCTYPE html>
     <style>
         body {
             /* Updated gradient: blue-500 to black, top to bottom */
-            background: linear-gradient(to bottom, #3b82f6, #000000);
+            background: linear-gradient(to bottom,rgb(47, 107, 203), #000000);
         }
         .code-block {
             /* Darker background, adjusted text color */
@@ -33,8 +33,8 @@ export const html = `<!DOCTYPE html>
             <div class="text-center space-y-3">
                 <h1 class="text-5xl font-extrabold tracking-tight text-white drop-shadow-lg">URL2MDA</h1>
                 <p class="text-xl text-blue-100">
-                    A fast tool to convert any website into LLM-ready markdown data, 
-                    <span class="font-semibold">with enhanced extraction for sites like YouTube, Twitter, and GitHub.</span>
+                    A fast tool to convert any website into LLM and AI Agent ready markdown data (MAGI markdown), 
+                    <span class="font-semibold">with enhanced extraction for sites like Reddit, Twitter, and GitHub.</span>
                 </p>
             </div>
 
