@@ -1,0 +1,16 @@
+{
+  "name": "magi-web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev src/index.ts",
+    "deploy": "wrangler deploy --minify src/index.ts"
+  },
+  "dependencies": {
+    "hono": "^4.7.7"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250425.0",
+    "wrangler": "^4.13.1"
+  }
+}
