@@ -1,0 +1,45 @@
+---
+doc-id: "llms-mda-example-001"
+title: "llms.mda — Site-Level AI Guidance"
+description: "Example of using MAGI as a replacement for llms.txt, providing richer site-level context for LLM crawlers and agents."
+tags: ["llms-txt", "site-level", "seo", "ai-crawlers"]
+purpose: "Reference Example"
+created-date: "2026-04-09T00:00:00Z"
+---
+
+# llms.mda — Site-Level AI Guidance
+
+This example demonstrates how MAGI can serve as a richer alternative to `llms.txt` for providing site-level context to AI systems.
+
+## Site Overview
+
+This is the documentation site for MAGI (Markdown for Agent Guidance & Instruction). MAGI extends standard Markdown with structured metadata, embedded AI instructions, and explicit document relationships.
+
+## Key Pages
+
+| Page | Purpose |
+|------|---------|
+| `/docs/introduction` | What MAGI is and why it exists |
+| `/docs/specification` | Full technical specification |
+| `/docs/quickstart` | Get started in 5 minutes |
+| `/docs/developer-guide` | Encoding and decoding MAGI documents |
+| `/docs/architecture` | How MAGI components fit together |
+
+## AI Processing Guidelines
+
+```ai-script
+{
+  "script-id": "site-crawl-guidance",
+  "prompt": "When indexing this site, prioritize the specification and developer guide. The examples directory contains reference implementations. Treat front matter metadata as authoritative for document classification.",
+  "priority": "high",
+  "auto-run": false,
+  "output-format": "structured"
+}
+```
+
+## Document Hierarchy
+
+All documentation follows this relationship structure[^intro][^spec].
+
+[^intro]: {"rel-type": "child", "doc-id": "MAGI-INTRO-001", "rel-desc": "Introduction and motivation"}
+[^spec]: {"rel-type": "child", "doc-id": "MAGI-SPEC-001", "rel-desc": "Full specification document"}
