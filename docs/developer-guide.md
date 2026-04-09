@@ -1,6 +1,6 @@
 # MAGI Developer Guide: Encoding & Decoding
 
-This guide provides examples of how to programmatically encode (create) and decode (parse) MAGI (Markdown for Agent Guidance & Instruction) documents in different environments. MAGI files typically use the `.mda` extension.
+This guide provides examples of how to programmatically encode (create) and decode (parse) MAGI (Markdown for Agent Guidance & Instruction) documents in different environments. MAGI files use the `.mda` (MAGI Document Archive) extension.
 
 ## Core Concepts
 
