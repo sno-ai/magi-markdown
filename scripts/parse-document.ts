@@ -1,0 +1,189 @@
+/**
+ * Parse a MAGI (.mda) document into its three structured components:
+ * front matter, ai-script blocks, and footnote relationships.
+ *
+ * Returns a MagiDocument matching the type definitions in types/magi.d.ts.
+ *
+ * @example
+ * ```ts
+ * import { readFileSync } from 'fs';
+ * import { parseMagiDocument } from './parse-document';
+ *
+ * const content = readFileSync('doc.mda', 'utf-8');
+ * const doc = parseMagiDocument(content);
+ *
+ * console.log(doc.frontMatter['doc-id']);   // "hello-world-001"
+ * console.log(doc.scripts.length);           // 1
+ * console.log(doc.relationships.length);     // 2
+ * ```
+ */
+
+import type {
+  MagiDocument,
+  MagiFrontMatter,
+  MagiAiScript,
+  MagiRelationship,
+} from '../types/magi';
+
+// ---------------------------------------------------------------------------
+// Front matter
+// ---------------------------------------------------------------------------
+
+const FRONT_MATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/;
+
+/**
+ * Extract and lightly parse the YAML front matter block.
+ * Only the flat-field subset used by MagiFrontMatter is decoded here;
+ * any unrecognised keys are carried through as raw strings.
+ *
+ * Supported YAML constructs:
+ *   scalar:   key: value  /  key: "value"  /  key: 'value'
+ *   sequence: key:\n  - item1\n  - item2
+ */
+export function parseFrontMatter(content: string): {
+  frontMatter: MagiFrontMatter;
+  rest: string;
+} {
+  const match = FRONT_MATTER_RE.exec(content);
+  if (!match) {
+    return { frontMatter: { 'doc-id': '', title: '' }, rest: content };
+  }
+
+  const yaml = match[1];
+  const rest = content.slice(match[0].length);
+  const fm: Record<string, unknown> = {};
+
+  const lines = yaml.split(/\r?\n/);
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Sequence value: previous key followed by list items
+    const seqMatch = /^(\S[\w-]*):\s*$/.exec(line);
+    if (seqMatch) {
+      const key = seqMatch[1];
+      const items: string[] = [];
+      i++;
+      while (i < lines.length && /^\s+-\s/.test(lines[i])) {
+        items.push(stripQuotes(lines[i].replace(/^\s+-\s+/, '').split('#')[0].trim()));
+        i++;
+      }
+      fm[key] = items;
+      continue;
+    }
+
+    // Scalar value: key: value
+    const scalarMatch = /^(\S[\w-]*):\s*(.*)$/.exec(line);
+    if (scalarMatch) {
+      const key = scalarMatch[1];
+      const raw = scalarMatch[2].split('#')[0].trim();
+      fm[key] = raw === '' ? undefined : stripQuotes(raw);
+      i++;
+      continue;
+    }
+
+    i++;
+  }
+
+  return {
+    frontMatter: fm as unknown as MagiFrontMatter,
+    rest,
+  };
+}
+
+function stripQuotes(s: string): string {
+  if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+    return s.slice(1, -1);
+  }
+  return s;
+}
+
+// ---------------------------------------------------------------------------
+// AI script blocks
+// ---------------------------------------------------------------------------
+
+// Matches fenced ```ai-script ... ``` blocks (non-greedy, multiline)
+const AI_SCRIPT_RE = /```ai-script\r?\n([\s\S]*?)```/g;
+
+/**
+ * Extract all ai-script fenced code blocks from document content.
+ * Returns the parsed scripts and the body with those blocks removed.
+ */
+export function parseAiScripts(content: string): {
+  scripts: MagiAiScript[];
+  bodyWithoutScripts: string;
+} {
+  const scripts: MagiAiScript[] = [];
+  const bodyWithoutScripts = content.replace(AI_SCRIPT_RE, (_match, jsonStr: string) => {
+    try {
+      const data = JSON.parse(jsonStr.trim()) as Record<string, unknown>;
+      if (typeof data['script-id'] === 'string' && typeof data['prompt'] === 'string') {
+        scripts.push(data as unknown as MagiAiScript);
+      }
+    } catch {
+      // malformed JSON — skip block but still remove it from body
+    }
+    return '';
+  });
+
+  return { scripts, bodyWithoutScripts };
+}
+
+// ---------------------------------------------------------------------------
+// Relationships
+// ---------------------------------------------------------------------------
+
+// Handles both bare and backtick-wrapped JSON per MAGI spec
+const FOOTNOTE_RE = /^\[\^(\w+)\]:\s*`?({.+?})`?$/gm;
+
+function parseRelationshipsFromContent(content: string): MagiRelationship[] {
+  const relationships: MagiRelationship[] = [];
+  let match: RegExpExecArray | null;
+  FOOTNOTE_RE.lastIndex = 0;
+
+  while ((match = FOOTNOTE_RE.exec(content)) !== null) {
+    try {
+      const data = JSON.parse(match[2]) as Record<string, unknown>;
+      const relType = data['rel-type'] as MagiRelationship['rel-type'] | undefined;
+      const docId = data['doc-id'] as string | undefined;
+
+      if (!relType || !docId) continue;
+
+      const rel: MagiRelationship = { 'rel-type': relType, 'doc-id': docId };
+      if (typeof data['rel-desc'] === 'string') rel['rel-desc'] = data['rel-desc'];
+      relationships.push(rel);
+    } catch {
+      // skip invalid footnote JSON
+    }
+  }
+
+  return relationships;
+}
+
+// ---------------------------------------------------------------------------
+// Full document parser
+// ---------------------------------------------------------------------------
+
+/**
+ * Parse a raw MAGI document string into its structured components.
+ *
+ * Processing order:
+ *   1. Strip front matter → MagiFrontMatter
+ *   2. Strip ai-script blocks → MagiAiScript[]
+ *   3. Parse footnote relationships from remaining body → MagiRelationship[]
+ *   4. Trim blank lines from body
+ */
+export function parseMagiDocument(content: string): MagiDocument {
+  const { frontMatter, rest } = parseFrontMatter(content);
+  const { scripts, bodyWithoutScripts } = parseAiScripts(rest);
+  const relationships = parseRelationshipsFromContent(bodyWithoutScripts);
+
+  // Remove footnote definition lines from the visible body
+  const body = bodyWithoutScripts
+    .replace(/^\[\^\w+\]:\s*`?{.+?}`?\s*$/gm, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+  return { frontMatter, body, scripts, relationships };
+}
