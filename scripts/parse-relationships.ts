@@ -1,8 +1,12 @@
 /**
  * Parse MAGI footnote relationships from markdown content.
  *
- * MAGI footnotes follow the pattern:
+ * MAGI footnotes follow the pattern (both forms are valid per spec):
  *   [^refN]: {"rel-type": "...", "doc-id": "...", "rel-desc": "..."}
+ *   [^refN]: `{"rel-type": "...", "doc-id": "...", "rel-desc": "..."}`
+ *
+ * Per the MAGI spec, `source-url` may be used instead of `doc-id` for
+ * linking to external resources.
  *
  * This utility extracts all typed relationships from a MAGI document.
  */
@@ -10,11 +14,21 @@
 export interface MagiRelationship {
   refKey: string;
   relType: string;
-  docId: string;
+  /** Present when the target is another MAGI document. */
+  docId?: string;
+  /** Present when the target is an external URL (alternative to docId). */
+  sourceUrl?: string;
   relDesc?: string;
+  relStrength?: number;
+  biDirectional?: boolean;
 }
 
-const FOOTNOTE_REGEX = /^\[\^(\w+)\]:\s*({.+})$/gm;
+/**
+ * Matches both bare and backtick-wrapped JSON footnote definitions:
+ *   [^ref]: {...}
+ *   [^ref]: `{...}`
+ */
+const FOOTNOTE_REGEX = /^\[\^(\w+)\]:\s*`?({.+?})`?$/gm;
 
 /**
  * Extract all MAGI relationships from document content.
@@ -33,7 +47,7 @@ export function parseRelationships(content: string): MagiRelationship[] {
   const relationships: MagiRelationship[] = [];
   let match: RegExpExecArray | null;
 
-  // Reset regex state
+  // Reset regex state before each use
   FOOTNOTE_REGEX.lastIndex = 0;
 
   while ((match = FOOTNOTE_REGEX.exec(content)) !== null) {
@@ -42,14 +56,21 @@ export function parseRelationships(content: string): MagiRelationship[] {
 
     try {
       const data = JSON.parse(jsonStr);
-      if (data['rel-type'] && data['doc-id']) {
-        relationships.push({
-          refKey,
-          relType: data['rel-type'],
-          docId: data['doc-id'],
-          relDesc: data['rel-desc'],
-        });
-      }
+      const relType: string = data['rel-type'];
+      const docId: string | undefined = data['doc-id'];
+      const sourceUrl: string | undefined = data['source-url'];
+
+      // rel-type is always required; at least one of doc-id or source-url must be present
+      if (!relType || (!docId && !sourceUrl)) continue;
+
+      const rel: MagiRelationship = { refKey, relType };
+      if (docId) rel.docId = docId;
+      if (sourceUrl) rel.sourceUrl = sourceUrl;
+      if (data['rel-desc']) rel.relDesc = data['rel-desc'];
+      if (typeof data['rel-strength'] === 'number') rel.relStrength = data['rel-strength'];
+      if (typeof data['bi-directional'] === 'boolean') rel.biDirectional = data['bi-directional'];
+
+      relationships.push(rel);
     } catch {
       // Not a valid MAGI relationship footnote — skip
     }
@@ -72,7 +93,10 @@ export function buildRelationshipGraph(
   for (const [docId, rels] of docs) {
     if (!graph.has(docId)) graph.set(docId, []);
     for (const rel of rels) {
-      graph.get(docId)!.push({ targetId: rel.docId, relType: rel.relType });
+      const targetId = rel.docId ?? rel.sourceUrl;
+      if (targetId) {
+        graph.get(docId)!.push({ targetId, relType: rel.relType });
+      }
     }
   }
 
