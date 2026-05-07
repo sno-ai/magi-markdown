@@ -3,7 +3,7 @@
   <rect width="800" height="500" fill="#f8f9fa" rx="10" ry="10" />
   
   <!-- Title -->
-  <text x="400" y="50" font-family="Arial, sans-serif" font-size="24" fill="#333" text-anchor="middle" font-weight="bold">MAGI: Three Major Components</text>
+  <text x="400" y="50" font-family="Arial, sans-serif" font-size="24" fill="#333" text-anchor="middle" font-weight="bold">MDA: Three Major Components</text>
   
   <!-- YAML Front Matter -->
   <rect x="100" y="100" width="200" height="250" fill="#e3f2fd" stroke="#2196f3" stroke-width="2" rx="10" ry="10" />
@@ -14,7 +14,7 @@
   <text x="130" y="190" font-family="monospace" font-size="12" fill="#333">doc-id: "38f5a922..."</text>
   <text x="130" y="210" font-family="monospace" font-size="12" fill="#333">title: "Document"</text>
   <text x="130" y="230" font-family="monospace" font-size="12" fill="#333">description: "..."</text>
-  <text x="130" y="250" font-family="monospace" font-size="12" fill="#333">tags: ["magi", "doc"]</text>
+  <text x="130" y="250" font-family="monospace" font-size="12" fill="#333">tags: ["mda", "doc"]</text>
   <text x="130" y="270" font-family="monospace" font-size="12" fill="#333">created-date: "..."</text>
   <text x="130" y="290" font-family="monospace" font-size="12" fill="#333">updated-date: "..."</text>
   <text x="130" y="310" font-family="monospace" font-size="12" fill="#333">---</text>
