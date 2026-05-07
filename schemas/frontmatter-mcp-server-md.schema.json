@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://mda.sno.dev/spec/v1.0/schemas/frontmatter-skill-md.schema.json",
-  "title": "SKILL.md output frontmatter (strict)",
-  "description": "Strict schema for the YAML frontmatter of a compiled SKILL.md file. Conforms to agentskills.io v1. MDA-extended fields MUST appear under metadata.mda.*; per-vendor fields MUST appear under metadata.<vendor>.*. unevaluatedProperties:false enforces the no-stray-fields rule.",
+  "$id": "https://mda.sno.dev/spec/v1.0/schemas/frontmatter-mcp-server-md.schema.json",
+  "title": "MCP-SERVER.md output frontmatter (strict)",
+  "description": "Strict schema for the YAML frontmatter of a compiled MCP-SERVER.md file. Two-file artifact: requires a sibling mcp-server.json. MDA-extended fields MUST appear under metadata.mda.*; per-vendor fields under metadata.<vendor>.*. allowed-tools is NOT permitted at the top level.",
   "type": "object",
   "required": ["name", "description"],
   "properties": {
@@ -10,7 +10,6 @@
     "description": { "$ref": "_defs/description.schema.json" },
     "license": { "type": "string" },
     "compatibility": { "type": "string", "maxLength": 500 },
-    "allowed-tools": { "type": "string" },
     "metadata": { "$ref": "_defs/metadata-namespaces.schema.json" },
     "integrity": { "$ref": "_defs/integrity.schema.json" },
     "signatures": {
