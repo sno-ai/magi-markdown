@@ -52,12 +52,21 @@ importers:
       '@types/turndown':
         specifier: ^5.0.6
         version: 5.0.6
+      ajv:
+        specifier: ^8.18.0
+        version: 8.18.0
+      ajv-formats:
+        specifier: ^3.0.1
+        version: 3.0.1(ajv@8.18.0)
       cspell:
         specifier: ^9.7.0
         version: 9.7.0
       esbuild:
         specifier: '>=0.25.0'
         version: 0.27.4
+      js-yaml:
+        specifier: ^4.1.1
+        version: 4.1.1
       markdownlint-cli:
         specifier: ^0.48.0
         version: 0.48.0

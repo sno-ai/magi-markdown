@@ -84,6 +84,23 @@ The following fields are defined by MDA and have no equivalent in the open stand
 
 Schema: `_defs/mda-extended.schema.json`.
 
+### §02-3.1 ISO 8601 timestamp portability (normative)
+
+All `*-date` fields in MDA frontmatter MUST be written as **quoted YAML strings**, not as bare YAML scalars. Bare timestamps such as `created-date: 2026-05-07T00:00:00Z` are auto-coerced to native date types by YAML 1.1 / "core schema" parsers (notably `js-yaml` with default options) and to opaque parser-specific types by others. The schema requires a string type; quoting is the only portable form.
+
+✅ Conformant:
+```yaml
+created-date: "2026-05-07T00:00:00Z"
+updated-date: '2026-05-07T00:00:00Z'
+```
+
+❌ Non-conformant:
+```yaml
+created-date: 2026-05-07T00:00:00Z
+```
+
+A conforming validator MUST reject a fixture whose date field deserializes as a non-string. A conforming compiler MUST emit quoted forms when serializing `metadata.mda.*-date` to compiled outputs.
+
 ## §02-4 Source vs output rules
 
 | Rule | Source (`.mda`) | Output (`.md`) |

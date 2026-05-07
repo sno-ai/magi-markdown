@@ -31,4 +31,4 @@ Canonical URL: https://mda.sno.dev/spec/v1.0/
 
 The specification follows independent semver from the tooling and schemas. See §0.5 in [`spec/v1.0/00-overview.md`](spec/v1.0/00-overview.md).
 
-This document set is licensed under [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/). Schemas and tooling under [MIT](LICENSE).
+This document set is licensed under [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/). Schemas and tooling under [Apache-2.0](LICENSE).
