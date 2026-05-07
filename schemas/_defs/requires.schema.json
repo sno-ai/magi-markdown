@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mda.sno.dev/spec/v1.0/schemas/_defs/requires.schema.json",
+  "title": "MDA requires (capabilities)",
+  "description": "Open key-value capability declarations. Standard keys are documented in spec §10 and listed in REGISTRY.md. Unknown keys are permitted and SHOULD be ignored by consumers that do not recognize them.",
+  "type": "object",
+  "propertyNames": {
+    "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+    "minLength": 1,
+    "maxLength": 64
+  },
+  "additionalProperties": true
+}

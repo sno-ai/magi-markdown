@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mda.sno.dev/spec/v1.0/schemas/_defs/version-range.schema.json",
+  "title": "MDA version-range",
+  "description": "Restricted SemVer range admitted by MDA v1.0. Either an exact SemVer 2.0.0 string or a caret range. See spec §03-3.2.",
+  "type": "string",
+  "pattern": "^\\^?\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?$"
+}

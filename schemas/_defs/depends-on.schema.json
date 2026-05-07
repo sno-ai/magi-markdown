@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mda.sno.dev/spec/v1.0/schemas/_defs/depends-on.schema.json",
+  "title": "MDA depends-on entry",
+  "description": "One entry in metadata.mda.depends-on[]. Declares a runtime dependency on another MDA artifact. See spec §03-3.",
+  "type": "object",
+  "required": ["name", "version-range"],
+  "properties": {
+    "name": { "$ref": "name.schema.json" },
+    "version-range": { "$ref": "version-range.schema.json" },
+    "digest": {
+      "type": "string",
+      "description": "Optional content digest pin in <algorithm>:<lowercase-hex> form. Hex length MUST match the algorithm. Resolved artifact's integrity.digest MUST match byte-for-byte.",
+      "pattern": "^(sha256:[0-9a-f]{64}|sha384:[0-9a-f]{96}|sha512:[0-9a-f]{128})$"
+    }
+  },
+  "additionalProperties": false
+}
