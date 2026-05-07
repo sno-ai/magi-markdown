@@ -1,0 +1,22 @@
+---
+name: sigstore-signed-example
+description: Source declaring an integrity anchor and a single Sigstore-OIDC signature. Signature bytes here are illustrative; cryptographic verification is exercised in the reference implementation.
+integrity:
+  algorithm: sha256
+  digest: "sha256:a4f9c0d2e8b3a16e9c01b8f3d2a5c7b14e9f8a3d6c2b1e7f0a8d4c3b9e2f1a05"
+signatures:
+  - signer: "sigstore-oidc:https://accounts.google.com"
+    key-id: "fulcio:9c4e7b2f1a05c3b9e2d6c2b1e7f0a8d4c3b9e2f1a05c3b9e2d6c2b1e7f0a8d4c"
+    payload-digest: "sha256:a4f9c0d2e8b3a16e9c01b8f3d2a5c7b14e9f8a3d6c2b1e7f0a8d4c3b9e2f1a05"
+    algorithm: ecdsa-p256
+    signature: "MEUCIQDkXILLUSTRATIVESIGNATUREBYTESFORFIXTUREPURPOSESONLY=="
+    rekor-log-id: "c0d23b6c4f200000000000000000000000000000000000000000000000000000"
+    rekor-log-index: 87654321
+metadata:
+  mda:
+    version: "1.0.0"
+---
+
+# Sigstore-signed
+
+This fixture asserts that the source schema accepts a top-level `signatures[]` array using the Sigstore OIDC default and that `payload-digest` matches `integrity.digest`.

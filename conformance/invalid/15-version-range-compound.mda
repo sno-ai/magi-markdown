@@ -1,0 +1,13 @@
+---
+name: bad-version-range
+description: Source declaring a depends-on entry with a compound version-range. v1.0 admits only exact and caret ranges; the schema MUST reject.
+metadata:
+  mda:
+    depends-on:
+      - name: pdf-tools
+        version-range: ">=1.2.0 <2.0.0"
+---
+
+# Bad
+
+This fixture uses a compound version-range (`>=1.2.0 <2.0.0`) which is not in the v1.0 admitted subset.

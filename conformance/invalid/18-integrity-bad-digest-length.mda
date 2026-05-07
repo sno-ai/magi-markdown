@@ -1,0 +1,11 @@
+---
+name: bad-integrity-length
+description: Source declaring sha256 algorithm with a digest of incorrect length. The conditional length constraint MUST reject.
+integrity:
+  algorithm: sha256
+  digest: "sha256:a4f9c0"
+---
+
+# Bad
+
+This fixture has a sha256 algorithm but only 6 hex characters in the digest; sha256 requires exactly 64.

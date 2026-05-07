@@ -3,6 +3,10 @@
 // 1. Parses every schema in schemas/ — fails on malformed JSON Schema.
 // 2. For every entry in conformance/manifest.yaml, validates the fixture
 //    against the listed schemas and asserts the recorded verdict.
+// 3. Applies the cross-field semantic check that JSON Schema cannot express:
+//    when both `integrity` and `signatures[]` are present in the frontmatter,
+//    every signature's `payload-digest` MUST equal `integrity.digest`
+//    byte-for-byte (§09-2).
 //
 // Usage: node scripts/validate-conformance.mjs
 
@@ -20,7 +24,6 @@ const MANIFEST = join(REPO, "conformance", "manifest.yaml");
 
 const RED = "\x1b[31m";
 const GREEN = "\x1b[32m";
-const YELLOW = "\x1b[33m";
 const DIM = "\x1b[2m";
 const BOLD = "\x1b[1m";
 const RESET = "\x1b[0m";
@@ -75,20 +78,6 @@ function extractFrontmatter(text) {
   return yaml.load(block);
 }
 
-function extractAiScriptBlocks(text) {
-  const re = /```ai-script\s*\n([\s\S]*?)\n```/g;
-  const out = [];
-  let m;
-  while ((m = re.exec(text)) !== null) {
-    try {
-      out.push(JSON.parse(m[1]));
-    } catch (e) {
-      out.push({ __parseError: e.message });
-    }
-  }
-  return out;
-}
-
 function extractFootnoteRelationships(text) {
   // matches [^id]: { ... }
   const re = /^\[\^[^\]]+\]:\s*(\{[^\n]*\})\s*$/gm;
@@ -104,14 +93,22 @@ function extractFootnoteRelationships(text) {
   return out;
 }
 
-function bodyHasAiScriptFence(text) {
-  // strip frontmatter first
-  let body = text;
-  if (text.startsWith("---")) {
-    const end = text.indexOf("\n---", 3);
-    if (end !== -1) body = text.slice(end + 4);
-  }
-  return /```ai-script\b/.test(body);
+// Cross-field semantic check (§09-2): payload-digest MUST equal integrity.digest.
+// Returns an array of error strings (empty if OK or rule not applicable).
+function checkSignatureDigestEquality(fm) {
+  if (!fm || typeof fm !== "object") return [];
+  const sigs = fm["signatures"];
+  const integ = fm["integrity"];
+  if (!Array.isArray(sigs) || sigs.length === 0) return [];
+  if (!integ || typeof integ.digest !== "string") return [];
+  const expected = integ.digest;
+  const errs = [];
+  sigs.forEach((s, i) => {
+    if (s && typeof s === "object" && s["payload-digest"] !== expected) {
+      errs.push(`signatures[${i}].payload-digest != integrity.digest (rule §09-2)`);
+    }
+  });
+  return errs;
 }
 
 // ─── 3. Manifest-driven conformance run ───────────────────────────────────────
@@ -121,12 +118,11 @@ const manifest = yaml.load(readFileSync(MANIFEST, "utf8"));
 function getValidator(schemaPath) {
   const abs = resolve(REPO, schemaPath);
   const json = JSON.parse(readFileSync(abs, "utf8"));
-  // Use $id if registered, else compile fresh.
   const compiled = ajv.getSchema(json.$id) ?? ajv.compile(json);
   return compiled;
 }
 
-function runValidator(fixturePath, schemaPaths, expectedVerdict, fixtureId) {
+function runValidator(fixturePath, schemaPaths, expectedVerdict, fixtureId, semanticChecks) {
   const text = readFileSync(fixturePath, "utf8");
   const fm = extractFrontmatter(text);
 
@@ -134,15 +130,6 @@ function runValidator(fixturePath, schemaPaths, expectedVerdict, fixtureId) {
   let firstErrors = [];
 
   for (const sp of schemaPaths) {
-    if (sp === "body-fence-check") {
-      const found = bodyHasAiScriptFence(text);
-      if (found) {
-        allOk = false;
-        firstErrors.push("body contains ai-script fence (rule §07-4)");
-      }
-      continue;
-    }
-
     let validator;
     try {
       validator = getValidator(sp);
@@ -152,14 +139,20 @@ function runValidator(fixturePath, schemaPaths, expectedVerdict, fixtureId) {
     }
 
     const subjectsToCheck = [];
-    if (sp.endsWith("frontmatter-source.schema.json") || sp.endsWith("frontmatter-skill-md.schema.json")) {
+    if (
+      sp.endsWith("frontmatter-source.schema.json") ||
+      sp.endsWith("frontmatter-skill-md.schema.json") ||
+      sp.endsWith("frontmatter-agents-md.schema.json") ||
+      sp.endsWith("frontmatter-mcp-server-md.schema.json")
+    ) {
       subjectsToCheck.push({ label: "frontmatter", value: fm ?? {} });
-    } else if (sp.endsWith("ai-script.schema.json")) {
-      const blocks = extractAiScriptBlocks(text);
-      blocks.forEach((b, i) => subjectsToCheck.push({ label: `ai-script[${i}]`, value: b }));
     } else if (sp.endsWith("relationship-footnote.schema.json")) {
       const rels = extractFootnoteRelationships(text);
       rels.forEach((r, i) => subjectsToCheck.push({ label: `footnote[${i}]`, value: r }));
+    } else if (sp.includes("/_defs/")) {
+      // Sub-schema references in the manifest are documentation links,
+      // not standalone document validators. Skip.
+      continue;
     } else {
       subjectsToCheck.push({ label: "raw", value: fm ?? {} });
     }
@@ -172,6 +165,19 @@ function runValidator(fixturePath, schemaPaths, expectedVerdict, fixtureId) {
           `${subj.label} ${e.instancePath || "(root)"} ${e.message}`
         );
         firstErrors.push(...errs);
+      }
+    }
+  }
+
+  // Semantic checks beyond JSON Schema.
+  if (Array.isArray(semanticChecks)) {
+    for (const checkName of semanticChecks) {
+      if (checkName === "signature-digest-equality") {
+        const errs = checkSignatureDigestEquality(fm);
+        if (errs.length) {
+          allOk = false;
+          firstErrors.push(...errs);
+        }
       }
     }
   }
@@ -201,7 +207,6 @@ function runCompileFixture(entry) {
     return;
   }
 
-  // Validate the input source frontmatter against the source schema.
   const inputText = readFileSync(inputPath, "utf8");
   const fm = extractFrontmatter(inputText);
   const sourceValidator = getValidator("schemas/frontmatter-source.schema.json");
@@ -211,7 +216,6 @@ function runCompileFixture(entry) {
     return;
   }
 
-  // Validate that the expected SKILL.md output passes the strict target schema.
   const expectedSkill = join(expectedDir, "SKILL.md");
   if (!existsSync(expectedSkill)) {
     fail(`[${id}] expected/SKILL.md missing`);
@@ -226,28 +230,7 @@ function runCompileFixture(entry) {
     return;
   }
 
-  // Body of expected SKILL.md MUST NOT contain ai-script fence.
-  if (bodyHasAiScriptFence(expText)) {
-    fail(`[${id}] expected/SKILL.md body contains forbidden ai-script fence`);
-    return;
-  }
-
-  // Externalized scripts MUST validate against ai-script.schema.json.
-  const scriptsDir = join(expectedDir, "scripts");
-  if (existsSync(scriptsDir)) {
-    const aiValidator = getValidator("schemas/ai-script.schema.json");
-    for (const f of readdirSync(scriptsDir)) {
-      if (!f.endsWith(".ai-script.json")) continue;
-      const obj = JSON.parse(readFileSync(join(scriptsDir, f), "utf8"));
-      if (!aiValidator(obj)) {
-        fail(`[${id}] expected/scripts/${f} fails ai-script schema`,
-          (aiValidator.errors || []).slice(0, 3).map(e => `${e.instancePath} ${e.message}`).join(" | "));
-        return;
-      }
-    }
-  }
-
-  pass(`[${id}] compile fixture: input valid + expected SKILL.md conforms + scripts valid`);
+  pass(`[${id}] compile fixture: input valid + expected SKILL.md conforms`);
 }
 
 for (const entry of manifest.fixtures) {
@@ -259,7 +242,7 @@ for (const entry of manifest.fixtures) {
       fail(`[${entry.id}] fixture missing: ${entry.path}`);
       continue;
     }
-    runValidator(fixturePath, entry.against, entry.verdict, entry.id);
+    runValidator(fixturePath, entry.against, entry.verdict, entry.id, entry["semantic-checks"]);
   }
 }
 
@@ -285,11 +268,6 @@ for (const f of [
   if (skillValidator(fm ?? {})) pass(`${f} valid against SKILL.md target schema`);
   else fail(`${f} INVALID against SKILL.md target schema`,
     (skillValidator.errors || []).slice(0, 3).map(e => `${e.instancePath} ${e.message}`).join(" | "));
-  if (bodyHasAiScriptFence(text)) {
-    fail(`${f} body contains forbidden ai-script fence`);
-  } else {
-    pass(`${f} body free of ai-script fence`);
-  }
 }
 
 // ─── Summary ──────────────────────────────────────────────────────────────────

@@ -1,0 +1,14 @@
+---
+name: integrity-example
+description: Source declaring an integrity field with a valid sha256 digest shape. The digest value here is illustrative; canonical-byte computation is exercised in compile fixtures.
+integrity:
+  algorithm: sha256
+  digest: "sha256:a4f9c0d2e8b3a16e9c01b8f3d2a5c7b14e9f8a3d6c2b1e7f0a8d4c3b9e2f1a05"
+metadata:
+  mda:
+    version: "1.0.0"
+---
+
+# Integrity
+
+This fixture asserts that the source schema accepts a top-level `integrity` field with the proper shape.
