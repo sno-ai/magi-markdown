@@ -8,7 +8,7 @@ const threePartsSvg = `<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/
   <rect width="800" height="500" fill="#f8f9fa" rx="10" ry="10" />
   
   <!-- Title -->
-  <text x="400" y="50" font-family="Arial, sans-serif" font-size="24" fill="#333" text-anchor="middle" font-weight="bold">MAGI: Three Major Components</text>
+  <text x="400" y="50" font-family="Arial, sans-serif" font-size="24" fill="#333" text-anchor="middle" font-weight="bold">MDA: Three Major Components</text>
   
   <!-- YAML Front Matter -->
   <rect x="100" y="100" width="200" height="250" fill="#e3f2fd" stroke="#2196f3" stroke-width="2" rx="10" ry="10" />
@@ -19,7 +19,7 @@ const threePartsSvg = `<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/
   <text x="130" y="190" font-family="monospace" font-size="12" fill="#333">doc-id: "38f5a922..."</text>
   <text x="130" y="210" font-family="monospace" font-size="12" fill="#333">title: "Document"</text>
   <text x="130" y="230" font-family="monospace" font-size="12" fill="#333">description: "..."</text>
-  <text x="130" y="250" font-family="monospace" font-size="12" fill="#333">tags: ["magi", "doc"]</text>
+  <text x="130" y="250" font-family="monospace" font-size="12" fill="#333">tags: ["mda", "doc"]</text>
   <text x="130" y="270" font-family="monospace" font-size="12" fill="#333">created-date: "..."</text>
   <text x="130" y="290" font-family="monospace" font-size="12" fill="#333">updated-date: "..."</text>
   <text x="130" y="310" font-family="monospace" font-size="12" fill="#333">---</text>
@@ -68,7 +68,7 @@ const docGraphSvg = `<svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/sv
   <rect width="800" height="500" fill="#f8f9fa" rx="10" ry="10" />
   
   <!-- Title -->
-  <text x="400" y="40" font-family="Arial, sans-serif" font-size="24" fill="#333" text-anchor="middle" font-weight="bold">MAGI: Knowledge Graph Construction</text>
+  <text x="400" y="40" font-family="Arial, sans-serif" font-size="24" fill="#333" text-anchor="middle" font-weight="bold">MDA: Knowledge Graph Construction</text>
   
   <!-- Document Nodes -->
   <!-- Central Document -->
@@ -176,7 +176,7 @@ app.get('*', (c) => {
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>MAGI: Markdown for Agent Guidance & Instruction</title>
+      <title>MDA: Markdown for Agent</title>
       <style>
         :root {
           --primary-color: #005f73; /* Deep teal */
@@ -366,8 +366,8 @@ app.get('*', (c) => {
     </head>
     <body>
       <header>
-        <h1>📝 MAGI</h1>
-        <p>Markdown for Agent Guidance & Instruction</p>
+        <h1>📝 MDA</h1>
+        <p>Markdown for Agent</p>
       </header>
 
       <div class="container">
@@ -381,16 +381,16 @@ app.get('*', (c) => {
             losing valuable metadata and structural information.
           </p>
           <p>
-            <strong>MAGI (Markdown for Agent Guidance & Instruction)</strong> addresses this challenge by extending standard Markdown
+            <strong>MDA (Markdown for Agent)</strong> addresses this challenge by extending standard Markdown
             with optional, structured components designed specifically for AI consumption. It enhances content for
             Retrieval-Augmented Generation (RAG), seamless integration with LLM agents, and robust knowledge graph construction.
-            MAGI elegantly combines Markdown's readability with enhanced data for AI systems.
+            MDA elegantly combines Markdown's readability with enhanced data for AI systems.
           </p>
         </section>
 
         <section class="section">
           <h2>🧩 Core Components</h2>
-           <p>MAGI enhances standard Markdown by incorporating three key, <strong>optional</strong> components:</p>
+           <p>MDA enhances standard Markdown by incorporating three key, <strong>optional</strong> components:</p>
            <ul>
             <li><strong>Structured Metadata (YAML Front Matter):</strong> Provides rich context (e.g., <code>doc-id</code>, <code>title</code>, <code>tags</code>, <code>purpose</code>).</li>
             <li><strong>Embedded AI Instructions (<code>ai-script</code> Code Blocks):</strong> Embeds structured JSON instructions for LLM processing directly within the content.</li>
@@ -399,7 +399,7 @@ app.get('*', (c) => {
           <div class="svg-container">
             ${threePartsSvg}
           </div>
-           <p><strong>Key Principle:</strong> All MAGI components are optional. Use only what you need, offering flexibility.</p>
+           <p><strong>Key Principle:</strong> All MDA components are optional. Use only what you need, offering flexibility.</p>
         </section>
 
         <section class="section">
@@ -418,27 +418,27 @@ app.get('*', (c) => {
 
         <section class="section">
           <h2>🚀 Use Cases</h2>
-           <p>MAGI is designed to solve real-world problems at the intersection of human and AI content processing:</p>
+           <p>MDA is designed to solve real-world problems at the intersection of human and AI content processing:</p>
           <ul>
-            <li><strong>Enhanced RAG Systems:</strong> Transform knowledge bases into MAGI format to improve retrieval quality and context understanding.</li>
+            <li><strong>Enhanced RAG Systems:</strong> Transform knowledge bases into MDA format to improve retrieval quality and context understanding.</li>
             <li><strong>Multi-Agent Content Orchestration:</strong> Coordinate specialized AI agents working on the same content using embedded <code>ai-script</code> instructions.</li>
             <li><strong>Dynamic Documentation:</strong> Create living documentation where embedded scripts can trigger updates, while maintaining version relationships.</li>
-            <li><strong>Automated Knowledge Graphs:</strong> Generate graphs from MAGI documents where relationships are explicitly defined.</li>
+            <li><strong>Automated Knowledge Graphs:</strong> Generate graphs from MDA documents where relationships are explicitly defined.</li>
             <li><strong>Cross-Language Content Transformation:</strong> Maintain consistent document relationships across translations using UUID-based references.</li>
           </ul>
         </section>
 
         <!-- New Section for url2mda -->
         <section class="try-it-section">
-          <h2>🪄 Try MAGI Instantly!</h2>
-          <p>Want to see MAGI in action right away? Convert any public web page into MAGI format using the hosted <strong>url2mda</strong> service. Just paste a URL and get a MAGI <code>.mda</code> file—no installation required!</p>
-          <a href="https://url2mda.sno.ai" target="_blank" rel="noopener noreferrer" class="try-it-link">Convert URL to MAGI Now</a>
+          <h2>🪄 Try MDA Instantly!</h2>
+          <p>Want to see MDA in action right away? Convert any public web page into MDA format using the hosted <strong>url2mda</strong> service. Just paste a URL and get a MDA <code>.mda</code> file—no installation required!</p>
+          <a href="https://url2mda.sno.ai" target="_blank" rel="noopener noreferrer" class="try-it-link">Convert URL to MDA Now</a>
         </section>
 
         <section class="links-section">
           <h2>🔗 Learn More & Get Started</h2>
           <ul>
-            <li><a href="https://github.com/snoai/magi-markdown" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
+            <li><a href="https://github.com/sno-ai/mda" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
             <li><a href="https://docs.magi-mda.org" target="_blank" rel="noopener noreferrer">Official Documentation</a></li>
           </ul>
         </section>
@@ -446,7 +446,7 @@ app.get('*', (c) => {
       </div>
 
       <footer>
-        <p>&copy; ${new Date().getFullYear()} MAGI Project. Licensed under MIT.</p>
+        <p>&copy; ${new Date().getFullYear()} MDA Project. Licensed under MIT.</p>
       </footer>
 
     </body>
