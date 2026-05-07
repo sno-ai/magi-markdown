@@ -156,7 +156,7 @@ For DSSE PAE envelopes ([`spec/v1.0/09-signatures.md §09-3`](spec/v1.0/09-signa
 | ------------ | ----- | ----------- |
 | `application/vnd.mda.integrity+json` | MDA project | Standard MDA integrity envelope (§09-3.1). The signed bytes are the JCS-canonicalized `integrity` object. |
 
-Vendor-defined payload types SHOULD follow the form `application/vnd.<vendor>.<doc-type>+jcs+json` per [RFC 6838 §3.2](https://www.rfc-editor.org/rfc/rfc6838#section-3.2) (vendor tree). To register a vendor payload type:
+Vendor-defined payload types SHOULD follow the form `application/vnd.<vendor>.<doc-type>+json` per [RFC 6838 §3.2](https://www.rfc-editor.org/rfc/rfc6838#section-3.2) (vendor tree). The structured suffix is `+json`; `+jcs` is not IANA-registered and MUST NOT be used. The JCS-canonicalization contract for each payload-type is defined in the vendor's published documentation (see the per-namespace requirements below). To register a vendor payload type:
 
 1. Open a PR adding a row to the table above.
 2. The owning vendor MUST already have a registered namespace under "Registered namespaces" (or register it in the same PR).
