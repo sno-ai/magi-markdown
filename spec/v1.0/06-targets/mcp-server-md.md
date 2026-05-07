@@ -38,6 +38,8 @@ What MDA *does* require: the three fields it must read to enforce the cross-file
 
 Any additional fields the MCP project defines MAY appear and MUST be preserved verbatim by MDA tooling.
 
+The sidecar SHOULD declare its `protocolVersion` per the upstream MCP specification so that consuming clients can decide compatibility. MDA does NOT validate `protocolVersion` and does NOT pin a specific MCP protocol revision: the sidecar is opaque to MDA beyond the three fields above. Compatibility between a sidecar and an MCP client is governed entirely by upstream MCP, not by this specification.
+
 ### §06-2.3 Cross-file consistency
 
 The compiler MUST verify that:

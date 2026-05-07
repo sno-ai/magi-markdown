@@ -84,6 +84,7 @@ A verifier presented with an artifact that does NOT declare `integrity` MUST tre
 - **Compiled mode**: the compiler emits `integrity` when the source declares an `integrity:` placeholder, when the compiler is invoked with `--integrity`, or when any `signatures[]` entry is being emitted.
 - **Human mode**: an author SHOULD compute the digest with `sha256sum` or equivalent over the canonical bytes (the reference CLI exposes `mda canonicalize` to print them) and paste the result into the field.
 - **Agent mode**: an authoring agent SHOULD use the same `mda canonicalize` step (or a JCS library directly) rather than guessing. Hashing without canonicalization will produce a digest that no verifier can reproduce.
+- **Source-mode `.mda`**: `integrity` and `signatures[]` MAY appear in a `.mda` source. When they do, the digest is computed over the `.mda` bytes per §08-3 (single-file path); it anchors the source as authorial evidence. A source-mode digest is NOT comparable to the digest of any compiled `.md` output: compilation rewrites field placement (e.g. lifts MDA-extended fields under `metadata.mda.*`) and re-canonicalizes, producing different bytes. Verifiers MUST treat source-mode and output-mode anchors as independent.
 
 ## §08-6 Examples
 

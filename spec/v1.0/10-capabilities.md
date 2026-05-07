@@ -18,7 +18,7 @@ metadata:
   mda:
     requires:
       runtime: ["python>=3.11"]
-      tools: ["Read", "Bash(pdftotext:*)"]
+      tools: ["Read", "Bash"]
       network: none
       packages: ["pdftotext", "jq"]
       model: { min-context: 100000 }
@@ -46,8 +46,9 @@ The following keys are defined in this spec. Authors are NOT required to use the
 
 ### §10-3.2 `tools`
 
-- Value: array of tool whitelist strings, using the same syntax as the open-standard `allowed-tools` field (§02-2.6).
-- Examples: `["Read", "Bash(jq:*)", "Bash(pdftotext:*)"]`.
+- Value: array of strings naming tools the artifact uses. MDA does NOT parse the entries: each string is opaque pass-through.
+- Authors SHOULD prefer bare tool names (e.g. `["Read", "Write", "Bash"]`) for cross-runtime portability.
+- Vendor-specific micro-syntaxes (e.g. Claude Code's `Bash(jq:*)` glob form) MAY appear verbatim, but they are uninterpreted by MDA and consumers MUST NOT rely on cross-vendor portability of such entries. When an author needs a vendor's whitelist syntax to be authoritative, place it under that vendor's namespace instead — e.g. `metadata.claude-code.allowed-tools` (§04).
 
 ### §10-3.3 `network`
 
@@ -103,10 +104,14 @@ metadata:
   mda:
     requires:
       runtime: ["python>=3.11"]
-      tools: ["Read", "Bash(pdftotext:*)", "Bash(jq:*)"]
+      tools: ["Read", "Bash"]
       network: none
       packages: ["pdftotext", "jq"]
+  claude-code:
+    allowed-tools: "Read Bash(pdftotext:*) Bash(jq:*)"
 ```
+
+The `tools` list above is portable across runtimes; the Claude-Code-specific `Bash(...:*)` glob form lives under its vendor namespace where the intended consumer will read it.
 
 A skill that needs internet to a specific allow-list and a vision-capable LLM:
 
