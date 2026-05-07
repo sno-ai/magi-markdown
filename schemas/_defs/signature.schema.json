@@ -41,8 +41,8 @@
     },
     "payload-type": {
       "type": "string",
-      "description": "DSSE payload-type declaring the semantic type of the canonicalized payload bytes. Default (when absent): application/vnd.mda.integrity+json. Vendor-defined types follow RFC 6838 vendor tree: application/vnd.<vendor>.<doc-type>+jcs+json. See §09-3.1 and REGISTRY.md.",
-      "pattern": "^application/vnd\\.[a-z0-9][a-z0-9.\\-]*\\+jcs\\+json$"
+      "description": "DSSE payload-type declaring the semantic type of the canonicalized payload bytes. Default (when absent): application/vnd.mda.integrity+json. Vendor-defined types follow RFC 6838 vendor tree: application/vnd.<vendor>.<doc-type>+json (the +jcs+ structured-suffix form is non-IANA and not used). The JCS canonicalization contract for each payload-type is defined in spec prose, not in the media-type identifier itself. See §09-3.1 and REGISTRY.md.",
+      "pattern": "^application/vnd\\.[a-z0-9][a-z0-9.\\-]*\\+json$"
     }
   },
   "additionalProperties": false,
