@@ -1,6 +1,6 @@
 {
-	"name": "ai-markdown",
-	"version": "0.9.0",
+	"name": "markdown-for-agent",
+	"version": "1.0.0",
 	"license": "MIT",
 	"scripts": {
 		"sync:mdx": "tsx scripts/sync-mdx.ts"
