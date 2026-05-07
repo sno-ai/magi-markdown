@@ -1,8 +1,8 @@
-# 📝 MAGI: Markdown for Agent Guidance & Instruction 📝
+# 📝 MDA: Markdown for Agent 📝
 ## Bridging Human Content and LLM Agent Processing with Context-Rich Markdown Extension Format.
 
-[![CI](https://img.shields.io/github/actions/workflow/status/snoai/magi-markdown/sync-mdx.yml?branch=main)](https://github.com/snoai/magi-markdown/actions/workflows/sync-mdx.yml)
-[![License](https://img.shields.io/github/license/snoai/magi-markdown)](https://github.com/snoai/magi-markdown/blob/main/LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/sno-ai/mda/sync-mdx.yml?branch=main)](https://github.com/sno-ai/mda/actions/workflows/sync-mdx.yml)
+[![License](https://img.shields.io/github/license/sno-ai/mda)](https://github.com/sno-ai/mda/blob/main/LICENSE)
 
 ---
 
@@ -10,27 +10,27 @@
 
 Large Language Models (LLMs) and AI agents increasingly rely on processing diverse content, but standard formats often lack the necessary structure and context for optimal performance. Converting complex web pages or documents into LLM-friendly plain text can be imprecise, losing valuable metadata and structural information.
 
-**MAGI (Markdown for Agent Guidance & Instruction)** addresses this challenge by extending standard Markdown with optional, structured components designed specifically for AI consumption. It enhances content for Retrieval-Augmented Generation (RAG), seamless integration with LLM agents, and robust knowledge graph construction. MAGI elegantly combines Markdown's readability with:
+**MDA (Markdown for Agent)** addresses this challenge by extending standard Markdown with optional, structured components designed specifically for AI consumption. It enhances content for Retrieval-Augmented Generation (RAG), seamless integration with LLM agents, and robust knowledge graph construction. MDA elegantly combines Markdown's readability with:
 
 1.  **Structured Metadata (YAML Front Matter):** Provides rich context about the document.
 2.  **Embedded AI Instructions (`ai-script` blocks):** Allows direct commands for LLM processing within the content.
 3.  **Explicit Document Relationships (Footnotes):** Defines connections between documents for deeper understanding.
 
-MAGI files (`.mda`) remain perfectly readable by humans and standard Markdown renderers, while providing enhanced data for AI systems when parsed directly.
+MDA files (`.mda`) remain perfectly readable by humans and standard Markdown renderers, while providing enhanced data for AI systems when parsed directly.
 
-## What Is MAGI? (Core Components)
+## What Is MDA? (Core Components)
 
-![MAGI: Three Major Components](/images/three-parts.svg)
+![MDA: Three Major Components](/images/three-parts.svg)
 
-MAGI enhances standard Markdown by incorporating three key, **optional** components:
+MDA enhances standard Markdown by incorporating three key, **optional** components:
 
 1.  **YAML Front Matter:** Provides structured metadata (e.g., `doc-id`, `title`, `tags`, `purpose`).
 2.  **`ai-script` Code Blocks:** Embeds structured JSON instructions for LLM processing directly within the content (e.g., summarization prompts, model preferences).
 3.  **Markdown Footnotes with JSON:** Defines typed relationships between documents using a structured JSON format within standard footnotes (e.g., `parent`, `child`, `cites`).
 
-**Key Principle:** All MAGI components are optional. You can use only Front Matter, only `ai-script`, only Footnotes, or any combination, offering flexibility based on your needs.
+**Key Principle:** All MDA components are optional. You can use only Front Matter, only `ai-script`, only Footnotes, or any combination, offering flexibility based on your needs.
 
-**Example MAGI Structure:**
+**Example MDA Structure:**
 
 ````markdown
 ---
@@ -78,17 +78,17 @@ More standard Markdown content...
 
 ---
 
-# Quick Start: Try MAGI Instantly
+# Quick Start: Try MDA Instantly
 
-Want to see MAGI in action right away? Use the hosted [url2mda.sno.ai](https://url2mda.sno.ai) service to instantly convert any public web page into MAGI format. Just paste a URL and get a MAGI `.mda` file—no install required!
+Want to see MDA in action right away? Use the hosted [url2mda.sno.ai](https://url2mda.sno.ai) service to instantly convert any public web page into MDA format. Just paste a URL and get a MDA `.mda` file—no install required!
 
 For more details, guides, and examples, visit the official documentation at [docs.magi-mda.org](https://docs.magi-mda.org).
 
-## MAGI vs. Other Formats
+## MDA vs. Other Formats
 
-While other approaches exist to make content LLM-friendly, MAGI offers unique advantages:
+While other approaches exist to make content LLM-friendly, MDA offers unique advantages:
 
-*   **Standard Markdown:** MAGI is a superset. Standard Markdown lacks structured metadata, embedded instructions, and explicit relationship definitions.
+*   **Standard Markdown:** MDA is a superset. Standard Markdown lacks structured metadata, embedded instructions, and explicit relationship definitions.
 *   **`llms.txt (Details): A proposed standard using a root /llms.txt file to make websites more LLM-friendly.
 
 Using llms.mda: Websites can enhance their LLM interactions by implementing llms.mda files that:
@@ -97,7 +97,7 @@ Provide Rich Context: Enable more accurate and nuanced retrieval through detaile
 Enable Granular Processing Control: Allow content owners to guide how their content should be processed, summarized, or analyzed by different LLM systems.
 Create Connected Knowledge: Build sophisticated knowledge graphs by explicitly defining how documents relate to each other, significantly improving complex reasoning tasks.
 
-## MAGI Specification Details
+## MDA Specification Details
 
 ### Part 1: Front Matter Schema
 
@@ -106,8 +106,8 @@ Provides structured metadata using YAML syntax, enclosed by `---` delimiters.
 | Field           | Type          | Description                                                                 | Example                     |
 | --------------- | ------------- | --------------------------------------------------------------------------- | --------------------------- |
 | `doc-id`            | `string`      | A unique identifier for this document (UUID format recommended). Crucial for relationships. | `"38f5a922-81b2-4f1a-8d8c-3a5be4ea7511"` |
-| `title`         | `string`      | The main title of the document.                                             | `"Introduction to MAGI"`      |
-| `description`   | `string`      | A brief summary or abstract of the document's content.                      | `"Explains the MAGI format."` |
+| `title`         | `string`      | The main title of the document.                                             | `"Introduction to MDA"`      |
+| `description`   | `string`      | A brief summary or abstract of the document's content.                      | `"Explains the MDA format."` |
 | `author`        | `string`      | The primary author's name.                                                   | `"Jane Doe"`                  |
 | `author-id`     | `string`      | Unique identifier for the author (CUID2 or UUID recommended).               | `"usr_abcdef12345"`         |
 | `image`         | `string`      | URL for a primary cover image associated with the document.                 | `"https://example.com/cover.jpg"` |
@@ -120,7 +120,7 @@ Provides structured metadata using YAML syntax, enclosed by `---` delimiters.
 | `globs`         | `string`      | File or URL patterns this metadata applies to (e.g., `docs/**/*.ts`).        | `"*.ts"`                    |
 | `audience`      | `string`      | Describes the intended audience (e.g., "developers", "end-users").          | `"Developers"`              |
 | `purpose`       | `string`      | The primary goal or objective of the document (e.g., "tutorial", "reference").| `"Reference"`           |
-| `entities`      | `list[string]`| Key named entities (people, places, concepts) mentioned.                    | `["MAGI", "RAG", "LLM"]`    |
+| `entities`      | `list[string]`| Key named entities (people, places, concepts) mentioned.                    | `["MDA", "RAG", "LLM"]`    |
 | `relationships` | `list[string]`| High-level summary of relationships defined in footnotes.                  | `["Extends Markdown"]`      |
 | `source-url`    | `string`      | The original URL if the content was sourced from the web.                   | `"https://example.com/doc"` |
 
@@ -203,11 +203,11 @@ Instructions can also be passed externally via API metadata for separation of co
 ### Part 3: Footnote for Document Relationships
 
 Leverage standard Markdown footnotes `[^ref-id]` with embedded JSON to define explicit, typed relationships between documents. Essential for knowledge graphs.
-![MAGI: Knowledge Graph Construction](/images/doc-graph.svg)
+![MDA: Knowledge Graph Construction](/images/doc-graph.svg)
 
 **Core Components:**
 
-*   **`doc-id` References:** Each MAGI document needs a unique `doc-id` in its Front Matter.
+*   **`doc-id` References:** Each MDA document needs a unique `doc-id` in its Front Matter.
 *   **Relationship Types:** Defined in the JSON (e.g., `parent`, `child`, `related`, `cites`, `supports`, `contradicts`).
 *   **Footnote Syntax:** `[^ref-id]`: { ... JSON payload ... }`
 
@@ -246,15 +246,15 @@ This document outlines changes[^ref1] and implications[^ref2].
 
 ## Processing Logic & Best Practices
 
-*   **MAGI-Aware Processors:** Should parse Front Matter, extract and prioritize `ai-script` blocks, and interpret footnote relationships. Only human-readable Markdown and synthesized outputs should be shown to end-users.
+*   **MDA-Aware Processors:** Should parse Front Matter, extract and prioritize `ai-script` blocks, and interpret footnote relationships. Only human-readable Markdown and synthesized outputs should be shown to end-users.
 *   **Legacy Renderers:** Will typically ignore Front Matter or render it as text, display `ai-script` as code blocks, and show footnotes normally.
-*   **Clean `.mda` Files:** Inspired by `llms.txt`, a recommended best practice is to provide clean, MAGI-formatted Markdown versions of content whenever possible (e.g., alongside HTML). Tools like `url2mda` (see below) facilitate this.
+*   **Clean `.mda` Files:** Inspired by `llms.txt`, a recommended best practice is to provide clean, MDA-formatted Markdown versions of content whenever possible (e.g., alongside HTML). Tools like `url2mda` (see below) facilitate this.
 
 ---
 
 ## url2mda: Reference Implementation
 
-This repository includes `url2mda`, a Cloudflare Worker demonstrating how to convert website URLs into MAGI format.
+This repository includes `url2mda`, a Cloudflare Worker demonstrating how to convert website URLs into MDA format.
 
 *   **Fetch & Render**: Uses Cloudflare Browser Rendering for dynamic content.
 *   **Convert to Markdown**: Employs Turndown and attempts to auto-populate Front Matter.
@@ -264,8 +264,8 @@ This repository includes `url2mda`, a Cloudflare Worker demonstrating how to con
 
 ```bash
 # Clone the repo
-git clone https://github.com/snoai/magi.git
-cd magi
+git clone https://github.com/sno-ai/mda.git
+cd mda
 
 # Install dependencies
 pnpm install
@@ -284,7 +284,7 @@ After deployment, you can use the provided HTTP API.
 
 ### HTTP API Request
 
-Convert a website to MAGI, requesting detailed HTML structure and LLM filtering:
+Convert a website to MDA, requesting detailed HTML structure and LLM filtering:
 
 ```bash
 curl -X POST https://<your-worker-domain>/convert \
@@ -296,7 +296,7 @@ curl -X POST https://<your-worker-domain>/convert \
   }'
 ```
 
-#### Sample API Response (MAGI Format):
+#### Sample API Response (MDA Format):
 
 ```markdown
 ---
@@ -326,31 +326,31 @@ This domain is established to be used for illustrative examples in documents and
 ---
 
 ## Use Cases
-MAGI is designed to solve real-world problems at the intersection of human and AI content processing. Here are several powerful use cases:
+MDA is designed to solve real-world problems at the intersection of human and AI content processing. Here are several powerful use cases:
 1. Enhanced RAG Systems
-Organizations can transform their knowledge base into MAGI format to dramatically improve retrieval quality. For example, a financial services company converted their regulatory documentation to MAGI format, allowing their compliance AI to understand document relationships and provide more accurate guidance on complex multi-document dependencies.
+Organizations can transform their knowledge base into MDA format to dramatically improve retrieval quality. For example, a financial services company converted their regulatory documentation to MDA format, allowing their compliance AI to understand document relationships and provide more accurate guidance on complex multi-document dependencies.
 2. Multi-Agent Content Orchestration
-Product teams use MAGI to coordinate multiple specialized AI agents working on the same content. A marketing department embedded different ai-script blocks for their copywriting agent, SEO agent, and compliance agent, allowing each to process the same document with appropriate context and instructions.
+Product teams use MDA to coordinate multiple specialized AI agents working on the same content. A marketing department embedded different ai-script blocks for their copywriting agent, SEO agent, and compliance agent, allowing each to process the same document with appropriate context and instructions.
 3. Dynamic Documentation
-Technical writers create living documentation in MAGI format, where embedded ai-script blocks enable automatic updates when APIs change, while maintaining explicit relationships to older versions through structured footnotes.
+Technical writers create living documentation in MDA format, where embedded ai-script blocks enable automatic updates when APIs change, while maintaining explicit relationships to older versions through structured footnotes.
 4. Knowledge Graph Construction
-Research organizations automatically generate knowledge graphs from MAGI documents, where the structured relationships between studies, datasets, and conclusions are explicitly defined, enabling more sophisticated analysis of connected information.
+Research organizations automatically generate knowledge graphs from MDA documents, where the structured relationships between studies, datasets, and conclusions are explicitly defined, enabling more sophisticated analysis of connected information.
 5. Cross-Language Content Transformation
-International organizations use MAGI to maintain consistent document relationships across translated content, preserving the knowledge graph structure regardless of language through the UUID-based reference system.
+International organizations use MDA to maintain consistent document relationships across translated content, preserving the knowledge graph structure regardless of language through the UUID-based reference system.
 Cursor Rules Integration (.mdc)
-The MAGI format also fully supports and is compatible with cursor rules files (*.mdc), which define specialized processing instructions for text cursors, providing additional control over how content is navigated, edited, or presented in different contexts. These cursor rules integrate seamlessly with the document relationship structure and AI instructions.
+The MDA format also fully supports and is compatible with cursor rules files (*.mdc), which define specialized processing instructions for text cursors, providing additional control over how content is navigated, edited, or presented in different contexts. These cursor rules integrate seamlessly with the document relationship structure and AI instructions.
 
 
 ---
 
 ## Next Steps & Ecosystem
 
-The MAGI specification is evolving. Future work includes:
+The MDA specification is evolving. Future work includes:
 
 *   Developing standardized parsers and libraries for various languages.
-*   Integrating MAGI support into RAG frameworks and agent platforms.
+*   Integrating MDA support into RAG frameworks and agent platforms.
 *   Building a community around best practices and extensions.
-*   Exploring validation tools for MAGI syntax and schema.
+*   Exploring validation tools for MDA syntax and schema.
 
 Join the discussion and help shape the future of AI-native content!
 
@@ -364,8 +364,8 @@ We welcome contributions! Please fork, make changes, and open a pull request. Di
 
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
-## Quick Start: Try MAGI Instantly
+## Quick Start: Try MDA Instantly
 
-Want to see MAGI in action right away? Use the hosted [url2mda.sno.ai](https://url2mda.sno.ai) service to instantly convert any public web page into MAGI format. Just paste a URL and get a MAGI `.mda` file—no install required!
+Want to see MDA in action right away? Use the hosted [url2mda.sno.ai](https://url2mda.sno.ai) service to instantly convert any public web page into MDA format. Just paste a URL and get a MDA `.mda` file—no install required!
 
 For more details, guides, and examples, visit the official documentation at [docs.magi-mda.org](https://docs.magi-mda.org).
