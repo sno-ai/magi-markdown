@@ -1,0 +1,77 @@
+# MDA conformance manifest
+# Binds each fixture to spec rules and expected verdict.
+# Schema: see conformance/README.md.
+
+version: 1
+spec: v1.0
+
+fixtures:
+  # ─── valid (source-side acceptance) ───────────────────────────────────────
+  - id: "01-frontmatter-minimal"
+    path: valid/01-frontmatter-minimal.mda
+    against: [schemas/frontmatter-source.schema.json]
+    verdict: accept
+    rules: [§02-2.1, §02-2.2]
+    description: Minimal valid source — only `name` and `description`.
+
+  - id: "02-ai-script-inline"
+    path: valid/02-ai-script-inline.mda
+    against:
+      - schemas/frontmatter-source.schema.json
+      - schemas/ai-script.schema.json
+    verdict: accept
+    rules: [§03-2.1, §03-2.2]
+    description: Source with one inline ai-script block; payload validates against ai-script schema.
+
+  - id: "03-relationships-with-mirror"
+    path: valid/03-relationships-with-mirror.mda
+    against:
+      - schemas/frontmatter-source.schema.json
+      - schemas/relationship-footnote.schema.json
+    verdict: accept
+    rules: [§04-2, §04-4]
+    description: Source with footnote relationships AND a metadata.mda.relationships mirror (mirror is optional in source but encouraged).
+
+  # ─── invalid (source-side rejection) ──────────────────────────────────────
+  - id: "11-name-uppercase"
+    path: invalid/11-name-uppercase.mda
+    against: [schemas/frontmatter-source.schema.json]
+    verdict: reject
+    rules: [§02-2.1]
+    description: name field contains uppercase letters; violates kebab-case identifier shape.
+
+  - id: "12-description-over-1024"
+    path: invalid/12-description-over-1024.mda
+    against: [schemas/frontmatter-source.schema.json]
+    verdict: reject
+    rules: [§02-2.2]
+    description: description field exceeds 1024 chars.
+
+  # ─── invalid (output-side rejection — compiled .md against target schema) ─
+  - id: "13-skill-output-mda-extended-toplevel"
+    path: invalid/13-skill-output-mda-extended-toplevel.md
+    against: [schemas/frontmatter-skill-md.schema.json]
+    verdict: reject
+    rules: [§07-3.3]
+    description: Compiled SKILL.md keeps `doc-id` at top level; must nest under metadata.mda.
+
+  - id: "14-skill-output-has-ai-script-fence"
+    path: invalid/14-skill-output-has-ai-script-fence.md
+    against: [schemas/frontmatter-skill-md.schema.json, "body-fence-check"]
+    verdict: reject
+    rules: [§07-4, §03-2.3]
+    description: Compiled SKILL.md body contains an ai-script fence; must be externalized to scripts/.
+
+  # ─── compile (round-trip transformation) ──────────────────────────────────
+  - id: "21-mda-with-ai-script"
+    path: compile/21-mda-with-ai-script
+    input: compile/21-mda-with-ai-script/input.mda
+    target: skill-md
+    expected_dir: compile/21-mda-with-ai-script/expected/
+    verdict: equal
+    rules: [§01-4, §03-3.1, §03-3.2, §04-4, §07-3.3]
+    description: |
+      Compile a source with: an MDA-extended frontmatter field, an inline ai-script
+      block, and a relationship footnote. Expected output: SKILL.md with name+description
+      at top level, MDA-extended fields under metadata.mda, footnote mirrored to
+      metadata.mda.relationships, and ai-script externalized to scripts/<id>.ai-script.json.

@@ -1,0 +1,8 @@
+---
+name: BadName
+description: name field uses uppercase letters; expected to be rejected by §02-2.1 (kebab-case identifier shape).
+---
+
+# Bad name
+
+This source is invalid because `name` is not a kebab-case identifier.

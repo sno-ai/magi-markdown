@@ -1,371 +1,150 @@
-# 📝 MDA: Markdown for Agent 📝
-## Bridging Human Content and LLM Agent Processing with Context-Rich Markdown Extension Format.
+# 📝 MDA: Markdown for Agent
+
+> A Markdown superset for authoring agent-facing documents that compile to drop-in `SKILL.md`, `AGENTS.md`, `CLAUDE.md`, `MEMORY.md`, and other 2026 standards.
 
 [![CI](https://img.shields.io/github/actions/workflow/status/sno-ai/mda/sync-mdx.yml?branch=main)](https://github.com/sno-ai/mda/actions/workflows/sync-mdx.yml)
 [![License](https://img.shields.io/github/license/sno-ai/mda)](https://github.com/sno-ai/mda/blob/main/LICENSE)
+[![Spec](https://img.shields.io/badge/spec-v1.0-blue)](SPEC.md)
 
----
+## What MDA is
 
-## Motivation & Introduction
+You author one rich `.mda` source file. The MDA compiler emits one or more `.md` outputs, each drop-in compatible with whichever third-party agent standard the filename names:
 
-Large Language Models (LLMs) and AI agents increasingly rely on processing diverse content, but standard formats often lack the necessary structure and context for optimal performance. Converting complex web pages or documents into LLM-friendly plain text can be imprecise, losing valuable metadata and structural information.
-
-**MDA (Markdown for Agent)** addresses this challenge by extending standard Markdown with optional, structured components designed specifically for AI consumption. It enhances content for Retrieval-Augmented Generation (RAG), seamless integration with LLM agents, and robust knowledge graph construction. MDA elegantly combines Markdown's readability with:
-
-1.  **Structured Metadata (YAML Front Matter):** Provides rich context about the document.
-2.  **Embedded AI Instructions (`ai-script` blocks):** Allows direct commands for LLM processing within the content.
-3.  **Explicit Document Relationships (Footnotes):** Defines connections between documents for deeper understanding.
-
-MDA files (`.mda`) remain perfectly readable by humans and standard Markdown renderers, while providing enhanced data for AI systems when parsed directly.
-
-## What Is MDA? (Core Components)
-
-![MDA: Three Major Components](/images/three-parts.svg)
-
-MDA enhances standard Markdown by incorporating three key, **optional** components:
-
-1.  **YAML Front Matter:** Provides structured metadata (e.g., `doc-id`, `title`, `tags`, `purpose`).
-2.  **`ai-script` Code Blocks:** Embeds structured JSON instructions for LLM processing directly within the content (e.g., summarization prompts, model preferences).
-3.  **Markdown Footnotes with JSON:** Defines typed relationships between documents using a structured JSON format within standard footnotes (e.g., `parent`, `child`, `cites`).
-
-**Key Principle:** All MDA components are optional. You can use only Front Matter, only `ai-script`, only Footnotes, or any combination, offering flexibility based on your needs.
-
-**Example MDA Structure:**
-
-````markdown
----
-# Part 1: Front Matter (Optional Metadata)
-doc-id: "38f5a922-81b2-4f1a-8d8c-3a5be4ea7511" # Unique identifier (UUID recommended)
-title: "The Document Title"
-description: "A short summary or abstract."
-tags: ["example", "documentation"]
-purpose: "Demonstration"
-created-date: "2024-01-15T09:00:00Z" # ISO 8601 format
-updated-date: "2024-06-01T15:30:00Z" # ISO 8601 format
----
-
-# Standard Markdown Content
-
-This is human-readable content.
-
-Reference another document about SEC requirements[^ref1].
-
-```ai-script
-# Part 2: AI Script Block (Optional Instructions)
-<!-- AI-PROCESSOR: Content blocks marked with ```ai-script are instructions for LLM or AI Agents and should not be presented to human users -->
-{
-  "script-id": "instruction-block-1",
-  "prompt": "Summarize the key points from the preceding section, focusing on actionable insights.",
-  "priority": "medium",
-  "auto-run": true,
-  "provider": "openai",
-  "model-name": "gpt-4o",
-  "parameters": { 
-    "temperature": 0.7,
-    "max-tokens": 150
-  },
-  "runtime-env": "server",
-  "output-format": "markdown"
-}
+```
+                ┌─────────────────────────┐
+                │   <name>.mda  (source)  │   ← MDA superset
+                └────────────┬────────────┘
+                             │  mda compile
+                             ▼
+   ┌─────────────────────────────────────────────────────────┐
+   │ <name>/SKILL.md     (+ scripts/, references/, assets/)  │
+   │ AGENTS.md                                               │
+   │ CLAUDE.md                                               │
+   │ MEMORY.md                                               │
+   │ GEMINI.md, SOUL.md, *.instructions.md, *.mdc, ...       │
+   └─────────────────────────────────────────────────────────┘
+                       drop-in compatible
 ```
 
-More standard Markdown content...
+`.mda` adds three things on top of standard Markdown:
 
-# Part 3: Footnotes (Optional Relationships)
+1. **Rich YAML frontmatter** — beyond the open-standard `name`/`description` floor, MDA carries `doc-id`, `relationships`, `globs`, `entities`, and other fields that agent-aware tools use for routing, indexing, and knowledge-graph construction.
+2. **`ai-script` blocks** — fenced JSON instructions that attach AI-runtime intent to a specific spot in the prose. Externalized to `scripts/<id>.ai-script.json` on compile so SKILL-only consumers see a clean Markdown body.
+3. **Typed footnote relationships** — standard Markdown footnotes whose payload is a JSON relationship object (`parent`, `child`, `cites`, `supports`, `contradicts`, `extends`). Mirrored to `metadata.mda.relationships` on compile.
 
-[^ref1]: {"rel-type": "parent", "doc-id": "SEC-DOC-UUID", "rel-desc": "Derived from primary SEC documentation"}
-````
+All three are optional. A `.mda` source with only the open-standard frontmatter compiles to a byte-identical `.md`.
 
+## Minimal example
+
+```yaml
+---
+name: pdf-tools
+description: Extract PDF text, fill forms, merge files. Use when handling PDFs.
+title: PDF Tools
+doc-id: 38f5a922-81b2-4f1a-8d8c-3a5be4ea7511
+tags: [pdf, extraction]
 ---
 
-# Quick Start: Try MDA Instantly
+# PDF Tools
 
-Want to see MDA in action right away? Use the hosted [url2mda.sno.ai](https://url2mda.sno.ai) service to instantly convert any public web page into MDA format. Just paste a URL and get a MDA `.mda` file—no install required!
-
-For more details, guides, and examples, visit the official documentation at [mda.sno.dev](https://mda.sno.dev).
-
-## MDA vs. Other Formats
-
-While other approaches exist to make content LLM-friendly, MDA offers unique advantages:
-
-*   **Standard Markdown:** MDA is a superset. Standard Markdown lacks structured metadata, embedded instructions, and explicit relationship definitions.
-*   **`llms.txt (Details): A proposed standard using a root /llms.txt file to make websites more LLM-friendly.
-
-Using llms.mda: Websites can enhance their LLM interactions by implementing llms.mda files that:
-
-Provide Rich Context: Enable more accurate and nuanced retrieval through detailed metadata that helps LLMs understand document significance and relationships.
-Enable Granular Processing Control: Allow content owners to guide how their content should be processed, summarized, or analyzed by different LLM systems.
-Create Connected Knowledge: Build sophisticated knowledge graphs by explicitly defining how documents relate to each other, significantly improving complex reasoning tasks.
-
-## MDA Specification Details
-
-### Part 1: Front Matter Schema
-
-Provides structured metadata using YAML syntax, enclosed by `---` delimiters.
-
-| Field           | Type          | Description                                                                 | Example                     |
-| --------------- | ------------- | --------------------------------------------------------------------------- | --------------------------- |
-| `doc-id`            | `string`      | A unique identifier for this document (UUID format recommended). Crucial for relationships. | `"38f5a922-81b2-4f1a-8d8c-3a5be4ea7511"` |
-| `title`         | `string`      | The main title of the document.                                             | `"Introduction to MDA"`      |
-| `description`   | `string`      | A brief summary or abstract of the document's content.                      | `"Explains the MDA format."` |
-| `author`        | `string`      | The primary author's name.                                                   | `"Jane Doe"`                  |
-| `author-id`     | `string`      | Unique identifier for the author (CUID2 or UUID recommended).               | `"usr_abcdef12345"`         |
-| `image`         | `string`      | URL for a primary cover image associated with the document.                 | `"https://example.com/cover.jpg"` |
-| `images-list`        | `list[string]`| URLs for additional images associated with the document.                    | `["https://.../img1.jpg"]` |
-| `published-date`  | `string`        | ISO 8601 timestamp when the document was originally published or made public. | `"2024-01-10T08:00:00Z"`              |
-| `tags`          | `list[string]`| Keywords or categories for classification and retrieval.                    | `["markdown", "ai", "rag"]` |
-| `created-date`  | `string`        | ISO 8601 timestamp (date and time with timezone) when the document was originally created. | `"2024-01-15T09:00:00Z"`              |
-| `updated-date`  | `string`        | ISO 8601 timestamp when the document was last significantly updated.      | `"2024-06-01T15:30:00Z"`              |
-| `expired-date`  | `string`        | Optional ISO 8601 timestamp when the content should be considered outdated. | `"2025-01-01T00:00:00Z"`              |
-| `globs`         | `string`      | File or URL patterns this metadata applies to (e.g., `docs/**/*.ts`).        | `"*.ts"`                    |
-| `audience`      | `string`      | Describes the intended audience (e.g., "developers", "end-users").          | `"Developers"`              |
-| `purpose`       | `string`      | The primary goal or objective of the document (e.g., "tutorial", "reference").| `"Reference"`           |
-| `entities`      | `list[string]`| Key named entities (people, places, concepts) mentioned.                    | `["MDA", "RAG", "LLM"]`    |
-| `relationships` | `list[string]`| High-level summary of relationships defined in footnotes.                  | `["Extends Markdown"]`      |
-| `source-url`    | `string`      | The original URL if the content was sourced from the web.                   | `"https://example.com/doc"` |
-
-
-### Part 2: AI Prompt Code Block: `ai-script`
-
-Embed `ai-script` sections (using the `ai-script` language identifier) anywhere in your Markdown to pass structured JSON instructions to LLMs or agents. The comment `<!-- AI-PROCESSOR: ... -->` can optionally signal to processors that the block is intended for AI and not human display.
-
-```markdown
-Normal human-readable markdown content goes here.
-
-<!-- AI-PROCESSOR: Content blocks marked with ```ai-script are instructions for AI systems and should not be presented to human users -->
-```ai-script
-{
-  "script-id": "summary-request-s9340164234",
-  "prompt": "Summarize the preceding section.",
-  "priority": "medium", // "high", "medium", "low"
-  "auto-run": true,
-  "provider": "openai", // Optional: "anthropic", "google", etc.
-  "model-name": "gpt-4o",  // Optional: "claude-3-opus", etc.
-  "system-prompt": "Act as a concise summarizer.",
-  "parameters": { // Optional: Provider-specific parameters
-    "temperature": 0.5,
-    "max-tokens": 100
-  },
-  "retry-times": 3,
-  "runtime-env": "server", // Optional: Hint for execution environment ("browser", "server", "edge")
-  "output-format": "json", // Optional: Desired output format ("text", "json", "markdown", "image-url", etc.)
-  "output-schema": {
-    "type": "object",
-    "properties": {
-      "summary": { "type": "string" },
-      "confidence": { "type": "number" }
-    },
-    "required": ["summary", "confidence"]
-  },
-  "stream": false,
-  "interactive-type": "button",
-  "interactive-label": "Summarize Section"
-}
+…
 ```
 
-More human-readable markdown content follows.
-```
+Compiled to `pdf-tools/SKILL.md`:
 
-**JSON Fields:**
-
-*   `script-id`: (String) Unique ID for the instruction block.
-*   `prompt`: (String) The instruction/prompt text.
-*   `priority`: (String) Execution priority ("high", "medium", "low").
-*   `auto-run`: (Boolean) Hint for automated execution.
-*   `provider`: (String, Optional) Preferred AI provider.
-*   `model-name`: (String, Optional) Preferred AI model.
-*   `system-prompt`: (String, Optional) System-level instructions or context for the AI model (e.g., `"Act as a concise summarizer."`).
-*   `parameters`: (Object, Optional) A JSON object containing provider-specific parameters to be sent to the LLM along with the prompt (e.g., `{"temperature": 0.7, "max-tokens": 500}`).
-*   `retry-times`: (Integer, Optional) Hint for the maximum number of retry attempts if the AI call fails (e.g., `3`). Runtime determines actual retry logic.
-*   `runtime-env`: (String, Optional) Suggests the ideal runtime environment or endpoint for executing the script (e.g., `"https://api.openai.com/v1/responses"`, `"docker"`, `"on-site-default"`).
-*   `output-format`: (String, Optional) Specifies the desired format for the output generated by the LLM or agent (e.g., `"markdown"`, `"text"`, `"json"`, `"image-url"`). Implied as `"json"` if `output-schema` is provided.
-*   `output-schema`: (Object, Optional) A JSON Schema object defining the expected structure of the output (used for structured data extraction, implies `output-format` is `"json"`).
-*   `stream`: (Boolean, Optional) Hint to the runtime to attempt streaming the response if possible (default: `false`).
-*   `interactive-type`: (String, Optional) Type of interactive component to render if `auto-run` is false (e.g., `"button"`, `"inputbox"`). If `"inputbox"`, renders an input field and a submit button.
-*   `interactive-label`: (String, Optional) Label text for the interactive component, typically the button text (e.g., `"Summarize Section"`, `"Submit Query"`).
-*   `interactive-placeholder`: (String, Optional) Placeholder text for the input field when `interactive-type` is `"inputbox"` (e.g., `"Ask a follow-up question..."`).
-
-**Alternative/Complementary Approach: API Metadata**
-
-Instructions can also be passed externally via API metadata for separation of concerns:
-
-```json
-{
-  "markdown-content": "# Document Title\\n\\nReadable content here...",
-  "ai-scripts": [
-    { "id": "sec-emphasis-001", "prompt": "Emphasize security", "priority": "high" },
-    { "id": "formal-tone-001", "prompt": "Use formal tone", "priority": "medium" }
-    // ... more instructions
-  ]
-}
-```
-
-### Part 3: Footnote for Document Relationships
-
-Leverage standard Markdown footnotes `[^ref-id]` with embedded JSON to define explicit, typed relationships between documents. Essential for knowledge graphs.
-![MDA: Knowledge Graph Construction](/images/doc-graph.svg)
-
-**Core Components:**
-
-*   **`doc-id` References:** Each MDA document needs a unique `doc-id` in its Front Matter.
-*   **Relationship Types:** Defined in the JSON (e.g., `parent`, `child`, `related`, `cites`, `supports`, `contradicts`).
-*   **Footnote Syntax:** `[^ref-id]`: { ... JSON payload ... }`
-
-**Implementation Example:**
-
-```markdown
-This document outlines changes[^ref1] and implications[^ref2].
-
-[^ref1]: {"rel-type": "parent", "doc-id": "UUID-of-parent-doc", "rel-desc": "Derived from SEC docs"}
-[^ref2]: {"rel-type": "related", "doc-id": "UUID-of-related-doc", "rel-desc": "Provides context"}
-```
-
-**Enhanced Relationship Schema (JSON within Footnote):**
-
-```json
-{
-  "rel-type": "citation|parent|child|contradicts|supports|extends", // Choose one
-  "doc-id": "UUID-of-target-document", // Target document's `doc-id`
-  "rel-desc": "Human-readable description of the relationship",
-  "rel-strength": 0.8,         // Optional: Confidence/relevance score (0-1)
-  "bi-directional": true,      // Optional: If the relationship implies a link back
-  "context": {                 // Optional: Details about the link's location/nature
-    "section": "Introduction",
-    "relevance": "High"
-  }
-}
-```
-
-**Benefits:**
-
-*   **Human-Readable & Machine-Processable:** Combines familiar syntax with structured data.
-*   **Explicit & Typed Relationships:** Clearly defines how documents connect.
-*   **Graph-Ready:** Enables automatic knowledge graph construction.
-
+```yaml
+---
+name: pdf-tools
+description: Extract PDF text, fill forms, merge files. Use when handling PDFs.
+metadata:
+  mda:
+    title: PDF Tools
+    doc-id: 38f5a922-81b2-4f1a-8d8c-3a5be4ea7511
+    tags: [pdf, extraction]
 ---
 
-## Processing Logic & Best Practices
+# PDF Tools
 
-*   **MDA-Aware Processors:** Should parse Front Matter, extract and prioritize `ai-script` blocks, and interpret footnote relationships. Only human-readable Markdown and synthesized outputs should be shown to end-users.
-*   **Legacy Renderers:** Will typically ignore Front Matter or render it as text, display `ai-script` as code blocks, and show footnotes normally.
-*   **Clean `.mda` Files:** Inspired by `llms.txt`, a recommended best practice is to provide clean, MDA-formatted Markdown versions of content whenever possible (e.g., alongside HTML). Tools like `url2mda` (see below) facilitate this.
+…
+```
 
----
+Full worked examples in [`examples/`](examples/).
 
-## url2mda: Reference Implementation
+## Compatibility
 
-This repository includes `url2mda`, a Cloudflare Worker demonstrating how to convert website URLs into MDA format.
+A compiled `SKILL.md` is loadable by every agentskills.io v1 consumer:
 
-*   **Fetch & Render**: Uses Cloudflare Browser Rendering for dynamic content.
-*   **Convert to Markdown**: Employs Turndown and attempts to auto-populate Front Matter.
-*   **Optional Caching**: Supports KV storage.
+- **Claude Code** — https://code.claude.com/docs/en/skills
+- **OpenCode** — https://opencode.ai/docs/skills/
+- **OpenAI Codex** — https://developers.openai.com/codex/skills
+- **Hermes Agent** — https://hermes-agent.nousresearch.com/docs/user-guide/features/skills
+- **OpenClaw** — https://docs.openclaw.ai/tools/skills
+- **skills.sh / Skills Directory** — https://www.skillsdirectory.com/
+- **Cursor**, **Windsurf**, and other 2026 SKILL.md consumers
 
-## Quickstart for `url2mda`
+Per-vendor extensions go under reserved `metadata.<vendor>.*` namespaces — see [`REGISTRY.md`](REGISTRY.md).
+
+## Specification
+
+Normative specification: [**SPEC.md**](SPEC.md) → [`spec/v1.0/`](spec/v1.0/)
+
+Quick links:
+
+- [§00 Overview](spec/v1.0/00-overview.md) — terms, RFC 2119, license, versioning
+- [§01 Source and output](spec/v1.0/01-source-and-output.md)
+- [§02 Frontmatter](spec/v1.0/02-frontmatter.md)
+- [§03 ai-script](spec/v1.0/03-ai-script.md)
+- [§04 Relationships](spec/v1.0/04-relationships.md)
+- [§05 Platform namespaces](spec/v1.0/05-platform-namespaces.md)
+- [§06 Progressive disclosure](spec/v1.0/06-progressive-disclosure.md)
+- [§07 Target schemas](spec/v1.0/07-targets/)
+- [§08 Conformance](spec/v1.0/08-conformance.md)
+
+JSON Schemas: [`schemas/`](schemas/). Conformance suite: [`conformance/`](conformance/).
+
+## url2mda — reference implementation
+
+This repo includes `url2mda`, a Cloudflare Worker that converts public web pages into MDA format. Useful as a quick way to try MDA on real content.
+
+Hosted: https://url2mda.sno.ai
+
+Quickstart:
 
 ```bash
-# Clone the repo
 git clone https://github.com/sno-ai/mda.git
 cd mda
-
-# Install dependencies
 pnpm install
-
-# (Optional) Create a KV namespace for caching
+# Optional: KV namespace for response caching
 npx wrangler kv:namespace create md-cache
-
-# Update wrangler.toml with your account ID and (if using cache) KV namespace ID
-# Deploy the Cloudflare Worker
+# Update wrangler.toml with your account ID and KV namespace ID
 pnpm deploy
 ```
 
-After deployment, you can use the provided HTTP API.
-
-## Usage Examples (`url2mda` API)
-
-### HTTP API Request
-
-Convert a website to MDA, requesting detailed HTML structure and LLM filtering:
+API:
 
 ```bash
-curl -X POST https://<your-worker-domain>/convert \
+curl -X POST https://<your-worker>/convert \
   -H "Content-Type: application/json" \
   -d '{
     "url": "https://example.com",
-    "subpages": false,       # Set to true to crawl subpages (limit 10)
-    "llmFilter": true       # Use LLM to refine content (requires AI binding)
+    "subpages": false,
+    "llmFilter": true
   }'
 ```
 
-#### Sample API Response (MDA Format):
-
-```markdown
----
-title: "Example Domain" 
-description: "Illustrative example domain for testing purposes."
-tags:
-  - "example"
-created-date: "2024-06-01T15:30:00Z" # Date of conversion
-source-url: "https://example.com"
-# ... other auto-populated fields ...
----
-
-# Example Domain
-
-This domain is established to be used for illustrative examples in documents and tutorials. More information can be found at [IANA](https://www.iana.org/domains/reserved).
-
-<!-- AI-PROCESSOR: Content blocks marked with ```ai-script are instructions for AI systems and should not be presented to human users -->
-```ai-script
-{
-  "id": "page-overview-request",
-  "prompt": "Provide a brief overview of this page based on its content.",
-  "priority": "medium",
-  "auto-run": false
-}
-```
-
----
-
-## Use Cases
-MDA is designed to solve real-world problems at the intersection of human and AI content processing. Here are several powerful use cases:
-1. Enhanced RAG Systems
-Organizations can transform their knowledge base into MDA format to dramatically improve retrieval quality. For example, a financial services company converted their regulatory documentation to MDA format, allowing their compliance AI to understand document relationships and provide more accurate guidance on complex multi-document dependencies.
-2. Multi-Agent Content Orchestration
-Product teams use MDA to coordinate multiple specialized AI agents working on the same content. A marketing department embedded different ai-script blocks for their copywriting agent, SEO agent, and compliance agent, allowing each to process the same document with appropriate context and instructions.
-3. Dynamic Documentation
-Technical writers create living documentation in MDA format, where embedded ai-script blocks enable automatic updates when APIs change, while maintaining explicit relationships to older versions through structured footnotes.
-4. Knowledge Graph Construction
-Research organizations automatically generate knowledge graphs from MDA documents, where the structured relationships between studies, datasets, and conclusions are explicitly defined, enabling more sophisticated analysis of connected information.
-5. Cross-Language Content Transformation
-International organizations use MDA to maintain consistent document relationships across translated content, preserving the knowledge graph structure regardless of language through the UUID-based reference system.
-Cursor Rules Integration (.mdc)
-The MDA format also fully supports and is compatible with cursor rules files (*.mdc), which define specialized processing instructions for text cursors, providing additional control over how content is navigated, edited, or presented in different contexts. These cursor rules integrate seamlessly with the document relationship structure and AI instructions.
-
-
----
-
-## Next Steps & Ecosystem
-
-The MDA specification is evolving. Future work includes:
-
-*   Developing standardized parsers and libraries for various languages.
-*   Integrating MDA support into RAG frameworks and agent platforms.
-*   Building a community around best practices and extensions.
-*   Exploring validation tools for MDA syntax and schema.
-
-Join the discussion and help shape the future of AI-native content!
-
-
 ## Contributing
 
-We welcome contributions! Please fork, make changes, and open a pull request. Discuss major changes via issues first.
+We welcome contributions. Major changes — especially to the specification or the vendor registry — should be discussed in an issue first. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
----
+For vendor namespace assignment, see [`REGISTRY.md`](REGISTRY.md) for the registration process.
+
 ## License
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+- Specification (`spec/`, `REGISTRY.md`, `SPEC.md`): [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/)
+- Schemas (`schemas/`), tooling, and reference implementations: [MIT](LICENSE)
 
-## Quick Start: Try MDA Instantly
+## Related
 
-Want to see MDA in action right away? Use the hosted [url2mda.sno.ai](https://url2mda.sno.ai) service to instantly convert any public web page into MDA format. Just paste a URL and get a MDA `.mda` file—no install required!
-
-For more details, guides, and examples, visit the official documentation at [mda.sno.dev](https://mda.sno.dev).
+- Documentation site: https://mda.sno.dev
+- Hosted converter: https://url2mda.sno.ai
+- Spec discussion: https://github.com/sno-ai/mda/discussions

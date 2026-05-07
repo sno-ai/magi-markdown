@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mda.sno.dev/spec/v1.0/schemas/relationship-footnote.schema.json",
+  "title": "MDA relationship payload",
+  "description": "Schema for the JSON payload of an MDA relationship footnote (`[^id]: { ... }`) and for entries in the `metadata.mda.relationships` mirror in compiled outputs.",
+  "type": "object",
+  "required": ["rel-type", "doc-id"],
+  "properties": {
+    "rel-type": {
+      "type": "string",
+      "enum": ["parent", "child", "related", "cites", "supports", "contradicts", "extends"],
+      "description": "The kind of relationship to the target document."
+    },
+    "doc-id": {
+      "type": "string",
+      "description": "Target document's `doc-id`. UUID format recommended.",
+      "minLength": 1
+    },
+    "rel-desc": {
+      "type": "string",
+      "description": "Human-readable description of the relationship."
+    },
+    "rel-strength": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Optional confidence/relevance score [0,1]."
+    },
+    "bi-directional": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the relationship implies a link back from the target."
+    },
+    "context": {
+      "type": "object",
+      "description": "Optional details about where/how this link applies.",
+      "properties": {
+        "section": { "type": "string" },
+        "relevance": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

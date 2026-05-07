@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mda.sno.dev/spec/v1.0/schemas/_defs/iso8601.schema.json",
+  "title": "ISO 8601 date-time",
+  "type": "string",
+  "format": "date-time",
+  "description": "RFC 3339 / ISO 8601 timestamp with timezone, e.g. 2026-01-15T09:00:00Z."
+}

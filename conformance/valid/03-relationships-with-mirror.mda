@@ -1,0 +1,20 @@
+---
+name: relationships-example
+description: Source carrying both footnote relationships and a metadata.mda.relationships mirror. Use as a fixture for relationship-graph validation.
+metadata:
+  mda:
+    relationships:
+      - rel-type: parent
+        doc-id: 11111111-1111-1111-1111-111111111111
+        rel-desc: Conceptual parent document
+      - rel-type: cites
+        doc-id: 22222222-2222-2222-2222-222222222222
+        rel-desc: External citation
+---
+
+# Relationships
+
+This document references its parent[^p] and cites an external work[^c].
+
+[^p]: {"rel-type": "parent", "doc-id": "11111111-1111-1111-1111-111111111111", "rel-desc": "Conceptual parent document"}
+[^c]: {"rel-type": "cites", "doc-id": "22222222-2222-2222-2222-222222222222", "rel-desc": "External citation"}

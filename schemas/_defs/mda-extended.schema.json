@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mda.sno.dev/spec/v1.0/schemas/_defs/mda-extended.schema.json",
+  "title": "MDA-extended frontmatter fields",
+  "description": "Reusable shape for MDA-extended fields. In .mda sources these MAY appear at the top level. In compiled outputs they MUST be nested under metadata.mda.* (with the same shape).",
+  "type": "object",
+  "properties": {
+    "doc-id": {
+      "type": "string",
+      "description": "Unique document identifier; UUID format recommended.",
+      "pattern": "^[a-zA-Z0-9_-]{8,}$"
+    },
+    "title": {
+      "type": "string",
+      "description": "Free-text human-readable title. Distinct from `name` (which is a machine ID)."
+    },
+    "author": { "type": "string" },
+    "author-id": { "type": "string" },
+    "image": { "type": "string", "format": "uri" },
+    "images-list": {
+      "type": "array",
+      "items": { "type": "string", "format": "uri" }
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "published-date": { "$ref": "iso8601.schema.json" },
+    "created-date": { "$ref": "iso8601.schema.json" },
+    "updated-date": { "$ref": "iso8601.schema.json" },
+    "expired-date": { "$ref": "iso8601.schema.json" },
+    "globs": { "type": "string" },
+    "audience": { "type": "string" },
+    "purpose": { "type": "string" },
+    "entities": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "relationships": {
+      "type": "array",
+      "items": {
+        "$ref": "../relationship-footnote.schema.json"
+      },
+      "description": "Mirror of footnote relationship payloads. REQUIRED in compiled output when the source had relationship footnotes."
+    },
+    "source-url": { "type": "string", "format": "uri" }
+  },
+  "additionalProperties": false
+}
