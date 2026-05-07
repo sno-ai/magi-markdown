@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mda.sno.dev/spec/v1.0/schemas/_defs/signature.schema.json",
+  "title": "MDA signature entry",
+  "description": "One entry in the top-level signatures[] array. Binds a publisher identity to integrity.digest via DSSE PAE. See spec §09.",
+  "type": "object",
+  "required": ["signer", "key-id", "payload-digest", "algorithm", "signature"],
+  "properties": {
+    "signer": {
+      "type": "string",
+      "description": "<method>:<identity>. method MUST be one of sigstore-oidc, did-web.",
+      "pattern": "^(sigstore-oidc|did-web):.+$"
+    },
+    "key-id": {
+      "type": "string",
+      "description": "Method-specific handle: Fulcio cert SHA-256 (sigstore) or key fingerprint (did:web).",
+      "minLength": 1
+    },
+    "payload-digest": {
+      "type": "string",
+      "description": "MUST equal integrity.digest byte-for-byte. Self-describing <algorithm>:<lowercase-hex> form; hex length MUST match the algorithm.",
+      "pattern": "^(sha256:[0-9a-f]{64}|sha384:[0-9a-f]{96}|sha512:[0-9a-f]{128})$"
+    },
+    "algorithm": {
+      "type": "string",
+      "enum": ["ed25519", "ecdsa-p256", "rsa-pss-sha256"]
+    },
+    "signature": {
+      "type": "string",
+      "description": "Base64 (RFC 4648 §4) of the raw signature bytes over the DSSE PAE envelope.",
+      "minLength": 1
+    },
+    "rekor-log-id": {
+      "type": "string",
+      "description": "Rekor transparency log identifier; required when signer starts with sigstore-oidc:."
+    },
+    "rekor-log-index": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Rekor entry index; required when signer starts with sigstore-oidc:."
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": { "signer": { "pattern": "^sigstore-oidc:" } }
+      },
+      "then": {
+        "required": ["rekor-log-id", "rekor-log-index"]
+      }
+    }
+  ]
+}
