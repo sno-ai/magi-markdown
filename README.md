@@ -1,4 +1,4 @@
-# 📝 MDA: Markdown for Agent
+# 📝 MDA Open Spec — Markdown for Agent
 
 > A Markdown superset for authoring agent-facing documents that compile to drop-in `SKILL.md`, `AGENTS.md`, `CLAUDE.md`, and `MCP-SERVER.md` outputs aligned with the 2026 agent-runtime ecosystem.
 
