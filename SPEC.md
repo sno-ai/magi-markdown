@@ -1,6 +1,6 @@
-# MDA Specification
+# MDA Open Spec
 
-The current normative specification is **MDA v1.0**, located at [`spec/v1.0/`](spec/v1.0/).
+The current normative version is **MDA Open Spec v1.0**, located at [`spec/v1.0/`](spec/v1.0/).
 
 Canonical URL: https://mda.sno.dev/spec/v1.0/
 
@@ -14,7 +14,7 @@ The wedge: **cross-runtime portability + machine-readable dependency graph + ope
 
 Every MDA design decision follows P0 > P1 > P2:
 
-- **P0 — AI-agent authorability.** An LLM with only this specification in context MUST be able to produce conforming output.
+- **P0 — AI-agent authorability.** An LLM with only this Open Spec in context MUST be able to produce conforming output.
 - **P1 — Human authorability.** A human with a text editor and `sha256sum` + `cosign` MUST be able to produce conforming output.
 - **P2 — Tooling convenience.** Reference implementations are convenience, not requirement.
 

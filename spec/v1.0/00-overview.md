@@ -1,4 +1,4 @@
-# MDA Specification — Overview
+# MDA Open Spec — Overview
 
 > **Version:** v1.0
 > **Status:** Draft (frozen at v1.0.0-rc.1; final on v1.0.0)
@@ -8,7 +8,7 @@
 
 ## §0.1 What this document is
 
-The MDA Specification defines:
+The MDA Open Spec defines:
 
 1. The **MDA source format** (`.mda`): a Markdown superset for authoring AI-agent artifacts.
 2. The **compile contract** that transforms `.mda` sources into one or more `**.md` output files** that conform to widely-deployed agent standards (`SKILL.md`, `AGENTS.md`, `MCP-SERVER.md`, `CLAUDE.md`).
@@ -157,6 +157,6 @@ The companion `REGISTRY.md` (at the repository root) governs vendor namespace as
 
 When citing this specification, use the canonical URL with the section anchor, e.g.:
 
-> MDA Specification v1.0, §06-targets/skill-md §06-3.3 — Forbidden top-level fields.  
+> MDA Open Spec v1.0, §06-targets/skill-md §06-3.3 — Forbidden top-level fields.  
 > [https://mda.sno.dev/spec/v1.0/06-targets/skill-md.html#forbidden-top-level-fields](https://mda.sno.dev/spec/v1.0/06-targets/skill-md.html#forbidden-top-level-fields)
 

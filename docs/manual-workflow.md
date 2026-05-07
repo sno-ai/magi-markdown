@@ -66,7 +66,9 @@ metadata:
     tags: [pdf, extraction]
     requires:
       runtime: ["python>=3.11"]
-      tools: ["Read", "Bash(pdftotext:*)"]
+      tools: ["Read", "Bash"]    # bare names are portable; vendor-specific
+                                  # syntax (e.g. Bash(pdftotext:*)) belongs
+                                  # under metadata.<vendor>.* — see §2.4
       network: none
     created-date: "2026-01-15T00:00:00Z"       # quoted!
 ---

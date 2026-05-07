@@ -33,4 +33,4 @@ MDA extends Markdown without breaking it. Any Markdown renderer will display thi
 
 See the full specification for details on each component[^spec].
 
-[^spec]: `{"rel-type": "parent", "doc-id": "MDA-SPEC-001", "rel-desc": "Full MDA specification document"}`
+[^spec]: `{"rel-type": "parent", "doc-id": "MDA-SPEC-001", "rel-desc": "MDA Open Spec — full document"}`
