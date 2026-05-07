@@ -8,7 +8,7 @@ metadata:
     author: Sno Lab
     tags: [example, intro, relationships]
     created-date: "2026-05-07T00:00:00Z"
-    purpose: example
+    version: "1.0.0"
     relationships:
       - rel-type: parent
         doc-id: spec-skill-md-v1.0

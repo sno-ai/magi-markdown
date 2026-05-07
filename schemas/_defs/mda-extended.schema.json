@@ -14,36 +14,30 @@
       "type": "string",
       "description": "Free-text human-readable title. Distinct from `name` (which is a machine ID)."
     },
-    "author": { "type": "string" },
-    "author-id": { "type": "string" },
-    "image": { "type": "string", "format": "uri" },
-    "images-list": {
-      "type": "array",
-      "items": { "type": "string", "format": "uri" }
+    "version": {
+      "type": "string",
+      "description": "SemVer 2.0.0 string. MUST be quoted (no number coercion). MUST NOT include build metadata in v1.0.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?$"
     },
+    "requires": { "$ref": "requires.schema.json" },
+    "depends-on": {
+      "type": "array",
+      "items": { "$ref": "depends-on.schema.json" }
+    },
+    "author": { "type": "string" },
     "tags": {
       "type": "array",
       "items": { "type": "string" }
     },
-    "published-date": { "$ref": "iso8601.schema.json" },
     "created-date": { "$ref": "iso8601.schema.json" },
     "updated-date": { "$ref": "iso8601.schema.json" },
-    "expired-date": { "$ref": "iso8601.schema.json" },
-    "globs": { "type": "string" },
-    "audience": { "type": "string" },
-    "purpose": { "type": "string" },
-    "entities": {
-      "type": "array",
-      "items": { "type": "string" }
-    },
     "relationships": {
       "type": "array",
       "items": {
         "$ref": "../relationship-footnote.schema.json"
       },
       "description": "Mirror of footnote relationship payloads. REQUIRED in compiled output when the source had relationship footnotes."
-    },
-    "source-url": { "type": "string", "format": "uri" }
+    }
   },
   "additionalProperties": false
 }
