@@ -1,88 +1,127 @@
 ---
-title: "Getting Started"
-description: "Start using MDA Markdown in under 5 minutes"
+title: "Quickstart"
+description: "Author a minimal .mda source and compile it to a drop-in SKILL.md in under five minutes."
 ---
 
-To start working with MDA, you'll need:
+In five minutes you'll write a `.mda` source, compile it to a `SKILL.md` that loads in every agentskills.io v1 consumer, and understand what each piece is doing.
 
-1. A basic understanding of Markdown
-2. A text editor for creating .mda files
-3. Optionally, the url2mda tool to convert web content to MDA format
-### Understanding MDA Components
-<AccordionGroup>
-  <Accordion title="Understanding MDA Components" icon="file-code">
-    MDA has three optional components that enhance standard Markdown:
-    
-    1. **YAML Front Matter**: Provides structured metadata (like `title`, `doc-id`).
-    2. **ai-script blocks**: Embeds JSON instructions for AI/LLM processing.
-    3. **Footnotes with JSON**: Defines typed relationships between documents (e.g., `` [^ref1]: `{"rel-type": ...}` ``).
-    
-    ![MDA Components](/images/three-parts.svg)
-    
-    Each component is optional - use only what you need.
-  </Accordion>
-</AccordionGroup>
-## Creating a Simple MDA File
+## What you need
 
-Create a file with the `.mda` extension. Here's an example structure:
+1. A text editor.
+2. The `@mda/cli` reference implementation, or — if you'd rather not install anything — the [manual workflow](https://github.com/sno-ai/mda/blob/main/docs/manual-workflow.md), which uses only `sha256sum` and `cosign`.
+3. A basic grasp of Markdown.
 
-```markdown
+## A minimal `.mda` source
+
+Create a file called `pdf-tools.mda`:
+
+```yaml
 ---
-doc-id: "example-123"
-title: "My First MDA Document"
-description: "A simple example of MDA format"
-tags: ["example", "getting-started"]
-created-date: "2024-06-10T10:00:00Z"
+name: pdf-tools
+description: Extract PDF text, fill forms, merge files. Use when handling PDFs.
+metadata:
+  mda:
+    doc-id: 38f5a922-81b2-4f1a-8d8c-3a5be4ea7511
+    title: PDF Tools
+    version: "1.2.0"
+    tags: [pdf, extraction]
 ---
 
-# Hello MDA
+# PDF Tools
 
-This is standard Markdown content.
+Use this skill when the user asks for PDF text extraction, form filling, or file merging.
 
-(Your ai-script block would go here - see below)
+## Operations
 
-This document is related to our documentation[^ref1].
-
-[^ref1]: `{"rel-type": "related", "doc-id": "MDA-DOCS-UUID", "rel-desc": "Linked to the main MDA documentation"}`
+- `extract-text` — pulls UTF-8 text from a PDF.
+- `fill-form` — fills AcroForm fields from a JSON spec.
+- `merge` — concatenates two or more PDFs into one.
 ```
 
-### Adding AI Instructions
+What's happening:
 
-Inside your `.mda` file, you can add an `ai-script` block like this:
+- `name` and `description` are the **open-standard floor** every agent-skill consumer reads. No MDA awareness required to load this.
+- Everything under `metadata.mda.*` is the MDA-extended layer. `doc-id` (UUID) gives the document a stable identity for relationship references. `version` is SemVer 2.0.0. `title` and `tags` are routing hints.
+- The body is plain Markdown. Renders fine anywhere.
 
-```ai-script
-{
-  "script-id": "summary-request",
-  "prompt": "Summarize this document briefly.",
-  "priority": "medium",
-  "auto-run": true
-}
-```
-
-## Convert Web Content with url2mda
-
-The easiest way to test MDA is with our url2mda service, which converts web pages to MDA format:
+## Compile
 
 ```bash
-curl -X POST https://url2mda.sno.ai/convert \
-  -H "Content-Type: application/json" \
-  -d '{
-    "url": "https://example.com",
-    "subpages": false
-  }'
+npx @mda/cli compile pdf-tools.mda --target SKILL.md
 ```
 
-Try it out in your browser: [https://url2mda.sno.ai](https://url2mda.sno.ai)
+Output: `pdf-tools/SKILL.md`. Because the source already sits in the strict target shape — every MDA-extended field is nested under `metadata.mda.*` — the compile is essentially a rename.
 
-## Explore the Open Source Toolkit
+The output drops into Claude Code, OpenCode, Codex, Hermes, OpenClaw, skills.sh, Cursor, Windsurf, and any other agentskills.io v1 consumer. Same source compiles to `AGENTS.md`, `MCP-SERVER.md` (with its `mcp-server.json` sidecar), or `CLAUDE.md` by changing the `--target` flag.
 
-MDA is fully open source and includes tools like url2mda that you can run locally:
+## Adding a typed relationship
 
-1. Clone the repository: `git clone https://github.com/sno-ai/mda`
-2. Navigate to the url2mda directory: `cd mda/apps/url2mda`
-3. Install dependencies: `pnpm install`
-4. Run locally: `pnpm dev`
+If your skill builds on another, declare it.
 
-View MDA examples in the `docs/mda-examples` directory to see MDA in action for various use cases.
+In the body, drop a footnote reference:
 
-That's it! You're now ready to create AI-friendly content with MDA.
+```markdown
+This skill extends the PDF rendering primitives from pdf-core[^pdf-core].
+```
+
+At the bottom of the document:
+
+```markdown
+[^pdf-core]: `{"rel-type": "extends", "doc-id": "9c2ab16d-0f73-4f7a-9d1f-3c2d5e6a7b8c", "rel-desc": "Extends pdf-core's rendering primitives"}`
+```
+
+The compiler mirrors this footnote to `metadata.mda.relationships` in body order on compile. Standard Markdown renderers display it as a normal footnote with the JSON literal. MDA-aware tools traverse the typed edge.
+
+`rel-type` values: `parent`, `child`, `related`, `cites`, `supports`, `contradicts`, `extends`.
+
+## Adding a hard dependency
+
+Relationships are the human-readable graph. For runtime dependencies — pinned versions, digest anchors — use `depends-on` directly in frontmatter:
+
+```yaml
+metadata:
+  mda:
+    depends-on:
+      - doc-id: 9c2ab16d-0f73-4f7a-9d1f-3c2d5e6a7b8c
+        version: "^1.0.0"
+        digest: "sha256:7f3c8e2b4a9d7f0e9b91d2c3e4f56789abcd0123ef456789abc0123def456789"
+```
+
+`version` accepts exact (`1.2.3`) or caret (`^1.2.0`) ranges only — no other range grammar in v1.0. The optional `digest` is a content anchor: the resolver MUST refuse to load a candidate whose `integrity.digest` doesn't match.
+
+## Signing (optional)
+
+Compile with the `--sign` flag and Sigstore OIDC keyless signing kicks in:
+
+```bash
+npx @mda/cli compile pdf-tools.mda --target SKILL.md --sign
+```
+
+The output `SKILL.md` gets `metadata.mda.integrity.digest` (a JCS-canonicalized hash of the canonical bytes) and `metadata.mda.signatures[]` (DSSE-enveloped signature with Rekor inclusion proof and Fulcio certificate metadata). A verifier rederives the digest, looks up Rekor, verifies the cert chain, and applies an OIDC identity allow-list against operator policy.
+
+For the air-gap path (no Sigstore reachability), `did:web` + `mda-keys.json` is the documented fallback. See `spec/v1.0/09-signatures.md`.
+
+## What you've learned
+
+- One `.mda` source produces drop-in `.md` outputs for the four target schemas (`SKILL.md`, `AGENTS.md`, `MCP-SERVER.md`, `CLAUDE.md`).
+- MDA-extended frontmatter sits under `metadata.mda.*`, never at the top level (top-level is reserved for the open-standard floor).
+- Typed footnotes mirror to a machine-readable relationship graph.
+- `depends-on` declares hard dependencies with SemVer ranges and digest anchors.
+- Signing is opt-in. Reproducible. The verifier surface is the same whether the artifact came from a human, an agent, or a compiler.
+
+## Next
+
+<CardGroup cols="2">
+  <Card title="Architecture" icon="diagram-project" href="/mdx/architecture">
+    Deeper on the three additions: rich frontmatter, typed footnote relationships, cryptographic identity.
+  </Card>
+  <Card title="Specification" icon="book" href="/mdx/specification">
+    The normative entry point — every § of the v1.0 spec, linked.
+  </Card>
+  <Card title="Manual workflow" icon="terminal" href="https://github.com/sno-ai/mda/blob/main/docs/manual-workflow.md">
+    Hand-author and sign without the reference CLI. Just a text editor, `sha256sum`, and `cosign`.
+  </Card>
+  <Card title="More examples" icon="code" href="/mda-examples/quickstart-hello-world">
+    Worked `.mda` files covering common patterns.
+  </Card>
+</CardGroup>

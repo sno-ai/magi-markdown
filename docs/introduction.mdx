@@ -1,107 +1,93 @@
 ---
 title: "Introduction"
-description: "MDA: Bridging human content and AI processing with context-rich Markdown."
+description: "MDA Open Spec — a Markdown superset for agent-facing documents, with one source compiling into the .md files every major agent runtime already loads."
 ---
 
-We've all seen the power of Large Language Models (LLMs) and AI agents. But feeding them content effectively? That's a different story. Standard formats often fall short, stripping away vital context needed for reliable AI processing, especially for complex documents or web pages.
+Until now, you shipped the same agent-facing skill four times. Once as `SKILL.md` for the agentskills.io runtimes. Once as `AGENTS.md` for the AAIF ecosystem. Once as `MCP-SERVER.md` with a sidecar JSON. Once as `CLAUDE.md`. Same content, four frontmatter shapes. Update one, forget the others, and a month in, the four files have quietly drifted into four slightly different instruction files.
 
-Converting content to plain text for Retrieval-Augmented Generation (RAG) or agent workflows can lose crucial structure and metadata, leading to imprecise results.
+You write one `.mda`. The compiler emits the rest.
 
-Introducing **MDA (Markdown for Agent)**. An _AI-native_, _human-readable_, and _extensible_ Markdown format designed to solve this.
+```
+                ┌─────────────────────────┐
+                │   <name>.mda  (source)  │   ← MDA superset
+                └────────────┬────────────┘
+                             │  mda compile
+                             ▼
+   ┌─────────────────────────────────────────────────────────┐
+   │ <name>/SKILL.md     (+ scripts/, references/, assets/)  │
+   │ AGENTS.md                                               │
+   │ <name>/MCP-SERVER.md  (+ mcp-server.json sidecar)       │
+   │ CLAUDE.md                                               │
+   └─────────────────────────────────────────────────────────┘
+                       drop-in compatible
+```
 
-## Why MDA?
+## Three additions, all optional
 
-### The Problem
+`.mda` adds three things on top of standard Markdown.
 
-... so you want your AI to *really* understand your content. Let's walk through the usual struggle:
-
-<Steps>
-  <Step title="Just use Plain Text or Markdown?">
-    <Warning>
-      Stripping content down seems easy, but...
-      - Where did that table structure go?
-      - What was the original source URL?
-      - How does this document relate to others?
-      - How do I tell the AI *how* to process this specific section?
-    </Warning>
-  </Step>
-  <Step title="Maybe HTML directly?">
-    <Note>
-      HTML is structured, but often noisy for LLMs:
-      - Full of tags irrelevant to the core meaning.
-      - Doesn't explicitly define inter-document relationships.
-      - No standard way to embed processing instructions for the AI.
-      - Can be complex to parse reliably.
-    </Note>
-  </Step>
-  <Step title="Building custom pre-processing pipelines?">
-     <Card title="The Engineering Overhead">
-       - Complex parsers for different formats (PDF, DOCX, HTML).
-       - Heuristics for extracting metadata (often inaccurate).
-       - Separate systems for managing relationships.
-       - Ad-hoc methods for passing instructions to the LLM.
-       - Constant maintenance as source formats change.
-     </Card>
-  </Step>
-</Steps>
-
-And you find yourself asking...
-
-> "Isn't there a simpler way to make content both human-readable *and* AI-ready?"
-
-### The Solution: MDA
-
-MDA extends standard Markdown, keeping it readable while adding optional, structured layers for AI.
-
-<CardGroup cols="2">
-  <Card title="Structured Metadata" icon="list">
-    <div className="text-emerald-700 space-y-1">
-    - YAML Front Matter for rich context.
-    - Define `doc-id`, `title`, `tags`, `purpose`, dates, etc.
-    - Essential for classification and retrieval.
-    </div>
+<CardGroup cols="3">
+  <Card title="Rich frontmatter" icon="list">
+    Beyond the open-standard `name` and `description` baseline, MDA carries `doc-id`, `version`, `requires`, `depends-on`, `relationships`, and `tags`. Agent-aware tools use these for routing, dependency resolution, and graph traversal.
   </Card>
-  <Card title="Embedded AI Instructions" icon="code">
-    <div className="text-emerald-700 space-y-1">
-    - Use `ai-script` blocks for direct commands.
-    - Guide summarization, analysis, model choice.
-    - Control processing within the content itself.
-    </div>
+  <Card title="Typed footnote relationships" icon="link">
+    Standard Markdown footnotes whose payload is a JSON object: `parent`, `child`, `related`, `cites`, `supports`, `contradicts`, `extends`. Mirrored to `metadata.mda.relationships` in body order on compile.
   </Card>
-  <Card title="Explicit Relationships" icon="link">
-    <div className="text-emerald-700 space-y-1">
-    - Define document links using Markdown footnotes.
-    - Specify types: `parent`, `child`, `citation`, `related`.
-    - Build knowledge graphs automatically.
-    </div>
-  </Card>
-  <Card title="Human & Machine Friendly" icon="circle-check">
-    <div className="text-emerald-700 space-y-1">
-    - Remains standard Markdown for readability.
-    - Legacy renderers see normal text/code blocks.
-    - MDA-aware processors unlock AI potential.
-    - Optional components: Use only what you need.
-    </div>
+  <Card title="Cryptographic identity" icon="shield-check">
+    A JCS-canonicalized `integrity` digest plus DSSE-enveloped, Sigstore-anchored `signatures[]`. The compiled `.md` carries reproducible tamper detection without bolting it on later.
   </Card>
 </CardGroup>
 
-Stop fighting content conversion. Focus on building intelligent applications while MDA provides the AI-ready foundation.
+A `.mda` source with only the open-standard frontmatter compiles unchanged into a `.md`. Use as much or as little of MDA as your project needs.
 
-## Use Cases
+## Three authoring modes
 
-What can you build with MDA?
+MDA artifacts may be produced three ways. They're equivalent under validation.
+
+1. **Agent mode** — an AI agent writes the `.md` directly. The primary near-term use case.
+2. **Human mode** — a human writes the `.md` directly, with `sha256sum` and `cosign`.
+3. **Compiled mode** — an author writes a `.mda` source; the MDA compiler emits one or more `.md` outputs.
+
+Whichever path you take, the artifact is judged against the same JSON Schema 2020-12 target schema and the same conformance suite. There's no second code path for "this came from an agent."
+
+## Where the value lands
 
 <CardGroup cols="2">
-  <Card title="Enhanced RAG Systems" icon="magnifying-glass">
-    Improve retrieval accuracy by leveraging metadata and relationships for more context-aware results.
+  <Card title="One source, many runtimes" icon="arrows-split-up-and-left">
+    A compiled `SKILL.md` loads in Claude Code, OpenCode, OpenAI Codex, Hermes, OpenClaw, skills.sh, Cursor, and Windsurf. A compiled `AGENTS.md` lands in Codex CLI, Copilot, Cursor, Windsurf, Amp, Devin, Gemini CLI, VS Code, Jules, and Factory.
   </Card>
-  <Card title="Multi-Agent Orchestration" icon="user-group">
-    Coordinate different AI agents working on the same content using embedded `ai-script` instructions tailored for each agent.
+  <Card title="Machine-readable graph" icon="diagram-project">
+    `metadata.mda.depends-on` declares dependencies with version ranges and digest pins. `metadata.mda.relationships` mirrors the body's typed footnote graph. Tools traverse explicit edges instead of inferring from prose.
   </Card>
-  <Card title="Dynamic Documentation" icon="tower-control">
-    Create living documents where AI instructions can trigger updates or checks, and relationships track versions.
+  <Card title="Structured capabilities" icon="sliders">
+    `metadata.mda.requires` declares `runtime`, `tools`, `network`, `packages`, `model`, and `cost-hints` so a harness can decide activation, eviction, and routing without parsing description prose.
   </Card>
-  <Card title="Knowledge Graph Construction" icon="share">
-    Automatically build and maintain knowledge graphs directly from your content's defined relationships.
+  <Card title="Verifiable trust at load" icon="signature">
+    Sigstore OIDC keyless signing by default, with a `did:web` air-gap fallback. Reproducible tamper detection. The conformance runner enforces `signatures[].payload-digest == integrity.digest` byte-for-byte.
+  </Card>
+</CardGroup>
+
+## Status, honestly
+
+v1.0 ships the **contract**, not the entire ecosystem around it. What works today: you author a `.mda`, compile it to one or more conforming `.md` outputs, and validate them against the target JSON Schemas and the 35-fixture conformance suite.
+
+What's still being built: a bundled signature verifier, a working dependency resolver, a central artifact registry, a graph indexer, harnesses that route through `requires`. The `.mda` you write today still produces conforming `.md` outputs that load in every runtime listed above.
+
+For the truthful gap, see [What v1.0 doesn't ship](https://github.com/sno-ai/mda/blob/main/ai-doc/what-v1.0-does-not-ship.md). For the long version of the value proposition, the [AI-agent-side core value](https://github.com/sno-ai/mda/blob/main/ai-doc/ai-agent-core-value.md) and [human-author-side core value](https://github.com/sno-ai/mda/blob/main/ai-doc/human-curator-user-core-value.md) documents trace every claim back to a section of the spec.
+
+## Next
+
+<CardGroup cols="2">
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Author a minimal `.mda` and compile it to a `SKILL.md` in under five minutes.
+  </Card>
+  <Card title="Architecture" icon="diagram-project" href="/mdx/architecture">
+    The three additions, the parsing flow, and how a compiled `.md` stays drop-in compatible.
+  </Card>
+  <Card title="Specification" icon="book" href="/mdx/specification">
+    The normative spec entry point, with links to every §.
+  </Card>
+  <Card title="Examples" icon="code" href="/mda-examples/quickstart-hello-world">
+    Worked `.mda` examples covering common authoring patterns.
   </Card>
 </CardGroup>

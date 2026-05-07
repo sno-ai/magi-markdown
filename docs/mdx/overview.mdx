@@ -1,41 +1,83 @@
+---
+title: "Overview"
+description: "What MDA Open Spec is, what problem it solves, and how it sits between standard Markdown and the agent-runtime ecosystem."
+---
+
 # MDA Overview
 
-## Introduction
+**MDA (Markdown for Agent)** is a Markdown superset for agent-facing documents. One `.mda` source compiles into the `.md` files every major agent runtime already loads — `SKILL.md`, `AGENTS.md`, `MCP-SERVER.md`, `CLAUDE.md`. On top of those plain outputs, MDA layers a real dependency graph, structured capability declarations, and reproducible signed identity. All optional. Standard Markdown still renders.
 
-**MDA (Markdown for Agent)** is an extension of standard Markdown designed to enhance content for Retrieval-Augmented Generation (RAG) and seamless integration with Large Language Model (LLM) agents and other AI systems. It elegantly combines Markdown's simplicity and readability with structured metadata and AI-specific instructions, making it ideal for advanced RAG pipelines, intelligent documentation platforms, and autonomous agent workflows. MDA files typically use the `.mda` extension.
+## The problem MDA solves
 
-MDA enhances standard Markdown by incorporating three key, but **optional** components:
+In 2026 a single agent-facing skill routinely needs to ship as four files:
 
-![MDA: Three Major Components](/images/three-parts.svg)
+- `SKILL.md` for the agentskills.io ecosystem (Claude Code, OpenCode, Codex, Hermes, OpenClaw, skills.sh, Cursor, Windsurf).
+- `AGENTS.md` for AAIF-aligned runtimes (Codex CLI, Copilot, Cursor, Windsurf, Amp, Devin, Gemini CLI, VS Code, Jules, Factory).
+- `MCP-SERVER.md` plus its sidecar `mcp-server.json` for MCP servers.
+- `CLAUDE.md` for Claude Code's project-memory file.
 
-1.  **YAML Front Matter:** Provides structured metadata about the document (e.g., unique `doc-id`, `title`, `tags`, `dates`, `purpose`).
-2.  **`ai-script` Code Blocks:** Embeds specific instructions (as JSON) for LLM processing directly within the content (e.g., summarization prompts, entity extraction requests, model parameter settings).
-3.  **Markdown Footnotes with JSON Payloads:** Defines typed relationships between documents using a structured JSON format within standard footnotes (e.g., `parent`, `child`, `citation`, `related`), enabling knowledge graph construction.
+Maintained as separate copies, they drift. A typo fix on Tuesday in `SKILL.md` doesn't reach `AGENTS.md`. A version bump in `AGENTS.md` doesn't propagate. A month in, the four files quietly disagree on what the skill actually does.
 
-**Key Principle:** All components – Front Matter, `ai-script` blocks, and Footnotes – are optional, offering flexibility in how MDA is utilized. Standard Markdown renderers will parse `.mda` files perfectly, preserving human readability. For AI processing, sending the raw `.mda` file allows processors to leverage the embedded metadata and instructions natively, enabling more sophisticated understanding and interaction with the content.
+The deeper problem is what you can't say in any of those formats. You can't declare "this skill depends on that one, version `^1.2.0`, with this digest pin." You can't say "this file was signed by this identity at this Rekor index." You can't say "the relationship between this document and that one is `supports`, not `cites`." There's nowhere to put that information, so it lives in prose, where neither agents nor humans can act on it reliably.
 
-## Why Use MDA? Benefits Explained
+MDA puts those things into structured frontmatter and typed footnotes that a JSON Schema can validate. The Markdown body still renders. The standard fields still load. Everything new is optional.
 
-MDA offers several advantages over plain Markdown, particularly when working with AI systems:
+## The three MDA additions
 
-1.  **Enhanced RAG Performance:**
-    *   **Structured Metadata:** The Front Matter provides rich, queryable metadata (like `doc-id`, `tags`, `entities`, `created-date`, `updated-date`) that significantly improves document retrieval relevance and filtering in RAG systems. Instead of just relying on semantic similarity of the content, retrieval can target specific attributes, leading to more precise results.
-    *   **Explicit Relationships:** Footnotes define clear, typed connections (`citation`, `parent`, `child`, `related`, `contradicts`, `supports`, `extends`) between documents, enabling the construction of knowledge graphs. RAG systems can traverse these graphs to find highly relevant, interconnected information that might be missed by simple vector search alone.
+A `.mda` source is just standard Markdown plus three optional layers.
 
-2.  **Seamless LLM Agent Integration:**
-    *   **Embedded Instructions:** `ai-script` blocks allow developers and content creators to embed specific prompts or instructions directly within the `.mda` content. AI agents can parse these JSON instructions (e.g., "Summarize this section," "Extract key entities mentioned below," "Adopt a formal tone for the following explanation," "Use model X with temperature Y") and execute them in context, enabling more sophisticated, automated content processing and generation workflows.
-    *   **Contextual Guidance:** Instructions can be placed precisely where they are most relevant within the document flow, providing fine-grained control over how an LLM interacts with different parts of the content.
+### 1. Rich YAML frontmatter
 
-3.  **Improved Content Management & Understanding:**
-    *   **Standardization:** Provides a common, readable format for embedding AI-relevant information within documentation, knowledge bases, or content repositories.
-    *   **Discoverability:** Rich metadata and defined relationships make it easier for both humans and automated systems (like search indexers or knowledge graph builders) to discover, classify, and understand the context, purpose, and connections of documents within a larger corpus.
-    *   **Maintainability:** Centralizes essential metadata and AI-specific instructions with the content itself, simplifying updates and ensuring consistency across related documents or processing steps.
+Beyond the open-standard `name` and `description` baseline that every consumer already reads, MDA carries `doc-id`, `version`, `requires`, `depends-on`, `relationships`, and `tags` under a `metadata.mda.*` namespace. Vendor-specific extensions live alongside under reserved `metadata.<vendor>.*` namespaces. Strict JSON Schema 2020-12 validation, with `unevaluatedProperties: false` so unknown top-level fields fail fast.
 
-4.  **Human Readability & Flexibility:**
-    *   **Graceful Degradation:** MDA (`.mda`) files remain perfectly readable Markdown. Standard tools and viewers will simply display the Front Matter as text, `ai-script` blocks as code blocks, and Footnotes normally (showing the raw JSON string as the footnote content).
-    *   **Optionality:** Teams can adopt MDA incrementally, using only the components (Front Matter, `ai-script`, Footnotes) that provide immediate value for their specific use case, without requiring a full rewrite of existing Markdown content.
+Spec section: [§02 Frontmatter](https://github.com/sno-ai/mda/blob/main/spec/v1.0/02-frontmatter.md).
 
-5.  **Reference Implementation (`url2mda`):**
-    *   The provided `url2mda` tool (see `README.md`) demonstrates a practical way to automatically generate MDA (`.mda`) from existing web content, attempting to auto-populate Front Matter metadata and potentially adding initial `ai-script` blocks, bootstrapping the process of creating AI-ready documentation from web sources.
+### 2. Typed footnote relationships
 
-In summary, MDA bridges the gap between human-readable content and machine-processable data, creating a powerful format for building next-generation AI applications that rely on understanding, processing, and generating rich textual information with enhanced context and control.
+Standard Markdown footnotes whose payload is a JSON relationship object: `parent`, `child`, `related`, `cites`, `supports`, `contradicts`, `extends`. The compiler mirrors them to `metadata.mda.relationships` in body order. Standard renderers display them as plain footnotes with the JSON literal; MDA-aware tools traverse the typed graph.
+
+Spec section: [§03 Relationships](https://github.com/sno-ai/mda/blob/main/spec/v1.0/03-relationships.md).
+
+### 3. Optional cryptographic identity
+
+A reproducible `integrity` digest derived through JCS canonicalization, with multi-file boundary semantics for skills that bundle scripts and references. DSSE PAE-enveloped signatures anchored in Sigstore by default, with a `did:web` air-gap fallback. The conformance runner enforces `signatures[].payload-digest == integrity.digest` byte-for-byte.
+
+Spec sections: [§08 Integrity](https://github.com/sno-ai/mda/blob/main/spec/v1.0/08-integrity.md) and [§09 Signatures](https://github.com/sno-ai/mda/blob/main/spec/v1.0/09-signatures.md).
+
+## Three authoring modes
+
+MDA artifacts may be produced three ways. They're equivalent under validation.
+
+1. **Agent mode** — an AI agent writes the `.md` directly. The primary near-term use case. The v1.0 contract requires an LLM with only the spec in context to be able to produce conforming output.
+2. **Human mode** — a human writes the `.md` directly with `sha256sum` and `cosign`. See [`docs/manual-workflow.md`](https://github.com/sno-ai/mda/blob/main/docs/manual-workflow.md).
+3. **Compiled mode** — an author writes a `.mda` source; the MDA compiler emits one or more `.md` outputs.
+
+Whichever path you take, the artifact is judged against the same JSON Schema 2020-12 target schema, the same conformance suite, and the same cross-field check that `signatures[].payload-digest` equals `integrity.digest`. There's no second code path for "this came from an agent."
+
+## Why MDA, in plain terms
+
+- **One source of truth.** Stop maintaining four near-identical files.
+- **A real dependency graph.** Pin versions and content digests in frontmatter. The resolver refuses load when a candidate's digest doesn't match.
+- **Typed relationships, not prose.** Knowledge-graph and RAG indexers have something machine-readable to traverse.
+- **Verifiable trust at load.** Sigstore-anchored signatures with operator-controlled OIDC identity allow-lists.
+- **Strict validation early.** JSON Schema rejects "almost conformant" artifacts before they ship, instead of letting them silently drift in a runtime.
+- **Open spec.** Vendor-neutral. Per-vendor extensions live under reserved namespaces. Loaders read only their own namespace.
+
+## Status, honestly
+
+v1.0 ships the **contract**, not the entire ecosystem around it.
+
+What works today: you can author a `.mda`, compile it to one or more conforming `.md` outputs, and validate them against the JSON Schema target schemas and the 35-fixture conformance suite.
+
+What's still being built: a bundled signature verifier, a working dependency resolver, a central artifact registry, a graph indexer, and harnesses that route through `metadata.mda.requires`. The `.mda` you write today still produces conforming `.md` outputs that load in every runtime listed above.
+
+For the truthful gap, see [What v1.0 doesn't ship](https://github.com/sno-ai/mda/blob/main/ai-doc/what-v1.0-does-not-ship.md). For the long version of the value proposition, two documents go deeper:
+
+- [Core value for AI agents](https://github.com/sno-ai/mda/blob/main/ai-doc/ai-agent-core-value.md) — five points framed for runtimes, harnesses, validators, and dispatchers.
+- [Core value for human authors and curators](https://github.com/sno-ai/mda/blob/main/ai-doc/human-curator-user-core-value.md) — six points framed for the people who write and curate agent-facing instruction libraries.
+
+## Next
+
+- [Quickstart](/quickstart) — author a minimal `.mda` and compile it.
+- [Architecture](/mdx/architecture) — deeper on the three additions and the parsing flow.
+- [Specification](/mdx/specification) — the normative entry point with links to every §.
