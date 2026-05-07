@@ -1,6 +1,6 @@
 ---
 name: bad-skill-output
-description: Compiled SKILL.md keeps `doc-id` at the top level instead of nesting under metadata.mda. Expected to be rejected by §07-3.3 (unevaluatedProperties:false).
+description: Compiled SKILL.md keeps `doc-id` at the top level instead of nesting under metadata.mda. Expected to be rejected by §06-targets/skill-md §06-3.3 (unevaluatedProperties:false).
 doc-id: 99999999-9999-9999-9999-999999999999
 ---
 

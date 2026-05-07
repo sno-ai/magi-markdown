@@ -14,23 +14,70 @@ fixtures:
     rules: [§02-2.1, §02-2.2]
     description: Minimal valid source — only `name` and `description`.
 
-  - id: "02-ai-script-inline"
-    path: valid/02-ai-script-inline.mda
-    against:
-      - schemas/frontmatter-source.schema.json
-      - schemas/ai-script.schema.json
-    verdict: accept
-    rules: [§03-2.1, §03-2.2]
-    description: Source with one inline ai-script block; payload validates against ai-script schema.
-
   - id: "03-relationships-with-mirror"
     path: valid/03-relationships-with-mirror.mda
     against:
       - schemas/frontmatter-source.schema.json
       - schemas/relationship-footnote.schema.json
     verdict: accept
-    rules: [§04-2, §04-4]
+    rules: [§03-2, §03-4]
     description: Source with footnote relationships AND a metadata.mda.relationships mirror (mirror is optional in source but encouraged).
+
+  - id: "04-depends-on-and-requires"
+    path: valid/04-depends-on-and-requires.mda
+    against:
+      - schemas/frontmatter-source.schema.json
+      - schemas/_defs/depends-on.schema.json
+      - schemas/_defs/version-range.schema.json
+      - schemas/_defs/requires.schema.json
+    verdict: accept
+    rules: [§03-3, §03-3.2, §10-2]
+    description: Source declaring metadata.mda.depends-on (with caret range and digest pinning) and metadata.mda.requires (with standard keys).
+
+  - id: "05-integrity-sha256"
+    path: valid/05-integrity-sha256.mda
+    against:
+      - schemas/frontmatter-source.schema.json
+      - schemas/_defs/integrity.schema.json
+    verdict: accept
+    rules: [§02-2.7, §08-2]
+    description: Source declaring a top-level integrity field with a valid sha256 digest shape.
+
+  - id: "06-sigstore-signed"
+    path: valid/06-sigstore-signed.mda
+    against:
+      - schemas/frontmatter-source.schema.json
+      - schemas/_defs/integrity.schema.json
+      - schemas/_defs/signature.schema.json
+    semantic-checks: [signature-digest-equality]
+    verdict: accept
+    rules: [§02-2.8, §09-2, §09-4]
+    description: Source declaring a Sigstore-OIDC signature; payload-digest matches integrity.digest; rekor coordinates present.
+
+  - id: "07-did-web-signed"
+    path: valid/07-did-web-signed.mda
+    against:
+      - schemas/frontmatter-source.schema.json
+      - schemas/_defs/integrity.schema.json
+      - schemas/_defs/signature.schema.json
+    semantic-checks: [signature-digest-equality]
+    verdict: accept
+    rules: [§09-2, §09-5]
+    description: Source declaring a did:web signature for the air-gap signing path; no rekor coordinates required.
+
+  - id: "08-agents-md-frontmatter-free"
+    path: valid/08-agents-md-frontmatter-free.md
+    against: [schemas/frontmatter-agents-md.schema.json]
+    verdict: accept
+    rules: [§06-targets/agents-md §06-3]
+    description: Pure-Markdown AGENTS.md with no frontmatter; conformant per the optional-frontmatter rule.
+
+  - id: "09-agents-md-with-frontmatter"
+    path: valid/09-agents-md-with-frontmatter.md
+    against: [schemas/frontmatter-agents-md.schema.json]
+    verdict: accept
+    rules: [§06-targets/agents-md §06-3.1, §06-targets/agents-md §06-3.2]
+    description: AGENTS.md with optional frontmatter; MDA-extended fields nested under metadata.mda.*.
 
   # ─── invalid (source-side rejection) ──────────────────────────────────────
   - id: "11-name-uppercase"
@@ -47,31 +94,63 @@ fixtures:
     rules: [§02-2.2]
     description: description field exceeds 1024 chars.
 
+  - id: "14-signature-without-integrity"
+    path: invalid/14-signature-without-integrity.mda
+    against: [schemas/frontmatter-source.schema.json]
+    verdict: reject
+    rules: [§02-2.8, §09-2]
+    description: signatures[] present but integrity is missing; dependentRequired clause forces integrity.
+
+  - id: "15-version-range-compound"
+    path: invalid/15-version-range-compound.mda
+    against:
+      - schemas/frontmatter-source.schema.json
+      - schemas/_defs/version-range.schema.json
+    verdict: reject
+    rules: [§03-3.2]
+    description: depends-on entry uses a compound version-range; v1.0 admits only exact and caret ranges.
+
+  - id: "18-integrity-bad-digest-length"
+    path: invalid/18-integrity-bad-digest-length.mda
+    against:
+      - schemas/frontmatter-source.schema.json
+      - schemas/_defs/integrity.schema.json
+    verdict: reject
+    rules: [§08-2]
+    description: integrity.algorithm is sha256 but digest length does not match (6 hex chars vs required 64).
+
+  - id: "19-signature-digest-mismatch"
+    path: invalid/19-signature-digest-mismatch.mda
+    against:
+      - schemas/frontmatter-source.schema.json
+      - schemas/_defs/integrity.schema.json
+      - schemas/_defs/signature.schema.json
+    semantic-checks: [signature-digest-equality]
+    verdict: reject
+    rules: [§09-2]
+    description: integrity.digest and signatures[0].payload-digest are both well-formed but unequal; the cross-field rule MUST reject.
+
   # ─── invalid (output-side rejection — compiled .md against target schema) ─
   - id: "13-skill-output-mda-extended-toplevel"
     path: invalid/13-skill-output-mda-extended-toplevel.md
     against: [schemas/frontmatter-skill-md.schema.json]
     verdict: reject
-    rules: [§07-3.3]
+    rules: [§06-targets/skill-md §06-3.3]
     description: Compiled SKILL.md keeps `doc-id` at top level; must nest under metadata.mda.
 
-  - id: "14-skill-output-has-ai-script-fence"
-    path: invalid/14-skill-output-has-ai-script-fence.md
-    against: [schemas/frontmatter-skill-md.schema.json, "body-fence-check"]
+  - id: "16-agents-md-allowed-tools-toplevel"
+    path: invalid/16-agents-md-allowed-tools-toplevel.md
+    against: [schemas/frontmatter-agents-md.schema.json]
     verdict: reject
-    rules: [§07-4, §03-2.3]
-    description: Compiled SKILL.md body contains an ai-script fence; must be externalized to scripts/.
+    rules: [§06-targets/agents-md §06-3.2]
+    description: AGENTS.md output places allowed-tools at the top level; the target forbids it (must nest under vendor namespace).
 
-  # ─── compile (round-trip transformation) ──────────────────────────────────
-  - id: "21-mda-with-ai-script"
-    path: compile/21-mda-with-ai-script
-    input: compile/21-mda-with-ai-script/input.mda
-    target: skill-md
-    expected_dir: compile/21-mda-with-ai-script/expected/
-    verdict: equal
-    rules: [§01-4, §03-3.1, §03-3.2, §04-4, §07-3.3]
-    description: |
-      Compile a source with: an MDA-extended frontmatter field, an inline ai-script
-      block, and a relationship footnote. Expected output: SKILL.md with name+description
-      at top level, MDA-extended fields under metadata.mda, footnote mirrored to
-      metadata.mda.relationships, and ai-script externalized to scripts/<id>.ai-script.json.
+  - id: "17-mcp-server-md-missing-name"
+    path: invalid/17-mcp-server-md-missing-name.md
+    against: [schemas/frontmatter-mcp-server-md.schema.json]
+    verdict: reject
+    rules: [§06-targets/mcp-server-md §06-3.1]
+    description: MCP-SERVER.md output omits the required top-level `name` field.
+
+  # NOTE: future fixtures will exercise compile flows (compile/) once the
+  # reference compiler emits canonical bytes (§08) end-to-end.

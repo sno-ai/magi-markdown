@@ -1,0 +1,21 @@
+---
+name: depends-on-example
+description: Source declaring runtime dependencies via metadata.mda.depends-on and capability declarations via metadata.mda.requires. Use as a fixture for §03-3 and §10.
+metadata:
+  mda:
+    version: "1.2.0"
+    depends-on:
+      - name: pdf-tools
+        version-range: "^1.2.0"
+        digest: "sha256:a4f9c0d2e8b3a16e9c01b8f3d2a5c7b14e9f8a3d6c2b1e7f0a8d4c3b9e2f1a05"
+      - name: web-fetch
+        version-range: "1.0.3"
+    requires:
+      runtime: ["python>=3.11"]
+      tools: ["Read", "Bash(jq:*)"]
+      network: none
+---
+
+# Depends-on and requires
+
+This document exercises the runtime-graph (`depends-on`) and capability-declaration (`requires`) MDA-extended fields.

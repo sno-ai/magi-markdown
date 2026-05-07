@@ -1,0 +1,14 @@
+---
+name: bad-signature-no-integrity
+description: Source declaring signatures[] without the required integrity anchor. The dependentRequired clause MUST reject this.
+signatures:
+  - signer: "did-web:tools.example.com"
+    key-id: "ed25519-9c4e7b"
+    payload-digest: "sha256:a4f9c0d2e8b3a16e9c01b8f3d2a5c7b14e9f8a3d6c2b1e7f0a8d4c3b9e2f1a05"
+    algorithm: ed25519
+    signature: "BASE64ILLUSTRATIVE=="
+---
+
+# Bad
+
+This fixture has a signature but no integrity field; the source schema MUST reject it.
