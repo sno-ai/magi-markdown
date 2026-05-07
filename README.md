@@ -7,6 +7,8 @@
 [![Docs](https://img.shields.io/badge/docs-mda.sno.dev-3b82f6)](https://mda.sno.dev)
 [![GitHub stars](https://img.shields.io/github/stars/sno-ai/mda?style=flat&color=yellow)](https://github.com/sno-ai/mda/stargazers)
 
+**Read in other languages:** **English** · [中文](docs/readme/README.zh-CN.md) · [Deutsch](docs/readme/README.de.md) · [Español](docs/readme/README.es.md) · [Français](docs/readme/README.fr.md) · [Русский](docs/readme/README.ru.md) · [한국어](docs/readme/README.ko.md) · [日本語](docs/readme/README.ja.md) · [हिन्दी](docs/readme/README.hi.md)
+
 ## What MDA is
 
 Until now, you shipped the same skill four times. Once as `SKILL.md` for the agentskills.io runtimes. Once as `AGENTS.md` for the AAIF ecosystem. Once as `MCP-SERVER.md` with a sidecar JSON. Once as `CLAUDE.md`. Same content, four frontmatter shapes. Update one, forget the others, and a month in, the four files have quietly drifted into four slightly different instruction files.
