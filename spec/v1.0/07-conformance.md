@@ -49,13 +49,18 @@ The authoritative index is `conformance/manifest.yaml`. The shape of each entry:
 ```yaml
 - id: "<numeric-prefix-and-slug>"
   path: <relative-path-to-fixture-or-dir>
-  against: [<schema-or-rule-ids>]
+  against: [<schema-or-rule-ids>]              # optional; omit for extraction-only fixtures
+  extraction-expected: ok | no-frontmatter |    # optional; §02-1.1 extraction-time verdict
+                       unterminated-frontmatter |
+                       invalid-encoding |
+                       frontmatter-yaml-parse-error
+  semantic-checks: [signature-digest-equality]  # optional; cross-field rules JSON Schema cannot express
   verdict: accept | reject | equal
   rules: [§<section>-<clause>, ...]
   description: <one or two sentences>
 ```
 
-`verdict: accept` and `verdict: reject` apply to validator-level fixtures (`valid/`, `invalid/`). `verdict: equal` applies to compiler-level fixtures (`compile/`) and asserts byte-equivalence to the `expected/` tree.
+`verdict: accept` and `verdict: reject` apply to validator-level fixtures (`valid/`, `invalid/`). `verdict: equal` applies to compiler-level fixtures (`compile/`) and asserts byte-equivalence to the `expected/` tree. `extraction-expected` opts a fixture into the §02-1.1 extraction-time verdict check (BOM, CRLF, body-with-`---`-horizontal-rule, empty body, body-only files, unterminated frontmatter, invalid UTF-8); when set, the runner asserts the extractor returns the named outcome before applying any schema. `semantic-checks` opts a fixture into cross-field semantic rules (currently only `signature-digest-equality`, §09-2).
 
 ## §07-5 Adding fixtures
 

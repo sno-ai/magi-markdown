@@ -38,6 +38,11 @@
       "type": "integer",
       "minimum": 0,
       "description": "Rekor entry index; required when signer starts with sigstore-oidc:."
+    },
+    "payload-type": {
+      "type": "string",
+      "description": "DSSE payload-type declaring the semantic type of the canonicalized payload bytes. Default (when absent): application/vnd.mda.integrity+json. Vendor-defined types follow RFC 6838 vendor tree: application/vnd.<vendor>.<doc-type>+jcs+json. See §09-3.1 and REGISTRY.md.",
+      "pattern": "^application/vnd\\.[a-z0-9][a-z0-9.\\-]*\\+jcs\\+json$"
     }
   },
   "additionalProperties": false,
