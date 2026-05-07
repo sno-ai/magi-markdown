@@ -3,7 +3,7 @@
   <rect width="800" height="500" fill="#f8f9fa" rx="10" ry="10" />
   
   <!-- Title -->
-  <text x="400" y="40" font-family="Arial, sans-serif" font-size="24" fill="#333" text-anchor="middle" font-weight="bold">MAGI: Knowledge Graph Construction</text>
+  <text x="400" y="40" font-family="Arial, sans-serif" font-size="24" fill="#333" text-anchor="middle" font-weight="bold">MDA: Knowledge Graph Construction</text>
   
   <!-- Document Nodes -->
   <!-- Central Document -->
