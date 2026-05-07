@@ -1,6 +1,6 @@
 # 📝 MDA Open Spec — Markdown for Agent
 
-> A Markdown superset for agent-facing documents. One source, compiled into the `.md` files every major agent runtime already loads. Add a real dependency graph and reproducible signed identity if you need them.
+> A Markdown superset for agent-facing documents. **One source, many targets** — compile into the `.md` files every major agent runtime already loads. **Tamper-evident at load** — every artifact carries a reproducible content digest, and signed artifacts carry Sigstore-anchored signatures, so neither the agent loading the doc nor the human reviewing it has to trust an unsigned blob.
 
 [![Latest release](https://img.shields.io/github/v/release/sno-ai/mda?include_prereleases&label=release&color=blue)](https://github.com/sno-ai/mda/releases/latest)
 [![License](https://img.shields.io/github/license/sno-ai/mda)](https://github.com/sno-ai/mda/blob/main/LICENSE)
@@ -30,13 +30,17 @@ You write one `.mda`. The compiler emits the rest.
                        drop-in compatible
 ```
 
+And those four files can't say who signed them. The agent loading `SKILL.md` has no way to verify the content matches what you wrote, and the curator reviewing `AGENTS.md` has no way to know whose hands have been on it between merge and load. The standard frontmatter shapes have nowhere to put a content digest or a signature, so the trust decision quietly falls back to "we trust the repo, somehow."
+
+MDA carries a JCS-canonicalized `integrity.digest` and DSSE-enveloped, Sigstore-anchored `signatures[]` in the frontmatter itself. Both sides — the agent at load time and the human at review time — can make a real trust decision against the artifact in hand, not against a feeling about the repo. Tamper-evidence and signer verification ship in the contract, not as a later bolt-on.
+
 ![Three MDA additions on top of standard Markdown: rich frontmatter, typed footnote relationships, signed identity](images/three-additions.png)
 
 `.mda` adds three things on top of standard Markdown. All of them optional.
 
 1. **Rich YAML frontmatter.** Beyond the open-standard `name` and `description` baseline, MDA carries `doc-id`, `version`, `requires`, `depends-on`, `relationships`, and `tags`. Agent-aware tools use these for routing, dependency resolution, and graph traversal. See [`spec/v1.0/02-frontmatter.md`](spec/v1.0/02-frontmatter.md) and [`spec/v1.0/10-capabilities.md`](spec/v1.0/10-capabilities.md).
 2. **Typed footnote relationships.** Standard Markdown footnotes whose payload is a JSON object: `parent`, `child`, `related`, `cites`, `supports`, `contradicts`, `extends`. Mirrored to `metadata.mda.relationships` in body order on compile. See [`spec/v1.0/03-relationships.md`](spec/v1.0/03-relationships.md).
-3. **Optional cryptographic identity.** A JCS-canonicalized `integrity` digest plus DSSE-enveloped, Sigstore-anchored `signatures[]`. The compiled `.md` carries reproducible tamper detection without bolting it on later. See [`spec/v1.0/08-integrity.md`](spec/v1.0/08-integrity.md) and [`spec/v1.0/09-signatures.md`](spec/v1.0/09-signatures.md).
+3. **Cryptographic identity.** A JCS-canonicalized `integrity` digest plus DSSE-enveloped, Sigstore-anchored `signatures[]`. The compiled `.md` carries reproducible tamper detection without bolting it on later. See [`spec/v1.0/08-integrity.md`](spec/v1.0/08-integrity.md) and [`spec/v1.0/09-signatures.md`](spec/v1.0/09-signatures.md).
 
 A `.mda` source with only the open-standard frontmatter compiles unchanged into a `.md`. Use as much or as little of MDA as your project needs.
 
