@@ -1,92 +1,94 @@
+---
+title: "Specification"
+description: "Entry point to the MDA Open Spec v1.0 — every § linked, with what each one normatively says."
+---
+
 # MDA Open Spec
 
-This document provides detailed specifications for the three optional components of MDA (Markdown for Agent): YAML Front Matter, `ai-script` Code Blocks, and Markdown Footnotes for Relationships.
+The current normative version is **MDA Open Spec v1.0**, frozen at `v1.0.0-rc.1`.
 
-MDA is designed to be saved in files with the `.mda` extension to clearly signal the presence of enhanced components. While standard Markdown files (`.md`) can contain MDA elements for backward compatibility, processors optimized for MDA might prioritize `.mda` files or treat `.md` files as standard Markdown, potentially ignoring `ai-script` blocks or footnote relationships unless explicitly configured to parse them.
+- Canonical URL: https://mda.sno.dev/spec/v1.0/
+- Repo: [github.com/sno-ai/mda](https://github.com/sno-ai/mda)
+- Spec source: [`spec/v1.0/`](https://github.com/sno-ai/mda/tree/main/spec/v1.0)
+- License: spec content under [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/); schemas and tooling under Apache-2.0.
 
-The MDA format, represented as a string, is suitable for transmission via REST APIs, either as request payloads (e.g., sending content to be processed) or response bodies (e.g., returning processed or generated content in MDA format).
+This page is a guided index into the spec. The authoritative text lives in `spec/v1.0/`. Mintlify links go to GitHub; clone or download the repo if you need offline access.
 
-## 1. Front Matter Schema
+## What MDA is
 
-Provides structured metadata using YAML syntax, enclosed by `---` delimiters at the very beginning of the `.mda` file.
+A portable, structured metadata format for AI-agent artifacts. A single `.mda` source compiles to byte-equivalent `.md` outputs that drop into every major agent ecosystem: `SKILL.md`, `AGENTS.md`, `CLAUDE.md`, and `MCP-SERVER.md`.
 
-**Fields:** Field names use kebab-case (e.g., `doc-id`, `created-date`).
+The wedge: **cross-runtime portability + machine-readable dependency graph + open-extensible capability declarations**. Cryptographic identity (Sigstore-anchored signatures) is an enabler that makes enterprise adoption viable, not the wedge itself.
 
-| Field           | Type          | Description                                                                 | Example                     | Required/Optional | Notes                                    |
-| --------------- | ------------- | --------------------------------------------------------------------------- | --------------------------- |-------------------|------------------------------------------|
-| `doc-id`        | `string`      | A unique identifier (UUID format recommended) for this document. Crucial for `footnote relationships`.| `"38f5a922-81b2-4f1a-8d8c-3a5be4ea7511"` | Optional          | Strongly recommended for linking         |
-| `title`         | `string`      | The main title of the document.                                             | `"Introduction to MDA"`      | Optional          |                                          |
-| `description`   | `string`      | A brief summary or abstract of the document's content.                      | `"Explains the MDA format."` | Optional          |                                          |
-| `author`        | `string`      | The primary author's name.                                                   | `"Jane Doe"`                  | Optional          |                                          |
-| `author-id`     | `string`      | Unique identifier for the author (CUID2 or UUID recommended).               | `"usr_abcdef12345"`         | Optional          | Useful for linking author profiles       |
-| `image`         | `string`      | URL for a primary cover image associated with the document.                 | `"https://example.com/cover.jpg"` | Optional          |                                          |
-| `images-list`        | `list[string]`| URLs for additional images associated with the document.                    | `["https://.../img1.jpg"]` | Optional          |                                          |
-| `published-date`  | `string`        | ISO 8601 timestamp when the document was originally published or made public. | `"2024-01-10T08:00:00Z"`              | Optional          |                                          |
-| `tags`          | `list[string]`| Keywords or categories for classification and retrieval.                    | `["markdown", "ai", "rag"]` | Optional          |                                          |
-| `created-date`  | `string`        | ISO 8601 timestamp (date and time with timezone recommended) when the document was originally created. | `"2024-01-15T09:00:00Z"`              | Optional          | e.g., `YYYY-MM-DDTHH:mm:ssZ`             |
-| `updated-date`  | `string`        | ISO 8601 timestamp when the document was last significantly updated.      | `"2024-06-01T15:30:00Z"`              | Optional          |                                          |
-| `expired-date`  | `string`        | Optional ISO 8601 timestamp when the content should be considered outdated. | `"2025-01-01T00:00:00Z"`              | Optional          |                                          |
-| `globs`         | `list[string]`| File or URL patterns this metadata applies to (e.g., `["docs/**/*.md", "*.ts"]`). | `["*.mda", "!legacy/*"]`   | Optional          | Used for external/meta `.mda` files      |
-| `audience`      | `list[string]`| Describes the intended audience(s) (e.g., `["developers", "end-users"]`).| `["Developers"]`              | Optional          |                                          |
-| `purpose`       | `string`      | The primary goal or objective of the document (e.g., "tutorial", "reference").| `"Reference"`               | Optional          |                                          |
-| `entities`      | `list[string]`| Key named entities (people, places, organizations, concepts) mentioned.       | `["MDA", "RAG", "LLM"]`    | Optional          | Useful for RAG filtering/extraction    |
-| `relationships` | `list[string]`| High-level summary of relationships defined in footnotes (human-readable).  | `["Extends Markdown"]`      | Optional          | Primarily for human readers              |
-| `source-url`    | `string`      | The original URL if the content was sourced or derived from the web.         | `"https://example.com/doc"` | Optional          |                                          |
+## Design priority order
 
-*Note: While all fields are technically optional for basic `.mda` validity, `doc-id` is essential if using the Footnote relationship feature.* Custom fields are allowed but may be ignored by standard processors.
+Every MDA design decision follows P0 > P1 > P2:
 
-## 2. AI Script Block (`ai-script`)
+- **P0 — AI-agent authorability.** An LLM with only this Open Spec in context MUST be able to produce conforming output.
+- **P1 — Human authorability.** A human with a text editor and `sha256sum` + `cosign` MUST be able to produce conforming output.
+- **P2 — Tooling convenience.** Reference implementations are convenience, not requirement.
 
-Embeds instructions for AI processing within standard Markdown fenced code blocks using the `ai-script` language identifier. The content **must** be a single, valid JSON object. Field names within the JSON use kebab-case (e.g., `script-id`, `model-name`).
+Normative statement: [`spec/v1.0/00-overview.md §0.5`](https://github.com/sno-ai/mda/blob/main/spec/v1.0/00-overview.md).
 
-**JSON Fields:**
+## Three authoring modes
 
-| Field        | Type      | Description                                                                     | Example                     | Required/Optional | Notes                                      |
-|--------------|-----------|---------------------------------------------------------------------------------|-----------------------------|-------------------|--------------------------------------------|
-| `script-id`  | `string`  | A unique identifier for this specific instruction block within the document.    | `"summary-request-001"`     | Required          | Should be unique within the `.mda` file      |
-| `prompt`     | `string`  | The actual prompt or command text intended for the LLM or AI agent.             | `"Summarize this section."`    | Required          |                                            |
-| `priority`   | `string`  | Helps prioritize execution if multiple instructions exist (e.g., "high", "medium", "low"). | `"medium"`                | Optional          | Default behavior is application-specific |
-| `auto-run`   | `boolean` | Hint indicating if an automated processing agent should execute this instruction without explicit user trigger. | `true`                      | Optional          | Default is usually `false`                 |
-| `provider`   | `string`  | Suggests the target AI provider (e.g., "openai", "anthropic", "google", "local-llm"). | `"openai"`                | Optional          |                                            |
-| `model-name` | `string`  | Suggests the target model name (e.g., "gpt-4o", "claude-3-opus-20240229"). | `"gpt-4o"`                | Optional          |                                            |
-| `system-prompt`| `string`  | Optional system-level instructions or context for the AI model.        | `"Act as a helpful assistant."` | Optional          | Prepended or handled specially by the runtime |
-| `parameters` | `object`  | A JSON object containing provider-specific parameters (e.g., temperature, max tokens). | `{"temperature": 0.7}` | Optional          | Passed directly to the model API       |
-| `retry-times`| `integer` | Optional hint for the maximum number of retry attempts on failure.       | `3`                         | Optional          | Runtime should interpret this hint. Default behavior is runtime-specific. |
-| `runtime-env`| `string`  | Suggests the ideal runtime context or endpoint for execution (e.g., "server", "browser", "edge", API URL). | `"server"`                | Optional          | Hint for the processing system           |
-| `output-format`| `string`| Desired format for the output (e.g., "markdown", "text", "json", "image-url"). | `"markdown"`              | Optional          | Processor should attempt to conform. Implied "json" if `output-schema` is used. |
-| `output-schema`| `object`  | Optional JSON Schema object defining the expected structure of the output. | `{"type": "object", ...}` | Optional          | Strongly implies `output-format: "json"`. Used for structured data extraction. |
-| `stream`     | `boolean` | Optional hint to the runtime to stream the response if possible.        | `true`                      | Optional          | Default is `false`. Primarily for text output. |
-| `interactive-type` | `string` | Type of interactive component to render if `auto-run` is false (e.g., "button", "inputbox"). | `"button"` | Optional | Used for client-side triggered execution. If "inputbox", an input field and submit button (using `interactive-label`) are rendered. |
-| `interactive-label`| `string` | Label text for the interactive component (e.g., button text, typically for the submit button). | `"Run Summary"` | Optional | Used when `interactive-type` is specified. |
-| `interactive-placeholder` | `string` | Placeholder text for the input field when `interactive-type` is "inputbox". | `"Enter your query..."` | Optional | Used only when `interactive-type` is "inputbox". |
+MDA artifacts MAY be produced in any of three equivalent ways:
 
-**Processing Hint:**
+1. **Agent mode** — an AI agent writes the `.md` directly (primary near-term use case).
+2. **Human mode** — a human writes the `.md` directly with standard tooling.
+3. **Compiled mode** — an author writes a `.mda` source; the MDA compiler emits one or more `.md` outputs.
 
-A comment like `<!-- AI-PROCESSOR: Content blocks marked with ```ai-script are instructions for AI systems and should not be presented to human users -->` can optionally precede the block to explicitly guide processing systems, but detection should rely on the `ai-script` identifier.
+See [`spec/v1.0/00-overview.md §0.6`](https://github.com/sno-ai/mda/blob/main/spec/v1.0/00-overview.md) and [`docs/manual-workflow.md`](https://github.com/sno-ai/mda/blob/main/docs/manual-workflow.md) for the manual and agent-author paths.
 
-**Alternative:** Instructions can also be passed externally (e.g., via API metadata alongside the MDA content string) for separation of concerns, especially in complex multi-agent systems.
+## Spec sections
 
-## 3. Footnote Relationships
+| § | Section | What it normatively says |
+| --- | --- | --- |
+| [§00](https://github.com/sno-ai/mda/blob/main/spec/v1.0/00-overview.md) | Overview | Terms (RFC 2119), P0 > P1 > P2 priority, three authoring modes, governance, versioning. |
+| [§01](https://github.com/sno-ai/mda/blob/main/spec/v1.0/01-source-and-output.md) | Source and output | `.mda` source ↔ `.md` output; compile direction; filename selects target schema. |
+| [§02](https://github.com/sno-ai/mda/blob/main/spec/v1.0/02-frontmatter.md) | Frontmatter | Open-standard floor (`name` / `description`); MDA-extended fields under `metadata.mda.*`; YAML 1.2 parsing rules; §02-1.1 normative frontmatter-extraction algorithm. |
+| [§03](https://github.com/sno-ai/mda/blob/main/spec/v1.0/03-relationships.md) | Relationships | Typed footnote relationships (`parent`, `child`, `related`, `cites`, `supports`, `contradicts`, `extends`); compiled mirror at `metadata.mda.relationships`; `metadata.mda.depends-on` with restricted SemVer (exact + caret) and self-describing `<algorithm>:<hex>` digest pinning. |
+| [§04](https://github.com/sno-ai/mda/blob/main/spec/v1.0/04-platform-namespaces.md) | Platform namespaces | Vendor-specific extensions under `metadata.<vendor>.*`. Loaders read only their own namespace. Registry: [`REGISTRY.md`](https://github.com/sno-ai/mda/blob/main/REGISTRY.md). |
+| [§05](https://github.com/sno-ai/mda/blob/main/spec/v1.0/05-progressive-disclosure.md) | Progressive disclosure | Three-tier progressive disclosure model inherited from agentskills.io v1, embedded normatively. |
+| [§06](https://github.com/sno-ai/mda/tree/main/spec/v1.0/06-targets) | Target schemas | `SKILL.md` (Tier 1, agentskills.io v1); `AGENTS.md` (Tier 1, AAIF-aligned); `MCP-SERVER.md` (Tier 2, with sidecar `mcp-server.json`); `CLAUDE.md` (Tier 2 stub). |
+| [§07](https://github.com/sno-ai/mda/blob/main/spec/v1.0/07-conformance.md) | Conformance | Levels V (validator) and C (compiler), bound to fixtures in `conformance/manifest.yaml`. Runner-enforced cross-field check that `signatures[].payload-digest == integrity.digest`. |
+| [§08](https://github.com/sno-ai/mda/blob/main/spec/v1.0/08-integrity.md) | Integrity | JCS-canonicalized `integrity.digest`; `<algorithm>:<hex>` self-describing format; multi-file boundary literal; source-mode vs output-mode anchor semantics. |
+| [§09](https://github.com/sno-ai/mda/blob/main/spec/v1.0/09-signatures.md) | Signatures | DSSE PAE envelope; Sigstore OIDC keyless default with Rekor inclusion + Fulcio certificate chain verification; `did:web` + `mda-keys.json` air-gap fallback. Rekor entry type pinned to `dsse-v0.0.1`. |
+| [§10](https://github.com/sno-ai/mda/blob/main/spec/v1.0/10-capabilities.md) | Capabilities | `metadata.mda.requires` open key-value with six standard keys: `runtime`, `tools`, `network`, `packages`, `model`, `cost-hints`. |
+| [§11](https://github.com/sno-ai/mda/blob/main/spec/v1.0/11-implementer-guide.md) | Implementer's Guide | Informative. Canonical loader pseudocode, error category vocabulary. |
+| [§12](https://github.com/sno-ai/mda/blob/main/spec/v1.0/12-sigstore-tooling.md) | Sigstore tooling integration | Informative. Mapping from `cosign` / `sigstore-python` / `sigstore-go` bundles into MDA `signatures[]`. |
 
-Leverages standard Markdown footnote syntax (`[^ref-id]` and `[^ref-id]: ...`) to define typed relationships between the current document and other resources. The footnote definition **must** contain a single JSON object enclosed in backticks (`` ` ``).
+## Companion artifacts
 
-**JSON Fields within Footnote Definition:** Field names use kebab-case (e.g., `rel-type`, `doc-id`).
+- **JSON Schemas** — [`schemas/`](https://github.com/sno-ai/mda/tree/main/schemas) — `frontmatter-source`, `frontmatter-skill-md`, `frontmatter-agents-md`, `frontmatter-mcp-server-md`, `relationship-footnote`, plus `_defs/` for `integrity`, `signature`, `requires`, `depends-on`, `version-range`, `metadata-namespaces`, `mda-keys`.
+- **Conformance suite** — [`conformance/`](https://github.com/sno-ai/mda/tree/main/conformance) — 35 fixtures (positive + negative) bound to spec rule IDs in `manifest.yaml`. Runner: `node scripts/validate-conformance.mjs`.
+- **Examples** — [`examples/`](https://github.com/sno-ai/mda/tree/main/examples) — `source-only/`, `skill-md/` (additional target examples land alongside reference-implementation maturity).
+- **Vendor namespace registry** — [`REGISTRY.md`](https://github.com/sno-ai/mda/blob/main/REGISTRY.md) — vendor namespaces, standard `requires` keys, reserved Sigstore OIDC issuers, reserved Rekor instances, reserved DSSE `payload-type` values.
+- **Manual-workflow recipes** — [`docs/manual-workflow.md`](https://github.com/sno-ai/mda/blob/main/docs/manual-workflow.md) — hand-author and sign without the MDA CLI.
+- **Reference implementation** — [`packages/mda/`](https://github.com/sno-ai/mda/tree/main/packages/mda) — TypeScript, npm: `@mda/cli`. Architecture spec: [`packages/mda/IMPL-SPEC.md`](https://github.com/sno-ai/mda/blob/main/packages/mda/IMPL-SPEC.md).
 
-| Field           | Type                             | Description                                                                    | Example                                           | Required/Optional | Notes                                                   |
-|-----------------|----------------------------------|--------------------------------------------------------------------------------|---------------------------------------------------|-------------------|---------------------------------------------------------|
-| `rel-type`      | `string` (Enum recommended)      | Nature of the relationship. Recommended values: `citation`, `parent`, `child`, `related`, `contradicts`, `supports`, `extends`. | `"parent"`                                      | Required          |                                                         |
-| `doc-id`        | `string`                         | The unique `doc-id` (from Front Matter) of the target/related `.mda` document. Use *either* `doc-id` or `source-url`. | `"UUID-of-target-document"`                     | Conditional       | Required if not using `source-url`                      |
-| `source-url`    | `string`                         | The URL of the target/related external resource. Use *either* `doc-id` or `source-url`. | `"https://example.com/related-article"`        | Conditional       | Required if not using `doc-id`                           |
-| `rel-desc`      | `string`                         | A brief, human-readable description of why the documents/resources are related. | `"Derived from primary SEC documentation"`        | Required          |                                                         |
-| `rel-strength`  | `float` (0.0 to 1.0)             | Optional confidence score or relevance strength of the relationship.           | `0.8`                                             | Optional          |                                                         |
-| `bi-directional`| `boolean`                        | Optional: Indicates if the relationship implies a reciprocal link back (interpretation depends on processor). | `true`                                            | Optional          | Default is usually `false`                              |
-| `context`       | `object`                         | Optional: Provides additional structured context about the link's location/nature. | `{"section": "Introduction", "relevance": "High"}` | Optional          |                                                         |
-| `context.section`| `string`                       | Specific section/heading in the source document where the link originates. | `"Introduction"`                                | Optional          | Within `context` object                            |
-| `context.relevance`| `string`                      | Qualitative assessment of relevance (e.g., "High", "Medium", "Low"). | `"High"`                                        | Optional          | Within `context` object                            |
+## Governance
 
-**Implementation Notes:**
+MDA is an independent project. It actively serves AAIF (Linux Foundation Agentic AI Foundation) governed targets — `AGENTS.md` and `MCP-SERVER.md` — as first-class compile destinations. MDA does not seek to join AAIF in v1.0. See [`spec/v1.0/00-overview.md §0.8`](https://github.com/sno-ai/mda/blob/main/spec/v1.0/00-overview.md).
 
-*   Ensure the `doc-id` used in footnotes corresponds accurately to a `doc-id` defined in the Front Matter of the target `.mda` document for internal links.
-*   Consistent use of `rel-type` values is crucial for building reliable knowledge graphs. The recommended set is: `citation`, `parent`, `child`, `related`, `contradicts`, `supports`, `extends`. Custom values are tolerated by parsers but discouraged for interoperability.
-*   The JSON payload **must** be wrapped in backticks. Parsers in this repository tolerate bare-JSON footnotes for backward compatibility, but new content should always use the backtick form so standard Markdown renderers do not eat the braces.
-*   Standard Markdown parsers will render the footnote with the backticks and JSON string as the literal content. MDA-aware parsers extract and interpret the JSON.
+## Versioning
+
+- **Patch releases** (`v1.0.1`, `v1.0.2`, …) deliver editorial fixes and reference-implementation maturity. They do not change the conformance contract.
+- **Pre-release cycle.** The spec freezes at `v1.0.0-rc.1`. Subsequent `v1.0.0-rc.N` tags ship reference-implementation maturity. The final `v1.0.0` lands when the reference implementation passes 100% conformance.
+- **Minor releases** (`v1.1.0`) are not pre-planned. They emerge from observed adoption.
+- **Major releases** (`v2.0.0`) ship breaking changes in a new directory; previous versions remain immutable at their canonical URLs.
+
+See [`spec/v1.0/00-overview.md §0.9`](https://github.com/sno-ai/mda/blob/main/spec/v1.0/00-overview.md).
+
+## What v1.0 doesn't ship
+
+The contract is locked. The consumer-side ecosystem that enforces or routes through that contract is mostly nascent. For the truthful gap, see [What v1.0 doesn't ship](https://github.com/sno-ai/mda/blob/main/ai-doc/what-v1.0-does-not-ship.md).
+
+For the long-form value framing, two documents go deeper. Both trace every claim back to a section of the spec, and both call out current ecosystem gaps inline:
+
+- [Core value for AI agents](https://github.com/sno-ai/mda/blob/main/ai-doc/ai-agent-core-value.md) — five points framed for runtimes, harnesses, validators, and dispatchers.
+- [Core value for human authors and curators](https://github.com/sno-ai/mda/blob/main/ai-doc/human-curator-user-core-value.md) — six points framed for the people who write and curate agent-facing instruction libraries.
+
+## License
+
+This document set is licensed under [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/). Schemas and tooling are licensed under [Apache-2.0](https://github.com/sno-ai/mda/blob/main/LICENSE).

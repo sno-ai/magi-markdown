@@ -1,96 +1,133 @@
-# MDA Architecture: Integrating Content, Metadata, and AI Instructions
+---
+title: "Architecture"
+description: "How MDA layers structured data onto standard Markdown using three optional, parseable components."
+---
 
-## Introduction
+# MDA Architecture
 
-MDA (Markdown for Agent) provides a robust architectural framework for extending standard Markdown. It is designed to seamlessly integrate structured metadata, actionable AI instructions, and explicit document relationships directly within human-readable content. This architecture ensures backward compatibility with standard Markdown tooling while unlocking advanced capabilities for AI-driven systems, particularly in areas like Retrieval-Augmented Generation (RAG), intelligent documentation platforms, and autonomous agent workflows. MDA files typically use the `.mda` extension.
-
-The core principle is *enhancement through optionality*. MDA introduces distinct components that can be adopted individually or collectively, allowing for incremental integration based on specific needs.
-
-## Architectural Components
-
-MDA's architecture layers structured data onto standard Markdown using distinct, parseable components:
+MDA extends standard Markdown with three optional, parseable layers. The Markdown body still renders in any tool. MDA-aware processors lift the structured layers into machine-readable form. The architecture is **enhancement through optionality** — adopt one layer, two, or all three, in any order.
 
 ![MDA: Three Major Components](/images/three-parts.svg)
 
-### 1. YAML Front Matter (Document-Level Metadata)
+## Architectural components
 
-*   **Purpose:** To provide a standardized, machine-readable header containing metadata about the entire document. This context is invaluable for content management systems, search indexing, RAG retrieval filtering, and providing high-level context to AI models *before* they process the main content.
-*   **Syntax:** A valid YAML block enclosed by triple-dashed lines (`---`) located at the very beginning of the `.mda` file.
-*   **Functionality:** Defines key-value pairs representing document attributes. Key fields include `doc-id` (UUID format strongly recommended for reliable linking), `title`, `description`, `tags`, `created-date`, `updated-date` (both preferably in ISO 8601 format), `source-url`, `audience`, `purpose`, and `entities`. The schema uses kebab-case for multi-word field names (e.g., `created-date`) and is extensible for custom metadata.
-*   **Processing:** MDA-aware parsers identify and extract this block, parsing the YAML content into a structured data object (e.g., a dictionary or map). Standard Markdown parsers typically ignore it or render it as literal text.
-*   **Example (Illustrating Kebab-Case and ISO 8601 Dates):**
-    ```yaml
-    ---
-    doc-id: "38f5a922-81b2-4f1a-8d8c-3a5be4ea7511" # UUID Recommended
-    title: "MDA Architecture Overview"
-    description: "Details the core components and philosophy of the MDA format."
-    tags: ["architecture", "markdown", "ai", "specification", "mda"]
-    created-date: "2024-01-15T10:00:00Z" # ISO 8601 Format
-    updated-date: "2024-07-27T14:30:00Z" # ISO 8601 Format
-    audience: ["Developers", "Architects"]
-    purpose: "Technical Documentation"
-    source-url: "https://example.com/original-source" # Optional: If derived
-    entities: ["MDA", "RAG", "YAML", "JSON"] # Optional: Key concepts
-    ---
-    ```
+### 1. YAML Frontmatter (document-level metadata)
 
-### 2. `ai-script` Code Blocks (Embedded AI Instructions)
+A standardized, machine-readable header at the top of the `.mda` file. Provides classification, capability declarations, dependency edges, and routing hints to agent-aware tools — long before they touch the body.
 
-*   **Purpose:** To embed specific, actionable instructions or prompts for AI agents or LLMs directly within the flow of the Markdown content, providing contextually relevant guidance.
-*   **Syntax:** Standard Markdown fenced code blocks with the language identifier `ai-script`. The content within the block MUST be a valid JSON object. Field names within the JSON generally use kebab-case (e.g., `script-id`, `model-name`).
-*   **Functionality:** Allows authors to specify fine-grained tasks (e.g., summarize the preceding paragraph, extract entities from the following table, translate this section) or configure AI behavior (e.g., set generation parameters like temperature, specify desired output format, define execution priority). Key fields include `script-id` (unique within the document), `prompt`, `priority`, `auto-run`, `provider`, `model-name`, `parameters`, `runtime-env`, and `output-format`.
-*   **Processing:** MDA-aware systems scan the Markdown content for these blocks, parse the enclosed JSON, and queue the instructions for potential execution by an appropriate AI agent or LLM, often relating the instruction to the surrounding content based on proximity or explicit references (though explicit references are not part of the current spec). Standard renderers display these as regular code blocks.
-*   **Example (Illustrating Kebab-Case and Spec Fields):**
-    ```markdown
-    Here is a complex paragraph detailing quantum physics concepts...
+**Syntax.** A YAML 1.2 block enclosed by triple-dashed lines (`---`) at the very beginning of the file. UTF-8 encoded. CRLF normalized to LF before parsing. Field names use kebab-case.
 
-    <!-- AI-PROCESSOR: Content blocks marked with ```ai-script are instructions for AI systems and should not be presented to human users -->
-    ```ai-script
-    {
-      "script-id": "simplify-physics-para-001",
-      "prompt": "Explain the main concepts in the preceding paragraph in simple terms, suitable for a general audience.",
-      "priority": "medium",
-      "auto-run": false,
-      "provider": "anthropic",
-      "model-name": "claude-3-haiku-20240307", // Example specific model version
-      "parameters": {
-        "max-tokens": 150,
-        "temperature": 0.7
-      },
-      "runtime-env": "server", // Hint for execution location
-      "output-format": "markdown" // Desired output type
-    }
-    ```
+**Layout.** Two namespaces:
 
-    More human-readable Markdown follows...
-    ```
-*   **Processing Hint:** An optional HTML comment `<!-- AI-PROCESSOR: ... -->` before or after the block can explicitly signal to processors that the block contains non-displayable instructions, though parsing should primarily rely on the `ai-script` language identifier for robustness.
+- **Open-standard floor** — `name` and `description` at the top level. Every agent-skill consumer reads these without MDA awareness.
+- **MDA-extended fields** — under `metadata.mda.*`. `doc-id` (UUID), `title`, `version` (SemVer 2.0.0), `tags`, `author`, `created-date`, `updated-date`, `requires`, `depends-on`, `relationships`, `integrity`, `signatures[]`.
+- **Vendor-specific blocks** — under `metadata.<vendor>.*`. Loaders read only their own namespace. Unregistered namespaces are tolerated; consumers MUST NOT reject a document solely because it carries one. See [`REGISTRY.md`](https://github.com/sno-ai/mda/blob/main/REGISTRY.md).
 
-### 3. Markdown Footnotes with JSON Payloads (Document Relationships)
+**Validation.** JSON Schema 2020-12 with `unevaluatedProperties: false` on every target schema. Unknown top-level fields fail fast with a structured error rather than silently coexisting under a sibling vendor block.
 
-*   **Purpose:** To define explicit, typed relationships between the current document and other documents or external resources using standard Markdown footnote syntax, enabling the construction of knowledge graphs.
-*   **Syntax:** Utilizes the standard `[^ref-id]` inline reference marker and a corresponding `[^ref-id]: ...` definition line. The definition part *must* contain a single JSON object enclosed in backticks (`` ` ``). Field names within the JSON use kebab-case (e.g., `rel-type`, `doc-id`, `rel-desc`).
-*   **Functionality:** The JSON payload within the backticks defines the relationship, specifying the `rel-type` (e.g., `citation`, `parent`, `child`, `related`, `contradicts`, `supports`, `extends`), the target `doc-id` (linking to the Front Matter `doc-id` of another `.mda` document) or a `source-url` for external resources, and a human-readable `rel-desc`. Optional fields like `rel-strength`, `bi-directional`, and `context` can add further nuance.
-*   **Processing:** MDA-aware systems parse these footnote definitions, extracting the JSON payloads to build a relationship graph or provide contextual links during RAG or agent operation. Standard Markdown parsers render them as conventional footnotes, with the JSON string (including backticks) appearing as the footnote content.
-*   **Example (Illustrating Kebab-Case and `source-url`):**
-    ```markdown
-    This architecture builds upon established Markdown principles[^md-guide] and complements the MDA Open Spec[^core-spec].
+**Example.**
 
-    [^md-guide]: `{"rel-type": "citation", "source-url": "https://daringfireball.net/projects/markdown/", "rel-desc": "Based on original Markdown syntax"}`
-    [^core-spec]: `{"rel-type": "related", "doc-id": "spec-doc-uuid-123", "rel-desc": "References the MDA Open Spec v1.0", "rel-strength": 0.9, "context": {"section": "Overview"}}`
-    ```
+```yaml
+---
+name: pdf-tools
+description: Extract PDF text, fill forms, merge files. Use when handling PDFs.
+metadata:
+  mda:
+    doc-id: 38f5a922-81b2-4f1a-8d8c-3a5be4ea7511
+    title: PDF Tools
+    version: "1.2.0"
+    tags: [pdf, extraction]
+    requires:
+      runtime: ["python>=3.11"]
+      packages: ["pypdf>=4.0.0"]
+    depends-on:
+      - doc-id: 9c2ab16d-0f73-4f7a-9d1f-3c2d5e6a7b8c
+        version: "^1.0.0"
+        digest: "sha256:7f3c8e2b4a9d7f0e9b91d2c3e4f56789abcd0123ef456789abc0123def456789"
+---
+```
 
-## Processing Flow & Integration Philosophy
+Spec sections: [§02 Frontmatter](https://github.com/sno-ai/mda/blob/main/spec/v1.0/02-frontmatter.md), [§04 Platform namespaces](https://github.com/sno-ai/mda/blob/main/spec/v1.0/04-platform-namespaces.md), [§10 Capabilities](https://github.com/sno-ai/mda/blob/main/spec/v1.0/10-capabilities.md).
 
-1.  **Parsing:** A MDA processor first identifies and extracts the YAML Front Matter. It then scans the remaining content for `ai-script` blocks and footnote definitions containing JSON payloads (within backticks), parsing their structured data. The text content excluding these special blocks constitutes the core human-readable Markdown.
-2.  **Contextualization:** The extracted metadata (Front Matter), instructions (`ai-script`), and relationships (Footnotes) provide rich context for subsequent AI processing (e.g., RAG retrieval, agent task execution, knowledge graph population).
-3.  **Execution (Optional):** AI instructions within `ai-script` blocks can be selectively executed by an agent or processing pipeline based on their `priority`, `auto-run` status, `runtime-env` hints, and application logic.
-4.  **Rendering:** For human consumption, the core Markdown content is rendered using standard libraries. The structured components (Front Matter, `ai-script` blocks, relationship definitions) are typically *omitted* from the final user-facing view, unless specifically included for debugging or transparency (e.g., displaying the `rel-desc` from footnotes as hover text).
+### 2. Markdown footnotes with JSON payloads (typed relationships)
 
-**Philosophy:**
+Standard Markdown footnote syntax with a JSON object as payload. Defines explicit, typed relationships between this document and other resources. Lets agent-aware tools traverse a knowledge graph instead of inferring edges from prose.
 
-*   **Graceful Degradation:** MDA (`.mda`) remains valid Markdown. Non-MDA-aware tools can still render the content meaningfully, displaying Front Matter as text, `ai-script` as code blocks, and footnotes normally (including the raw JSON string).
-*   **Progressive Enhancement:** Users can start with plain Markdown and incrementally add Front Matter, `ai-script`, or relationships as needed to leverage MDA features.
-*   **Extensibility:** The YAML and JSON structures allow for custom fields beyond the standard specification to accommodate domain-specific requirements, although parsers might ignore unknown fields.
+**Syntax.** The standard `[^ref-id]` inline marker plus a `[^ref-id]: ...` definition line. The definition body MUST contain a single JSON object enclosed in backticks. Field names use kebab-case.
 
-This layered architecture makes MDA a flexible and powerful format for creating AI-ready content without sacrificing human readability or compatibility with the existing Markdown ecosystem.
+**JSON fields.**
+
+- `rel-type` — required. One of `parent`, `child`, `related`, `cites`, `supports`, `contradicts`, `extends`.
+- `doc-id` — references another `.mda` document's `metadata.mda.doc-id`. Either `doc-id` or `source-url` is required.
+- `source-url` — references an external resource by URL.
+- `rel-desc` — required. Short human-readable description.
+- `rel-strength` — optional `0.0–1.0` confidence score.
+- `bi-directional` — optional boolean.
+- `context` — optional structured metadata object (`section`, etc.).
+
+**Compile mirror.** On compile, the relationship list is mirrored to `metadata.mda.relationships` in body order — index 0 is the first body footnote reference. Standard Markdown renderers continue to display the footnote with the JSON literal as content; MDA-aware tools extract the typed edges from the mirror.
+
+**Example.**
+
+```markdown
+This skill extends the PDF rendering primitives from pdf-core[^pdf-core] and complements
+the document-format spec[^doc-spec].
+
+[^pdf-core]: `{"rel-type": "extends", "doc-id": "9c2ab16d-0f73-4f7a-9d1f-3c2d5e6a7b8c", "rel-desc": "Extends pdf-core's rendering primitives"}`
+[^doc-spec]: `{"rel-type": "cites", "source-url": "https://example.com/document-format-spec", "rel-desc": "References the upstream document format specification", "rel-strength": 0.9}`
+```
+
+Spec section: [§03 Relationships](https://github.com/sno-ai/mda/blob/main/spec/v1.0/03-relationships.md).
+
+### 3. Optional cryptographic identity (integrity + signatures)
+
+A reproducible content digest plus DSSE-enveloped signatures, both carried in frontmatter. Lets a verifier or operator make a load-time trust decision instead of an unsigned-content assumption.
+
+**Integrity.** `metadata.mda.integrity.digest` is the JCS-canonicalized hash of the canonical bytes of the artifact (with multi-file boundary literals for skills that bundle scripts, references, or assets). Self-describing format: `<algorithm>:<hex>`. The same format is used in `signatures[].payload-digest` and `depends-on.digest`.
+
+**Signatures.** `metadata.mda.signatures[]` carries DSSE PAE-enveloped signatures. Sigstore OIDC keyless is the default — the entry stores `rekor-log-id`, `rekor-log-index`, and `key-id = "fulcio:<sha256-of-cert>"`. A verifier rederives the digest, looks up Rekor, verifies inclusion against the log root, verifies the Fulcio certificate chain, and applies an OIDC identity allow-list against operator policy. The `did:web` + `mda-keys.json` air-gap fallback covers cases where Sigstore reachability cannot be assumed.
+
+**Cross-field check.** The conformance runner enforces that every `signatures[].payload-digest` equals `integrity.digest` byte-for-byte (§07-2.1). Multi-signature, signed third-party countersignatures, and operator-policy hooks are specified in §09-6 and §09-7.
+
+Spec sections: [§08 Integrity](https://github.com/sno-ai/mda/blob/main/spec/v1.0/08-integrity.md), [§09 Signatures](https://github.com/sno-ai/mda/blob/main/spec/v1.0/09-signatures.md), [§12 Sigstore tooling integration](https://github.com/sno-ai/mda/blob/main/spec/v1.0/12-sigstore-tooling.md).
+
+## Processing flow
+
+1. **Parsing.** A processor identifies and extracts the YAML frontmatter using the §02-1.1 algorithm (UTF-8 BOM strip, CRLF→LF normalization, opening/closing fence rules, body-with-`---`-horizontal-rule disambiguation, empty-body handling). It then parses the body and extracts footnote definitions whose payloads contain JSON objects in backticks. The remaining text is the human-readable Markdown body.
+
+2. **Schema validation.** The frontmatter is validated against the target schema selected by filename literal — `SKILL.md`, `AGENTS.md`, `MCP-SERVER.md`, or `CLAUDE.md`. Strict 2020-12 with `unevaluatedProperties: false`. Unknown top-level fields fail fast.
+
+3. **Cross-field semantic checks.** The conformance runner enforces `signatures[].payload-digest == integrity.digest` byte-for-byte and validates the §02-1.1 frontmatter-extraction edge cases (BOM strip, CRLF normalization, body-with-`---`-horizontal-rule, empty body, unterminated frontmatter, invalid UTF-8, body-only files at frontmatter-required targets).
+
+4. **Verification (optional).** If signatures are present and verification is wired to operator policy: rederive the integrity digest, equality-check it against `signatures[].payload-digest`, look up Rekor inclusion, verify the Fulcio certificate chain, apply the OIDC identity allow-list.
+
+5. **Use.** Capability declarations (`metadata.mda.requires`) inform routing and activation. Dependency edges (`metadata.mda.depends-on`) inform resolution. Relationship edges (`metadata.mda.relationships`) populate graph indexers. The Markdown body is rendered for human consumption. Frontmatter, footnote-relationship JSON, and signature blocks are typically omitted from final user-facing views.
+
+## Compile direction
+
+Source `.mda` → output `.md`. The output target is selected by filename — never by content inspection.
+
+| Source | Target | When |
+| --- | --- | --- |
+| `<name>.mda` | `<name>/SKILL.md` (+ `scripts/`, `references/`, `assets/`) | Publishing a skill that consumers activate on demand. |
+| `<name>.mda` | `AGENTS.md` at the repo root | Repo-wide instructions to every agent that visits. |
+| `<name>.mda` | `<name>/MCP-SERVER.md` (+ `<name>/mcp-server.json`) | Describing an MCP server's tools, launch, and trust posture. |
+| `<name>.mda` | `CLAUDE.md` | Populating Claude Code's persistent project-memory file. |
+
+A `.mda` source with only the open-standard frontmatter compiles unchanged into a `.md` — the compiler does no rewriting when there's nothing MDA-extended to lift.
+
+Spec sections: [§01 Source and output](https://github.com/sno-ai/mda/blob/main/spec/v1.0/01-source-and-output.md), [§06 Target schemas](https://github.com/sno-ai/mda/tree/main/spec/v1.0/06-targets).
+
+## Philosophy
+
+- **Graceful degradation.** A `.mda` file is valid Markdown. Tools that don't know MDA still render it meaningfully — frontmatter as text or YAML, footnotes as standard footnotes (with JSON literals), the body as Markdown.
+- **Progressive enhancement.** Start with plain Markdown. Add frontmatter when classification matters. Add typed footnotes when the graph matters. Add signatures when trust matters. No big-bang adoption.
+- **Strict where it counts.** JSON Schema 2020-12 with `unevaluatedProperties: false` catches "almost conformant" artifacts before they reach a runtime. Quoted timestamps. SemVer 2.0.0. YAML 1.2 boolean-coercion off (`yes` / `no` / `on` / `off` round-trip as strings).
+- **Vendor-neutral by design.** Per-vendor configuration is isolated under `metadata.<vendor>.*`. Adoption shifts coordination to the spec and registry, not to a single vendor.
+- **Open standard for the agent ecosystem.** First-class compile destinations include the agentskills.io v1 ecosystem and the AAIF-aligned ecosystem. MDA does not seek to subsume them — it serves them as portable upstream.
+
+## Next
+
+- [Specification](/mdx/specification) — the normative entry point with links to every §.
+- [Quickstart](/quickstart) — author a minimal `.mda` and compile it.
+- [Manual workflow](https://github.com/sno-ai/mda/blob/main/docs/manual-workflow.md) — hand-author and sign without the reference CLI.
