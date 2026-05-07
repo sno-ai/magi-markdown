@@ -141,7 +141,7 @@ For vendor namespace assignment, see [`REGISTRY.md`](REGISTRY.md) for the regist
 ## License
 
 - Specification (`spec/`, `REGISTRY.md`, `SPEC.md`): [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/)
-- Schemas (`schemas/`), tooling, and reference implementations: [MIT](LICENSE)
+- Schemas (`schemas/`), tooling, and reference implementations: [Apache-2.0](LICENSE)
 
 ## Related
 

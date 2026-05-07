@@ -4,7 +4,7 @@
 > **Status:** Draft (targeting Stable on first tagged release)
 > **Date:** 2026-05-07
 > **Canonical URL:** https://mda.sno.dev/spec/v1.0/
-> **License:** This specification (`spec/`) is licensed under [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/). Reference schemas (`schemas/`) and tooling are licensed under [MIT](../../LICENSE).
+> **License:** This specification (`spec/`) is licensed under [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/). Reference schemas (`schemas/`) and tooling are licensed under [Apache-2.0](../../LICENSE).
 
 ## 0.1 What this document is
 
