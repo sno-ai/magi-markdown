@@ -19,7 +19,7 @@ A `.mda` file MAY use the full MDA superset:
 - All MDA-extended frontmatter fields (§02-3) at the top level.
 - Footnote relationship JSON (§03).
 - Any vendor namespace under `metadata.<vendor>` (§04).
-- Optional `integrity` and `signatures[]` (§08, §09); typically compiler-emitted, but MAY be present in source if the author intends a sign-the-source workflow.
+- Optional `integrity` and `signatures[]` (§08, §09); typically compiler-emitted on the output, but MAY be present in source for a sign-the-source workflow. A source-mode anchor covers source bytes only and is NOT comparable to any output-mode anchor (§08-5).
 
 `.mda` files are not expected to be loaded directly by any third-party agent runtime. Their canonical consumer is the MDA compiler.
 
