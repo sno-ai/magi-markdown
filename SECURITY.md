@@ -1,7 +1,7 @@
 ## Security Policy
 
 ### Reporting
-If you discover a security vulnerability, please contact us at info@sno.ai or open a GitHub issue with the security label. We will respond within 72 hours and work to resolve it promptly.
+If you discover a security vulnerability, please email us at security@sno.ai. **Do not** open a public GitHub issue for security vulnerabilities. We will respond within 72 hours and work to resolve it promptly.
 
 ### Supported Versions
 | Version | Supported |

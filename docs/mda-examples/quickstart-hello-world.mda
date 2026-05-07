@@ -1,0 +1,36 @@
+---
+doc-id: "hello-world-001"
+title: "Hello World — MDA Quick Start"
+description: "A minimal example demonstrating all three MDA components."
+tags: ["quickstart", "example", "hello-world"]
+purpose: "Tutorial"
+created-date: "2026-04-08T00:00:00Z"
+---
+
+# Hello, MDA!
+
+This is a minimal MDA document. It looks like regular Markdown but includes three optional enhancements:
+
+1. **Front Matter** (above) — structured metadata in YAML
+2. **AI Script** (below) — processing instructions for LLMs
+3. **Footnotes** (bottom) — typed document relationships
+
+## Content
+
+MDA extends Markdown without breaking it. Any Markdown renderer will display this file correctly. AI systems that understand MDA can additionally leverage the metadata, instructions, and relationships.
+
+```ai-script
+{
+  "script-id": "summarize-hello",
+  "prompt": "Summarize this document in one sentence for a developer audience.",
+  "priority": "low",
+  "auto-run": false,
+  "output-format": "markdown"
+}
+```
+
+## Learn More
+
+See the full specification for details on each component[^spec].
+
+[^spec]: {"rel-type": "parent", "doc-id": "MDA-SPEC-001", "rel-desc": "Full MDA specification document"}

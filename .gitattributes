@@ -1,0 +1,4 @@
+# Treat .mda files as Markdown for GitHub linguist
+*.mda linguist-language=Markdown
+*.mda linguist-detectable=true
+*.mda diff=markdown
