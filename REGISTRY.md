@@ -1,12 +1,12 @@
-# MDA Vendor Namespace Registry
+# MDA Registry
 
 > **Status:** Active
-> **Authority:** This file is the normative source for namespace assignment under `metadata.<vendor>` in MDA frontmatter. It is referenced by [`spec/v1.0/05-platform-namespaces.md`](spec/v1.0/05-platform-namespaces.md).
+> **Authority:** This file is the normative source for: (1) vendor namespace assignment under `metadata.<vendor>` (referenced by [`spec/v1.0/04-platform-namespaces.md`](spec/v1.0/04-platform-namespaces.md)); (2) the standard `requires` capability keys (referenced by [`spec/v1.0/10-capabilities.md`](spec/v1.0/10-capabilities.md)); (3) reserved Sigstore OIDC issuers and transparency log providers (referenced by [`spec/v1.0/09-signatures.md`](spec/v1.0/09-signatures.md)).
 > **License:** This registry document is licensed under [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/), matching the specification.
 
 ## Purpose
 
-MDA frontmatter reserves the top-level `metadata` object as an extension hook. Each top-level key under `metadata` is a **vendor namespace** owned by a single vendor, runtime, or registry. This file is the canonical list of registered namespaces and the process for adding new ones.
+MDA frontmatter reserves the top-level `metadata` object as an extension hook. Each top-level key under `metadata` is a **vendor namespace** owned by a single vendor, runtime, or registry. This file is the canonical list of registered namespaces and the process for adding new ones. It also lists the optional standard keys the spec recognizes under `metadata.mda.requires` and the reserved infrastructure providers for the Sigstore signing path.
 
 Why a registry exists:
 
@@ -21,7 +21,7 @@ Each row binds a namespace key to its owner, the upstream documentation that def
 
 | Namespace key       | Owner                      | Upstream documentation                                              | Status     | Contact (PR / issue) |
 | ------------------- | -------------------------- | ------------------------------------------------------------------- | ---------- | -------------------- |
-| `mda`               | MDA project (Sno Lab)      | [`spec/v1.0/02-frontmatter.md`](spec/v1.0/02-frontmatter.md)       | Stable     | This repo            |
+| `mda`               | MDA project                | [`spec/v1.0/02-frontmatter.md`](spec/v1.0/02-frontmatter.md)       | Stable     | This repo            |
 | `claude-code`       | Anthropic Claude Code      | https://code.claude.com/docs/en/skills                              | Stable     | This repo            |
 | `codex`             | OpenAI Codex               | https://developers.openai.com/codex/skills                          | Stable     | This repo            |
 | `hermes`            | Nous Research Hermes Agent | https://hermes-agent.nousresearch.com/docs/developer-guide/creating-skills | Stable | This repo            |
@@ -29,7 +29,7 @@ Each row binds a namespace key to its owner, the upstream documentation that def
 | `openclaw`          | OpenClaw                   | https://docs.openclaw.ai/tools/skills                               | Stable     | This repo            |
 | `skills-sh`         | skills.sh / Skills Directory | https://www.skillsdirectory.com/docs/skill-md-format              | Stable     | This repo            |
 
-The MDA-aware compiler and validator MUST recognize every namespace listed as `Stable`. They MAY recognize namespaces marked `Provisional`. They MUST NOT reject unknown namespaces — only warn — so new vendors can experiment before registration.
+The MDA-aware compiler and validator MUST recognize every namespace listed as `Stable`. They MAY recognize namespaces marked `Provisional`. They MUST NOT reject a frontmatter document solely because it contains an unregistered namespace whose key satisfies the kebab-case shape — only warn — so new vendors can experiment before registration. Compilers MUST preserve unknown vendor namespaces verbatim and MUST NOT interpret their contents (see [`spec/v1.0/04-platform-namespaces.md §04-5.1`](spec/v1.0/04-platform-namespaces.md)).
 
 ## Reserved (do not assign)
 
@@ -102,8 +102,54 @@ The MDA registry does not validate the contents of vendor namespaces — that is
 
 `schemas/_defs/metadata-namespaces.schema.json` lists the registered namespaces explicitly and accepts any other kebab-case key via `patternProperties` so unregistered experimental namespaces continue to validate. Stable namespaces SHOULD be added to that schema in the same PR that registers them here.
 
+## Standard `requires` keys (capabilities)
+
+The `metadata.mda.requires` field is open key-value (see [`spec/v1.0/10-capabilities.md`](spec/v1.0/10-capabilities.md)). Authors MAY use any kebab-case key. The keys below are the recognized standard set: their value shapes are defined in §10-3 of the spec and consumers that recognize them MUST honor those shapes.
+
+| Key | Value shape (summary) | Spec section |
+| --- | --------------------- | ------------ |
+| `runtime` | array of strings, `<runtime>[<comparator><version>]` | §10-3.1 |
+| `tools` | array of tool whitelist strings | §10-3.2 |
+| `network` | `none` \| `local` \| `public` \| array of host globs | §10-3.3 |
+| `packages` | array of package identifiers | §10-3.4 |
+| `model` | object with `min-context`, `tools-required`, `vision` | §10-3.5 |
+| `cost-hints` | object with `tokens-per-call`, `seconds-per-call`, `paid-apis` | §10-3.6 |
+
+To propose a new standard key:
+
+1. Open a PR adding a row to the table above and a value-shape definition either to [`spec/v1.0/10-capabilities.md`](spec/v1.0/10-capabilities.md) or as a sub-section of this registry (depending on stability).
+2. Provide rationale: which consumer needs it, what semantics, why an existing standard key cannot carry the meaning.
+3. Reviewer applies the same on-topic / non-squatting test as for vendor namespaces.
+
+Unknown `requires` keys remain valid forever; promotion to "standard" only documents the recommended value shape.
+
+## Reserved Sigstore OIDC issuers
+
+For the default Sigstore signing path ([`spec/v1.0/09-signatures.md §09-4`](spec/v1.0/09-signatures.md)), the following OIDC issuers are recognized as legitimate, on-topic Sigstore deployments. Recognition does NOT mean a verifier MUST trust them — that is operator policy. It means the MDA project considers the issuer a valid `signer` prefix.
+
+| Issuer URL | Operator | Notes |
+| ---------- | -------- | ----- |
+| `https://accounts.google.com` | Google | Public Sigstore tenant. |
+| `https://github.com/login/oauth` | GitHub Actions OIDC | Public Sigstore tenant. |
+| `https://oauth2.sigstore.dev/auth` | Sigstore Dex | Public Sigstore tenant. |
+| `https://token.actions.githubusercontent.com` | GitHub Actions workload identity | For CI-emitted signatures. |
+| `https://gitlab.com` | GitLab CI workload identity | For CI-emitted signatures. |
+
+To propose a new issuer: open a PR with the issuer URL, the operator, and a link to the public Sigstore deployment documentation. Operators of private Sigstore deployments do NOT need to register here — operator policy decides what to trust.
+
+## Reserved transparency log providers
+
+For the Rekor side of the Sigstore path:
+
+| Rekor URL | Operator | Notes |
+| --------- | -------- | ----- |
+| `https://rekor.sigstore.dev` | Sigstore public good | Default. |
+| `https://rekor.sigstage.dev` | Sigstore staging | Test only. |
+
+Private Rekor instances do not need to register; operator policy applies.
+
 ## Changelog
 
 | Date       | Change                                                            |
 | ---------- | ----------------------------------------------------------------- |
-| 2026-05-07 | Initial registry. Seeded with: `mda`, `claude-code`, `codex`, `hermes`, `opencode`, `openclaw`, `skills-sh`. |
+| 2026-05-07 | Initial registry. Seeded with vendor namespaces: `mda`, `claude-code`, `codex`, `hermes`, `opencode`, `openclaw`, `skills-sh`. Added standard `requires` keys (§10-3) and reserved Sigstore OIDC issuers + Rekor instances (§09-4). |

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://mda.sno.dev/spec/v1.0/schemas/_defs/metadata-namespaces.schema.json",
   "title": "metadata vendor namespaces",
-  "description": "Reserved keys under top-level `metadata`. The full registry lives in REGISTRY.md (governed by spec §05).",
+  "description": "Reserved keys under top-level `metadata`. The full registry lives in REGISTRY.md (governed by spec §04).",
   "type": "object",
   "properties": {
     "mda": { "$ref": "mda-extended.schema.json" },
@@ -13,7 +13,7 @@
     },
     "codex": {
       "type": "object",
-      "description": "OpenAI Codex namespace. Mirrors fields normally written to a sibling agents/openai.yaml.",
+      "description": "OpenAI Codex namespace.",
       "additionalProperties": true
     },
     "hermes": {
