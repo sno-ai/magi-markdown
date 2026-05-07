@@ -439,7 +439,7 @@ app.get('*', (c) => {
           <h2>🔗 Learn More & Get Started</h2>
           <ul>
             <li><a href="https://github.com/sno-ai/mda" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
-            <li><a href="https://docs.magi-mda.org" target="_blank" rel="noopener noreferrer">Official Documentation</a></li>
+            <li><a href="https://mda.sno.dev" target="_blank" rel="noopener noreferrer">Official Documentation</a></li>
           </ul>
         </section>
 

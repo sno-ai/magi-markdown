@@ -82,7 +82,7 @@ More standard Markdown content...
 
 Want to see MDA in action right away? Use the hosted [url2mda.sno.ai](https://url2mda.sno.ai) service to instantly convert any public web page into MDA format. Just paste a URL and get a MDA `.mda` file—no install required!
 
-For more details, guides, and examples, visit the official documentation at [docs.magi-mda.org](https://docs.magi-mda.org).
+For more details, guides, and examples, visit the official documentation at [mda.sno.dev](https://mda.sno.dev).
 
 ## MDA vs. Other Formats
 
@@ -368,4 +368,4 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE) for detai
 
 Want to see MDA in action right away? Use the hosted [url2mda.sno.ai](https://url2mda.sno.ai) service to instantly convert any public web page into MDA format. Just paste a URL and get a MDA `.mda` file—no install required!
 
-For more details, guides, and examples, visit the official documentation at [docs.magi-mda.org](https://docs.magi-mda.org).
+For more details, guides, and examples, visit the official documentation at [mda.sno.dev](https://mda.sno.dev).
