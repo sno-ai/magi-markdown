@@ -28,6 +28,7 @@ Each row binds a namespace key to its owner, the upstream documentation that def
 | `opencode`          | OpenCode                   | https://opencode.ai/docs/skills/                                    | Stable     | This repo            |
 | `openclaw`          | OpenClaw                   | https://docs.openclaw.ai/tools/skills                               | Stable     | This repo            |
 | `skills-sh`         | skills.sh / Skills Directory | https://www.skillsdirectory.com/docs/skill-md-format              | Stable     | This repo            |
+| `snoai-llmix`       | SnoAI LLMix                | https://github.com/sno-ai/llmix/blob/main/docs/mda-vendor-namespace.md | Provisional | This repo          |
 
 The MDA-aware compiler and validator MUST recognize every namespace listed as `Stable`. They MAY recognize namespaces marked `Provisional`. They MUST NOT reject a frontmatter document solely because it contains an unregistered namespace whose key satisfies the kebab-case shape — only warn — so new vendors can experiment before registration. Compilers MUST preserve unknown vendor namespaces verbatim and MUST NOT interpret their contents (see [`spec/v1.0/04-platform-namespaces.md §04-5.1`](spec/v1.0/04-platform-namespaces.md)).
 
@@ -155,6 +156,7 @@ For DSSE PAE envelopes ([`spec/v1.0/09-signatures.md §09-3`](spec/v1.0/09-signa
 | Payload type | Owner | Description |
 | ------------ | ----- | ----------- |
 | `application/vnd.mda.integrity+json` | MDA project | Standard MDA integrity envelope (§09-3.1). The signed bytes are the JCS-canonicalized `integrity` object. |
+| `application/vnd.snoai-llmix.preset+json` | SnoAI LLMix | LLMix preset frontmatter payload, defined by the [`snoai-llmix` vendor namespace](https://github.com/sno-ai/llmix/blob/main/docs/mda-vendor-namespace.md). |
 
 Vendor-defined payload types SHOULD follow the form `application/vnd.<vendor>.<doc-type>+json` per [RFC 6838 §3.2](https://www.rfc-editor.org/rfc/rfc6838#section-3.2) (vendor tree). The structured suffix is `+json`; `+jcs` is not IANA-registered and MUST NOT be used. The JCS-canonicalization contract for each payload-type is defined in the vendor's published documentation (see the per-namespace requirements below). To register a vendor payload type:
 
@@ -168,3 +170,4 @@ Vendor-defined payload types SHOULD follow the form `application/vnd.<vendor>.<d
 | Date       | Change                                                            |
 | ---------- | ----------------------------------------------------------------- |
 | 2026-05-07 | Initial registry. Seeded with vendor namespaces: `mda`, `claude-code`, `codex`, `hermes`, `opencode`, `openclaw`, `skills-sh`. Added standard `requires` keys (§10-3), reserved Sigstore OIDC issuers + Rekor instances (§09-4), and reserved DSSE payload types (§09-3). |
+| 2026-05-07 | Registered the Provisional `snoai-llmix` vendor namespace and reserved `application/vnd.snoai-llmix.preset+json` for LLMix preset frontmatter payloads. |
