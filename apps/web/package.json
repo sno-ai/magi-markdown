@@ -7,10 +7,16 @@
     "deploy": "wrangler deploy --minify src/index.ts"
   },
   "dependencies": {
-    "hono": "^4.12.12"
+    "hono": "^4.12.16"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250425.0",
-    "wrangler": "^4.13.1"
+    "@cloudflare/workers-types": "^4.20260504.1",
+    "wrangler": "^4.59.1"
+  },
+  "pnpm": {
+    "overrides": {
+      "undici": ">=6.24.0",
+      "defu": ">=6.1.5"
+    }
   }
 }
