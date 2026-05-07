@@ -74,10 +74,10 @@ MDA's architecture layers structured data onto standard Markdown using distinct,
 *   **Processing:** MDA-aware systems parse these footnote definitions, extracting the JSON payloads to build a relationship graph or provide contextual links during RAG or agent operation. Standard Markdown parsers render them as conventional footnotes, with the JSON string (including backticks) appearing as the footnote content.
 *   **Example (Illustrating Kebab-Case and `source-url`):**
     ```markdown
-    This architecture builds upon established Markdown principles[^md-guide] and complements the core MDA specification[^core-spec].
+    This architecture builds upon established Markdown principles[^md-guide] and complements the MDA Open Spec[^core-spec].
 
     [^md-guide]: `{"rel-type": "citation", "source-url": "https://daringfireball.net/projects/markdown/", "rel-desc": "Based on original Markdown syntax"}`
-    [^core-spec]: `{"rel-type": "related", "doc-id": "spec-doc-uuid-123", "rel-desc": "References the core MDA specification v1.1", "rel-strength": 0.9, "context": {"section": "Overview"}}`
+    [^core-spec]: `{"rel-type": "related", "doc-id": "spec-doc-uuid-123", "rel-desc": "References the MDA Open Spec v1.1", "rel-strength": 0.9, "context": {"section": "Overview"}}`
     ```
 
 ## Processing Flow & Integration Philosophy

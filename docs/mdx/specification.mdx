@@ -1,4 +1,4 @@
-# MDA Specification
+# MDA Open Spec
 
 This document provides detailed specifications for the three optional components of MDA (Markdown for Agent): YAML Front Matter, `ai-script` Code Blocks, and Markdown Footnotes for Relationships.
 
