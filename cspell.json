@@ -48,7 +48,7 @@
   "enableFiletypes": [],
   "files": [
     "**/*.md",
-    "**/*.aimd",
+    "**/*.mda",
     "**/*.ts",
     "**/*.tsx",
     "**/*.js",
