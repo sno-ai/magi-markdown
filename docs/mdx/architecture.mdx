@@ -77,7 +77,7 @@ MDA's architecture layers structured data onto standard Markdown using distinct,
     This architecture builds upon established Markdown principles[^md-guide] and complements the MDA Open Spec[^core-spec].
 
     [^md-guide]: `{"rel-type": "citation", "source-url": "https://daringfireball.net/projects/markdown/", "rel-desc": "Based on original Markdown syntax"}`
-    [^core-spec]: `{"rel-type": "related", "doc-id": "spec-doc-uuid-123", "rel-desc": "References the MDA Open Spec v1.1", "rel-strength": 0.9, "context": {"section": "Overview"}}`
+    [^core-spec]: `{"rel-type": "related", "doc-id": "spec-doc-uuid-123", "rel-desc": "References the MDA Open Spec v1.0", "rel-strength": 0.9, "context": {"section": "Overview"}}`
     ```
 
 ## Processing Flow & Integration Philosophy
