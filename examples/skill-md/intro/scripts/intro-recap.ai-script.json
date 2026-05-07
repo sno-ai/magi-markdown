@@ -1,9 +1,0 @@
-{
-  "script-id": "intro-recap",
-  "prompt": "Summarize the preceding section in 2-3 bullets focused on actionable points.",
-  "priority": "medium",
-  "auto-run": false,
-  "output-format": "markdown",
-  "interactive-type": "button",
-  "interactive-label": "Recap intro"
-}

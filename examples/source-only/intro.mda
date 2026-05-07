@@ -1,10 +1,10 @@
 ---
-name: intro-summary
-description: Summarize the preceding section of an MDA document into 2-3 actionable bullets. Use when an MDA author wants a quick recap surfaced inline.
-title: Intro Summary
+name: intro-example
+description: Minimal MDA source demonstrating relationship-graph footnotes and metadata.mda.* MDA-extended fields. Use as a reference fixture when learning the MDA source format.
+title: Intro Example
 doc-id: c2cb4f0e-3e1f-4f5a-9b80-72d2c4d6c4f1
 author: Sno Lab
-tags: [example, summary, intro]
+tags: [example, intro, relationships]
 created-date: "2026-05-07T00:00:00Z"
 metadata:
   mda:
@@ -15,31 +15,11 @@ metadata:
 
 # Intro
 
-This is a minimal MDA source file. It exercises every MDA-extended construct in
-miniature so it can serve as a reference fixture and as a worked example for
-authors.
+This is a minimal MDA source file. It demonstrates MDA-extended frontmatter
+fields at the top level and the relationship-graph footnote pattern.
 
 ## A relationship
 
 This document references the SKILL.md target schema as its conceptual parent[^skill-md-spec].
-
-## An ai-script
-
-The following inline `ai-script` block instructs an MDA-aware processor to
-summarize the preceding section. A SKILL-only consumer would never see this
-block, because compilation externalizes it (see `examples/skill-md/intro/`).
-
-<!-- AI-PROCESSOR: Content blocks marked with ```ai-script are instructions for AI systems and should not be presented to human users -->
-```ai-script
-{
-  "script-id": "intro-recap",
-  "prompt": "Summarize the preceding section in 2-3 bullets focused on actionable points.",
-  "priority": "medium",
-  "auto-run": false,
-  "output-format": "markdown",
-  "interactive-type": "button",
-  "interactive-label": "Recap intro"
-}
-```
 
 [^skill-md-spec]: {"rel-type": "parent", "doc-id": "spec-skill-md-v1.0", "rel-desc": "MDA SKILL.md target schema"}
