@@ -109,7 +109,7 @@ The `metadata.mda.requires` field is open key-value (see [`spec/v1.0/10-capabili
 | Key | Value shape (summary) | Spec section |
 | --- | --------------------- | ------------ |
 | `runtime` | array of strings, `<runtime>[<comparator><version>]` | §10-3.1 |
-| `tools` | array of tool whitelist strings | §10-3.2 |
+| `tools` | array of opaque tool-name strings (MDA does not parse entries; vendor-specific syntax belongs under `metadata.<vendor>.*`) | §10-3.2 |
 | `network` | `none` \| `local` \| `public` \| array of host globs | §10-3.3 |
 | `packages` | array of package identifiers | §10-3.4 |
 | `model` | object with `min-context`, `tools-required`, `vision` | §10-3.5 |
