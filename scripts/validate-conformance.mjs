@@ -69,13 +69,76 @@ for (const f of schemaFiles) {
   }
 }
 
-// ─── 2. Frontmatter extraction helper ─────────────────────────────────────────
+// ─── 2. Frontmatter extraction (§02-1.1 normative) ────────────────────────────
+// Returns:
+//   { kind: "ok",            frontmatter: <parsed-yaml>|null, body: string }
+//   { kind: "no-frontmatter", body: string }
+//   { kind: "error",          code: "invalid-encoding" | "unterminated-frontmatter"
+//                             | "frontmatter-yaml-parse-error", message: string }
+function extractFrontmatterStrict(buf) {
+  // Step 1+2: BOM strip + UTF-8 decode (strict).
+  if (!Buffer.isBuffer(buf)) buf = Buffer.from(buf);
+  let bytes = buf;
+  if (bytes.length >= 3 && bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) {
+    bytes = bytes.slice(3);
+  }
+  let decoded;
+  try {
+    // TextDecoder with fatal:true raises on invalid UTF-8.
+    decoded = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch (e) {
+    return { kind: "error", code: "invalid-encoding", message: e.message };
+  }
+
+  // Step 3: line-ending normalization (CRLF → LF, lone CR → LF).
+  const norm = decoded.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+
+  // Step 4: opening fence at offset 0.
+  if (!norm.startsWith("---\n")) {
+    return { kind: "no-frontmatter", body: norm };
+  }
+
+  // Step 5: scan forward for the FIRST line equal to "---".
+  let i = 4; // past "---\n"
+  let closeStart = -1;
+  let closeEnd = -1;
+  while (i <= norm.length) {
+    const nl = norm.indexOf("\n", i);
+    const lineEnd = nl === -1 ? norm.length : nl;
+    const line = norm.slice(i, lineEnd);
+    if (line === "---") {
+      closeStart = i;
+      closeEnd = nl === -1 ? norm.length : nl + 1;
+      break;
+    }
+    if (nl === -1) break;
+    i = nl + 1;
+  }
+  if (closeStart === -1) {
+    return { kind: "error", code: "unterminated-frontmatter",
+             message: "opening --- without matching closing fence" };
+  }
+
+  const fmStr = norm.slice(4, closeStart);
+  const body = norm.slice(closeEnd);
+
+  let parsed;
+  try {
+    parsed = yaml.load(fmStr);
+  } catch (e) {
+    return { kind: "error", code: "frontmatter-yaml-parse-error", message: e.message };
+  }
+  return { kind: "ok", frontmatter: parsed ?? null, body };
+}
+
+// Backwards-compatible wrapper used by the rest of the runner: returns the
+// parsed frontmatter object or null. Errors degrade to null so existing
+// fixtures keep their previous behavior; new fixtures use extractFrontmatterStrict.
 function extractFrontmatter(text) {
-  if (!text.startsWith("---")) return null;
-  const end = text.indexOf("\n---", 3);
-  if (end === -1) return null;
-  const block = text.slice(3, end).trimStart();
-  return yaml.load(block);
+  const buf = Buffer.isBuffer(text) ? text : Buffer.from(text);
+  const r = extractFrontmatterStrict(buf);
+  if (r.kind === "ok") return r.frontmatter;
+  return null;
 }
 
 function extractFootnoteRelationships(text) {
@@ -122,9 +185,38 @@ function getValidator(schemaPath) {
   return compiled;
 }
 
-function runValidator(fixturePath, schemaPaths, expectedVerdict, fixtureId, semanticChecks) {
-  const text = readFileSync(fixturePath, "utf8");
-  const fm = extractFrontmatter(text);
+function runValidator(fixturePath, schemaPaths, expectedVerdict, fixtureId, semanticChecks, extractionExpected) {
+  const buf = readFileSync(fixturePath);
+  const ext = extractFrontmatterStrict(buf);
+
+  // §02-1.1 extraction-time verdict (when the manifest opts in via `extraction-expected`).
+  if (extractionExpected) {
+    const got = ext.kind === "error" ? ext.code
+              : ext.kind === "no-frontmatter" ? "no-frontmatter"
+              : "ok";
+    if (got === extractionExpected) {
+      pass(`[${fixtureId}] extraction (§02-1.1): ${got}`);
+      // For extraction-only fixtures (no schemas listed), we're done.
+      if (!schemaPaths || schemaPaths.length === 0) return;
+    } else {
+      fail(`[${fixtureId}] extraction expected ${extractionExpected} got ${got}`,
+           ext.kind === "error" ? ext.message : "");
+      return;
+    }
+  } else if (ext.kind === "error") {
+    // Default behavior: an extraction error against a fixture with schemas
+    // is treated as a hard rejection.
+    if (expectedVerdict === "reject") {
+      pass(`[${fixtureId}] reject: ${ext.code} (${ext.message})`);
+      return;
+    }
+    fail(`[${fixtureId}] extraction failed: ${ext.code}`, ext.message);
+    return;
+  }
+
+  const text = ext.kind === "no-frontmatter" ? ext.body
+             : ext.kind === "ok" ? buf.toString("utf8") : "";
+  const fm = ext.kind === "ok" ? ext.frontmatter : null;
 
   let allOk = true;
   let firstErrors = [];
@@ -242,7 +334,8 @@ for (const entry of manifest.fixtures) {
       fail(`[${entry.id}] fixture missing: ${entry.path}`);
       continue;
     }
-    runValidator(fixturePath, entry.against, entry.verdict, entry.id, entry["semantic-checks"]);
+    runValidator(fixturePath, entry.against || [], entry.verdict, entry.id,
+                 entry["semantic-checks"], entry["extraction-expected"]);
   }
 }
 
