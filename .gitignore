@@ -102,5 +102,6 @@ apps/url2aimd/wrangler.toml
 # Local-only docs and tooling
 ai-doc/
 .codex/
+.claude/
 
 wrangler.toml
