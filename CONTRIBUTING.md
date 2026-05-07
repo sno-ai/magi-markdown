@@ -1,12 +1,12 @@
-# Contributing to MAGI Markdown
+# Contributing to MDA Markdown
 
-Thank you for your interest in contributing to MAGI Markdown! We welcome contributions from the community and are pleased to have you join us.
+Thank you for your interest in contributing to MDA Markdown! We welcome contributions from the community and are pleased to have you join us.
 
 ## Getting Started
 
 1. **Fork the Repository**
    - Fork the repository on GitHub
-   - Clone your fork locally: `git clone https://github.com/sno-ai/magi-markdown.git`
+   - Clone your fork locally: `git clone https://github.com/sno-ai/mda.git`
 
 2. **Install Dependencies**
    ```bash
@@ -53,7 +53,7 @@ Thank you for your interest in contributing to MAGI Markdown! We welcome contrib
    ```
 
 2. **Create a Pull Request**
-   - Go to the MAGI Markdown repository on GitHub
+   - Go to the MDA Markdown repository on GitHub
    - Click "New Pull Request"
    - Choose your fork and branch
    - Fill in the PR template with all relevant information
@@ -90,4 +90,4 @@ Thank you for your interest in contributing to MAGI Markdown! We welcome contrib
 
 ## License
 
-By contributing to MAGI Markdown, you agree that your contributions will be licensed under its MIT license.
+By contributing to MDA Markdown, you agree that your contributions will be licensed under its MIT license.
