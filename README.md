@@ -49,8 +49,8 @@ MDA puts those things in the frontmatter and footnotes, in shapes a JSON Schema 
 
 For the long version, two documents go deeper. Both trace every claim back to a section of the spec, and both call out current ecosystem gaps inline. Read them if you're deciding whether to adopt.
 
-- [**`ai-doc/ai-agent-core-value.md`**](ai-doc/ai-agent-core-value.md) — five points framed for runtimes, harnesses, validators, and dispatchers. What MDA gives an agent at load time: structured `requires` for typed dispatch, verifiable trust at load, machine-readable graph edges, filename-based one-lookup target dispatch, and the same validation contract for agent-authored and compiler-emitted output.
-- [**`ai-doc/human-curator-user-core-value.md`**](ai-doc/human-curator-user-core-value.md) — six points framed for the people who write and curate agent-facing instruction libraries. What MDA gives an author at ship time: one source into multiple ecosystems, tamper-evidence and publisher attribution, machine-readable dependency graph and version pinning, LLM-mediated authoring without learning every runtime's frontmatter, smaller (not zero) vendor lock-in, and strict validation that catches almost-conformant artifacts before they ship.
+- [**`docs/v1.0/ai-agent-core-value.md`**](docs/v1.0/ai-agent-core-value.md) — five points framed for runtimes, harnesses, validators, and dispatchers. What MDA gives an agent at load time: structured `requires` for typed dispatch, verifiable trust at load, machine-readable graph edges, filename-based one-lookup target dispatch, and the same validation contract for agent-authored and compiler-emitted output.
+- [**`docs/v1.0/human-curator-user-core-value.md`**](docs/v1.0/human-curator-user-core-value.md) — six points framed for the people who write and curate agent-facing instruction libraries. What MDA gives an author at ship time: one source into multiple ecosystems, tamper-evidence and publisher attribution, machine-readable dependency graph and version pinning, LLM-mediated authoring without learning every runtime's frontmatter, smaller (not zero) vendor lock-in, and strict validation that catches almost-conformant artifacts before they ship.
 
 ## Three authoring modes
 
@@ -145,7 +145,7 @@ v1.0 ships the **contract**, not the entire ecosystem around it.
 
 The `.mda` you write today still produces conforming `.md` outputs that load in every runtime listed above. The verification, resolution, and graph-traversal pieces are work in progress. The contract that lets them be built without further negotiation is what v1.0 freezes.
 
-For the full gap between the spec and the consumer-side ecosystem, see [`ai-doc/what-v1.0-does-not-ship.md`](ai-doc/what-v1.0-does-not-ship.md). That distinction, between an honest spec freeze and a marketing freeze, is the one this project tries to keep.
+For the full gap between the spec and the consumer-side ecosystem, see [`docs/v1.0/what-v1.0-does-not-ship.md`](docs/v1.0/what-v1.0-does-not-ship.md). That distinction, between an honest spec freeze and a marketing freeze, is the one this project tries to keep.
 
 ## Contributing
 
