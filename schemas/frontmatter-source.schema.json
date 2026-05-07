@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mda.sno.dev/spec/v1.0/schemas/frontmatter-source.schema.json",
+  "title": "MDA source frontmatter",
+  "description": "Permissive schema for .mda source files. MDA-extended fields MAY appear at the top level. Open-standard fields are also accepted at the top level. Use frontmatter-skill-md.schema.json for compiled SKILL.md outputs.",
+  "type": "object",
+  "properties": {
+    "name": { "$ref": "_defs/name.schema.json" },
+    "description": { "$ref": "_defs/description.schema.json" },
+    "license": { "type": "string" },
+    "compatibility": { "type": "string", "maxLength": 500 },
+    "allowed-tools": { "type": "string" },
+    "metadata": { "$ref": "_defs/metadata-namespaces.schema.json" },
+
+    "doc-id": { "$ref": "_defs/mda-extended.schema.json#/properties/doc-id" },
+    "title": { "$ref": "_defs/mda-extended.schema.json#/properties/title" },
+    "author": { "$ref": "_defs/mda-extended.schema.json#/properties/author" },
+    "author-id": { "$ref": "_defs/mda-extended.schema.json#/properties/author-id" },
+    "image": { "$ref": "_defs/mda-extended.schema.json#/properties/image" },
+    "images-list": { "$ref": "_defs/mda-extended.schema.json#/properties/images-list" },
+    "tags": { "$ref": "_defs/mda-extended.schema.json#/properties/tags" },
+    "published-date": { "$ref": "_defs/iso8601.schema.json" },
+    "created-date": { "$ref": "_defs/iso8601.schema.json" },
+    "updated-date": { "$ref": "_defs/iso8601.schema.json" },
+    "expired-date": { "$ref": "_defs/iso8601.schema.json" },
+    "globs": { "$ref": "_defs/mda-extended.schema.json#/properties/globs" },
+    "audience": { "$ref": "_defs/mda-extended.schema.json#/properties/audience" },
+    "purpose": { "$ref": "_defs/mda-extended.schema.json#/properties/purpose" },
+    "entities": { "$ref": "_defs/mda-extended.schema.json#/properties/entities" },
+    "relationships": { "$ref": "_defs/mda-extended.schema.json#/properties/relationships" },
+    "source-url": { "$ref": "_defs/mda-extended.schema.json#/properties/source-url" }
+  },
+  "additionalProperties": false
+}

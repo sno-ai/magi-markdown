@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mda.sno.dev/spec/v1.0/schemas/_defs/metadata-namespaces.schema.json",
+  "title": "metadata vendor namespaces",
+  "description": "Reserved keys under top-level `metadata`. The full registry lives in REGISTRY.md (governed by spec §05).",
+  "type": "object",
+  "properties": {
+    "mda": { "$ref": "mda-extended.schema.json" },
+    "claude-code": {
+      "type": "object",
+      "description": "Anthropic Claude Code namespace.",
+      "additionalProperties": true
+    },
+    "codex": {
+      "type": "object",
+      "description": "OpenAI Codex namespace. Mirrors fields normally written to a sibling agents/openai.yaml.",
+      "additionalProperties": true
+    },
+    "hermes": {
+      "type": "object",
+      "description": "Nous Research Hermes Agent namespace.",
+      "additionalProperties": true
+    },
+    "opencode": {
+      "type": "object",
+      "description": "OpenCode namespace.",
+      "additionalProperties": true
+    },
+    "openclaw": {
+      "type": "object",
+      "description": "OpenClaw namespace.",
+      "additionalProperties": true
+    },
+    "skills-sh": {
+      "type": "object",
+      "description": "skills.sh / Skills Directory registry namespace.",
+      "additionalProperties": true
+    }
+  },
+  "patternProperties": {
+    "^[a-z0-9]+(-[a-z0-9]+)*$": {
+      "type": "object",
+      "description": "Any other vendor namespace; key MUST be a kebab-case identifier and SHOULD be registered in REGISTRY.md.",
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

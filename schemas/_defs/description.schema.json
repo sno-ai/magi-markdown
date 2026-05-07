@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mda.sno.dev/spec/v1.0/schemas/_defs/description.schema.json",
+  "title": "MDA description string",
+  "description": "Non-empty short prose, ≤1024 chars. Should describe what the artifact does AND when to use it.",
+  "type": "string",
+  "minLength": 1,
+  "maxLength": 1024
+}

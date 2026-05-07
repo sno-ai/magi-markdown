@@ -1,0 +1,8 @@
+---
+name: minimal-skill
+description: A skill that does the minimum required to be valid. Use when you need a frontmatter-only conformance baseline.
+---
+
+# Minimal
+
+This is the minimum-viable MDA source: only the two required fields, nothing else.

@@ -1,0 +1,7 @@
+{
+  "script-id": "fx21-step",
+  "prompt": "State which fixture you are reading.",
+  "priority": "low",
+  "auto-run": false,
+  "output-format": "text"
+}

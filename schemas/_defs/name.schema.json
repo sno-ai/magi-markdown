@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mda.sno.dev/spec/v1.0/schemas/_defs/name.schema.json",
+  "title": "MDA name identifier",
+  "description": "Kebab-case machine identifier shared by `name`, vendor namespace keys, and similar. Used by reference from other schemas.",
+  "type": "string",
+  "minLength": 1,
+  "maxLength": 64,
+  "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+}
