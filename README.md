@@ -2,9 +2,10 @@
 
 > A Markdown superset for agent-facing documents. One source, compiled into the `.md` files every major agent runtime already loads. Add a real dependency graph and reproducible signed identity if you need them.
 
-[![CI](https://img.shields.io/github/actions/workflow/status/sno-ai/mda/sync-mdx.yml?branch=main)](https://github.com/sno-ai/mda/actions/workflows/sync-mdx.yml)
+[![Latest release](https://img.shields.io/github/v/release/sno-ai/mda?include_prereleases&label=release&color=blue)](https://github.com/sno-ai/mda/releases/latest)
 [![License](https://img.shields.io/github/license/sno-ai/mda)](https://github.com/sno-ai/mda/blob/main/LICENSE)
-[![Spec](https://img.shields.io/badge/spec-v1.0--rc.1-blue)](SPEC.md)
+[![Docs](https://img.shields.io/badge/docs-mda.sno.dev-3b82f6)](https://mda.sno.dev)
+[![GitHub stars](https://img.shields.io/github/stars/sno-ai/mda?style=flat&color=yellow)](https://github.com/sno-ai/mda/stargazers)
 
 ## What MDA is
 
