@@ -47,6 +47,8 @@ See [`spec/v1.0/00-overview.md §0.6`](spec/v1.0/00-overview.md) and [`docs/manu
 - [§08 — Integrity (`integrity` field, combined hash)](spec/v1.0/08-integrity.md)
 - [§09 — Signatures (`signatures[]`, Sigstore OIDC default)](spec/v1.0/09-signatures.md)
 - [§10 — Capabilities (`metadata.mda.requires`)](spec/v1.0/10-capabilities.md)
+- [§11 — Implementer's Guide](spec/v1.0/11-implementer-guide.md) (informative)
+- [§12 — Sigstore tooling integration](spec/v1.0/12-sigstore-tooling.md) (informative)
 
 ## Governance
 
@@ -57,7 +59,7 @@ MDA is an independent project. It actively serves AAIF (Linux Foundation Agentic
 - **JSON Schemas:** [`schemas/`](schemas/) — `frontmatter-source`, `frontmatter-skill-md`, `frontmatter-agents-md`, `frontmatter-mcp-server-md`, `relationship-footnote`, plus `_defs/` for `integrity`, `signature`, `requires`, `depends-on`, `version-range`
 - **Conformance suite:** [`conformance/`](conformance/) — fixtures + `manifest.yaml`
 - **Examples:** [`examples/`](examples/) — `source-only/`, `skill-md/` (additional target examples land alongside reference-implementation maturity)
-- **Vendor namespace registry:** [`REGISTRY.md`](REGISTRY.md) — also lists standard `requires` keys, reserved Sigstore OIDC issuers, and reserved transparency log providers
+- **Vendor namespace registry:** [`REGISTRY.md`](REGISTRY.md) — also lists standard `requires` keys, reserved Sigstore OIDC issuers, reserved transparency log providers, and reserved DSSE `payload-type` values
 - **Manual-workflow recipes:** [`docs/manual-workflow.md`](docs/manual-workflow.md) — hand-author and sign without the MDA CLI
 - **Reference implementation:** [`packages/mda/`](packages/mda/) — TypeScript, npm: `@mda/cli`. Architecture spec: [`packages/mda/IMPL-SPEC.md`](packages/mda/IMPL-SPEC.md)
 
