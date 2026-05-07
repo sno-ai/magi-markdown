@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mda.sno.dev/spec/v1.0/schemas/_defs/integrity.schema.json",
+  "title": "MDA integrity field",
+  "description": "Cryptographic content hash that anchors the artifact for tamper detection. See spec §08.",
+  "type": "object",
+  "required": ["algorithm", "digest"],
+  "properties": {
+    "algorithm": {
+      "type": "string",
+      "enum": ["sha256", "sha384", "sha512"]
+    },
+    "digest": {
+      "type": "string",
+      "description": "Self-describing digest in <algorithm>:<lowercase-hex> form. The prefix MUST match the algorithm field; the hex length MUST match the algorithm.",
+      "pattern": "^(sha256|sha384|sha512):[0-9a-f]+$"
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "algorithm": { "const": "sha256" } } },
+      "then": { "properties": { "digest": { "pattern": "^sha256:[0-9a-f]{64}$" } } }
+    },
+    {
+      "if": { "properties": { "algorithm": { "const": "sha384" } } },
+      "then": { "properties": { "digest": { "pattern": "^sha384:[0-9a-f]{96}$" } } }
+    },
+    {
+      "if": { "properties": { "algorithm": { "const": "sha512" } } },
+      "then": { "properties": { "digest": { "pattern": "^sha512:[0-9a-f]{128}$" } } }
+    }
+  ]
+}
