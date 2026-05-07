@@ -3,7 +3,8 @@
 	"version": "1.0.0",
 	"license": "Apache-2.0",
 	"scripts": {
-		"sync:mdx": "tsx scripts/sync-mdx.ts"
+		"sync:mdx": "tsx scripts/sync-mdx.ts",
+		"dev2main": "bash scripts/dev2main.sh"
 	},
 	"devDependencies": {
 		"@types/jsdom": "^28.0.1",
