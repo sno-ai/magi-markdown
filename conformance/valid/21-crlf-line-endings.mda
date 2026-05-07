@@ -1,0 +1,8 @@
+---
+name: crlf-source
+description: Frontmatter parses when the file uses CRLF line endings. Use to validate §02-1.1 step 3 line-ending normalization.
+---
+
+# CRLF source
+
+This fixture is encoded with CRLF (`\r\n`) line terminators throughout. A conforming extractor normalizes them to LF before applying the closing-fence scan.

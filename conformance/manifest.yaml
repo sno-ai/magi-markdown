@@ -79,6 +79,62 @@ fixtures:
     rules: [§06-targets/agents-md §06-3.1, §06-targets/agents-md §06-3.2]
     description: AGENTS.md with optional frontmatter; MDA-extended fields nested under metadata.mda.*.
 
+  # ─── valid (§02-1.1 frontmatter extraction algorithm) ─────────────────────
+  - id: "20-bom-prefixed"
+    path: valid/20-bom-prefixed.mda
+    against: [schemas/frontmatter-source.schema.json]
+    extraction-expected: ok
+    verdict: accept
+    rules: [§02-1.1 step 1]
+    description: File begins with UTF-8 BOM (0xEF 0xBB 0xBF); extractor MUST strip the BOM in step 1 and parse normally.
+
+  - id: "21-crlf-line-endings"
+    path: valid/21-crlf-line-endings.mda
+    against: [schemas/frontmatter-source.schema.json]
+    extraction-expected: ok
+    verdict: accept
+    rules: [§02-1.1 step 3]
+    description: File uses CRLF line terminators throughout; extractor MUST normalize CRLF to LF in step 3 before scanning for the closing fence.
+
+  - id: "22-body-with-horizontal-rule"
+    path: valid/22-body-with-horizontal-rule.mda
+    against: [schemas/frontmatter-source.schema.json]
+    extraction-expected: ok
+    verdict: accept
+    rules: [§02-1.1 step 5, §02-1.1 step 6]
+    description: Body contains Markdown horizontal rules (`---`); the FIRST `---` line after the opening fence is the closing fence — later `---` lines remain in the body.
+
+  - id: "23-empty-body"
+    path: valid/23-empty-body.mda
+    against: [schemas/frontmatter-source.schema.json]
+    extraction-expected: ok
+    verdict: accept
+    rules: [§02-1.1 step 7, §08-3.3]
+    description: Frontmatter-only source with an empty body string after the closing fence; the empty body is conformant and §08-3.3 emits no terminating newline.
+
+  # ─── invalid (§02-1.1 frontmatter extraction algorithm) ───────────────────
+  - id: "24-unterminated-frontmatter"
+    path: invalid/24-unterminated-frontmatter.mda
+    extraction-expected: unterminated-frontmatter
+    verdict: reject
+    rules: [§02-1.1 step 5]
+    description: Opening `---` fence at offset 0 with no matching closing `---` line; extractor MUST refuse with `unterminated-frontmatter`.
+
+  - id: "25-invalid-utf8"
+    path: invalid/25-invalid-utf8.mda
+    extraction-expected: invalid-encoding
+    verdict: reject
+    rules: [§02-1.1 step 2]
+    description: File contains a stray 0xFF byte that is not a valid UTF-8 continuation; extractor MUST refuse with `invalid-encoding` before YAML parsing.
+
+  - id: "26-skill-md-body-only"
+    path: invalid/26-skill-md-body-only.md
+    against: [schemas/frontmatter-skill-md.schema.json]
+    extraction-expected: no-frontmatter
+    verdict: reject
+    rules: [§02-1.1 step 4, §06-targets/skill-md]
+    description: SKILL.md without an opening `---` fence; §02-1.1 step 4 says only AGENTS.md tolerates body-only — SKILL.md MUST refuse (`missing-required-frontmatter`).
+
   # ─── invalid (source-side rejection) ──────────────────────────────────────
   - id: "11-name-uppercase"
     path: invalid/11-name-uppercase.mda

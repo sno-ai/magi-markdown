@@ -1,0 +1,8 @@
+﻿---
+name: bom-prefixed-skill
+description: Frontmatter parses correctly when the file starts with a UTF-8 BOM. Use to validate §02-1.1 step 1 BOM stripping.
+---
+
+# BOM-prefixed source
+
+This fixture begins with a UTF-8 BOM (0xEF 0xBB 0xBF) before the opening `---`. A conforming extractor strips the BOM in step 1 and proceeds normally; the frontmatter and body are otherwise standard.

@@ -1,0 +1,4 @@
+---
+name: frontmatter-only
+description: Frontmatter-only source with an empty body is conformant. Use to validate §02-1.1 step 7 and §08-3.3 empty-body handling.
+---

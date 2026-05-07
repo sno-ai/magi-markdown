@@ -1,0 +1,7 @@
+---
+name: unterminated
+description: Opening fence with no closing --- line; §02-1.1 step 5 requires extractors to refuse this file.
+
+# Body never reached
+
+The conformance runner records this fixture as a §02-1.1 step 5 rejection (extraction-expected: unterminated-frontmatter).
