@@ -58,7 +58,7 @@ interface AIScript {
 
 // Using kebab-case as specified in the Architecture doc for relationships
 interface Relationship {
-  'rel-type': string; // e.g., 'parent', 'child', 'cites', 'related'
+  'rel-type': string; // e.g., 'citation', 'parent', 'child', 'related', 'contradicts', 'supports', 'extends'
   'doc-id'?: string; // Target document's UUID
   'source-url'?: string; // URL if relating to an external resource
   'rel-desc': string;
@@ -378,29 +378,29 @@ def encode_mda(front_matter_dict, main_content, ai_scripts_list=[], relationship
     # Export metadata using the default YAMLHandler to get the YAML string with delimiters
     with StringIO() as file_like_object:
         frontmatter.dump(post, file_like_object)
-        aimd_string = file_like_object.getvalue()
+        mda_string = file_like_object.getvalue()
 
     # Ensure proper separation between front matter and content
-    aimd_string = aimd_string.strip() + '\\n\\n'
+    mda_string = mda_string.strip() + '\\n\\n'
 
     # 2. Append Main Content
-    aimd_string += main_content.strip() + '\\n\\n'
+    mda_string += main_content.strip() + '\\n\\n'
 
     # 3. Append AI Scripts
     for script in ai_scripts_list:
         script_json = json.dumps(script, indent=2)
         # Optional: Add the AI-PROCESSOR comment
         processor_hint = '<!-- AI-PROCESSOR: Content blocks marked with ```ai-script are instructions for AI systems and should not be presented to human users -->\\n'
-        aimd_string += processor_hint
-        aimd_string += f"```ai-script\\n{script_json}\\n```\\n\\n" # Ensure newlines around JSON
+        mda_string += processor_hint
+        mda_string += f"```ai-script\\n{script_json}\\n```\\n\\n" # Ensure newlines around JSON
 
     # 4. Append Footnote Relationships
     for ref_id, relationship in relationships_dict.items():
         relationship_json = json.dumps(relationship)
         # Use backticks around the JSON payload
-        aimd_string += f"[^{ref_id}]: `{relationship_json}`\\n"
+        mda_string += f"[^{ref_id}]: `{relationship_json}`\\n"
 
-    return aimd_string.strip() # Remove trailing newline/whitespace
+    return mda_string.strip() # Remove trailing newline/whitespace
 
 # --- Example Usage ---
 my_front_matter = {

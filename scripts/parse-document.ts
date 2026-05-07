@@ -46,7 +46,7 @@ export function parseFrontMatter(content: string): {
 } {
   const match = FRONT_MATTER_RE.exec(content);
   if (!match) {
-    return { frontMatter: { 'doc-id': '', title: '' }, rest: content };
+    return { frontMatter: {}, rest: content };
   }
 
   const yaml = match[1];
@@ -147,11 +147,20 @@ function parseRelationshipsFromContent(content: string): MdaRelationship[] {
       const data = JSON.parse(match[2]) as Record<string, unknown>;
       const relType = data['rel-type'] as MdaRelationship['rel-type'] | undefined;
       const docId = data['doc-id'] as string | undefined;
+      const sourceUrl = data['source-url'] as string | undefined;
+      const relDesc = data['rel-desc'] as string | undefined;
 
-      if (!relType || !docId) continue;
+      // Per spec: rel-type and rel-desc are required; one of doc-id / source-url must be present.
+      if (!relType || !relDesc || (!docId && !sourceUrl)) continue;
 
-      const rel: MdaRelationship = { 'rel-type': relType, 'doc-id': docId };
-      if (typeof data['rel-desc'] === 'string') rel['rel-desc'] = data['rel-desc'];
+      const rel: MdaRelationship = { 'rel-type': relType, 'rel-desc': relDesc };
+      if (docId) rel['doc-id'] = docId;
+      if (sourceUrl) rel['source-url'] = sourceUrl;
+      if (typeof data['rel-strength'] === 'number') rel['rel-strength'] = data['rel-strength'];
+      if (typeof data['bi-directional'] === 'boolean') rel['bi-directional'] = data['bi-directional'];
+      if (data.context && typeof data.context === 'object') {
+        rel.context = data.context as MdaRelationship['context'];
+      }
       relationships.push(rel);
     } catch {
       // skip invalid footnote JSON

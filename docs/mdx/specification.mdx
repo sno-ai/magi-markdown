@@ -87,5 +87,6 @@ Leverages standard Markdown footnote syntax (`[^ref-id]` and `[^ref-id]: ...`) t
 **Implementation Notes:**
 
 *   Ensure the `doc-id` used in footnotes corresponds accurately to a `doc-id` defined in the Front Matter of the target `.mda` document for internal links.
-*   Consistent use of `rel-type` values is crucial for building reliable knowledge graphs.
+*   Consistent use of `rel-type` values is crucial for building reliable knowledge graphs. The recommended set is: `citation`, `parent`, `child`, `related`, `contradicts`, `supports`, `extends`. Custom values are tolerated by parsers but discouraged for interoperability.
+*   The JSON payload **must** be wrapped in backticks. Parsers in this repository tolerate bare-JSON footnotes for backward compatibility, but new content should always use the backtick form so standard Markdown renderers do not eat the braces.
 *   Standard Markdown parsers will render the footnote with the backticks and JSON string as the literal content. MDA-aware parsers extract and interpret the JSON.

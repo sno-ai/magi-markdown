@@ -69,10 +69,12 @@
     {
       "group": "MDA Examples",
       "pages": [
+        "mda-examples/quickstart-hello-world",
         "mda-examples/simple-meeting-minutes",
         "mda-examples/technical-doc",
         "mda-examples/technical-doc-2",
-        "mda-examples/dynamic-content-generation"
+        "mda-examples/dynamic-content-generation",
+        "mda-examples/llms-mda-site-guidance"
       ]
     }
   ],
