@@ -8,7 +8,7 @@
   ],
   // Example rule customization (add more as needed):
   "MD013": false,
-  // MAGI .mda files follow the same markdown rules
+  // MDA .mda files follow the same markdown rules
   "globs": ["**/*.md", "**/*.mda", "**/*.mdx"], // Disable line length rule (often annoying for docs)
   "MD033": { "allowed_elements": ["details", "summary", "br"] } // Allow specific HTML elements if needed
 } 
