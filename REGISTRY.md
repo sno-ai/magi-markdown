@@ -1,12 +1,12 @@
 # MDA Registry
 
 > **Status:** Active
-> **Authority:** This file is the normative source for: (1) vendor namespace assignment under `metadata.<vendor>` (referenced by [`spec/v1.0/04-platform-namespaces.md`](spec/v1.0/04-platform-namespaces.md)); (2) the standard `requires` capability keys (referenced by [`spec/v1.0/10-capabilities.md`](spec/v1.0/10-capabilities.md)); (3) reserved Sigstore OIDC issuers and transparency log providers (referenced by [`spec/v1.0/09-signatures.md`](spec/v1.0/09-signatures.md)).
+> **Authority:** This file is the normative source for: (1) vendor namespace assignment under `metadata.<vendor>` (referenced by [`spec/v1.0/04-platform-namespaces.md`](spec/v1.0/04-platform-namespaces.md)); (2) the standard `requires` capability keys (referenced by [`spec/v1.0/10-capabilities.md`](spec/v1.0/10-capabilities.md)); (3) reserved Sigstore OIDC issuers and transparency log providers (referenced by [`spec/v1.0/09-signatures.md`](spec/v1.0/09-signatures.md)); (4) reserved DSSE `payload-type` values for the `signatures[]` envelope (referenced by [`spec/v1.0/09-signatures.md §09-3.1`](spec/v1.0/09-signatures.md)).
 > **License:** This registry document is licensed under [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/), matching the specification.
 
 ## Purpose
 
-MDA frontmatter reserves the top-level `metadata` object as an extension hook. Each top-level key under `metadata` is a **vendor namespace** owned by a single vendor, runtime, or registry. This file is the canonical list of registered namespaces and the process for adding new ones. It also lists the optional standard keys the spec recognizes under `metadata.mda.requires` and the reserved infrastructure providers for the Sigstore signing path.
+MDA frontmatter reserves the top-level `metadata` object as an extension hook. Each top-level key under `metadata` is a **vendor namespace** owned by a single vendor, runtime, or registry. This file is the canonical list of registered namespaces and the process for adding new ones. It also lists the optional standard keys the spec recognizes under `metadata.mda.requires`, the reserved infrastructure providers for the Sigstore signing path, and the reserved DSSE `payload-type` values that MDA-aware verifiers treat as on-spec.
 
 Why a registry exists:
 
@@ -148,8 +148,23 @@ For the Rekor side of the Sigstore path:
 
 Private Rekor instances do not need to register; operator policy applies.
 
+## Reserved DSSE payload types
+
+For DSSE PAE envelopes ([`spec/v1.0/09-signatures.md §09-3`](spec/v1.0/09-signatures.md)), the `payload-type` field declares the semantic type of the canonicalized payload bytes. The following payload types are reserved by the MDA project and its registered vendor consumers.
+
+| Payload type | Owner | Description |
+| ------------ | ----- | ----------- |
+| `application/vnd.mda.integrity+json` | MDA project | Standard MDA integrity envelope (§09-3.1). The signed bytes are the JCS-canonicalized `integrity` object. |
+
+Vendor-defined payload types SHOULD follow the form `application/vnd.<vendor>.<doc-type>+jcs+json` per [RFC 6838 §3.2](https://www.rfc-editor.org/rfc/rfc6838#section-3.2) (vendor tree). To register a vendor payload type:
+
+1. Open a PR adding a row to the table above.
+2. The owning vendor MUST already have a registered namespace under "Registered namespaces" (or register it in the same PR).
+3. Provide the upstream documentation URL describing what the payload bytes contain and how a verifier should interpret the `payload-type`.
+4. The signature still satisfies `payload-digest == integrity.digest` (§09-2); the vendor `payload-type` declares semantic context, not a different digest target.
+
 ## Changelog
 
 | Date       | Change                                                            |
 | ---------- | ----------------------------------------------------------------- |
-| 2026-05-07 | Initial registry. Seeded with vendor namespaces: `mda`, `claude-code`, `codex`, `hermes`, `opencode`, `openclaw`, `skills-sh`. Added standard `requires` keys (§10-3) and reserved Sigstore OIDC issuers + Rekor instances (§09-4). |
+| 2026-05-07 | Initial registry. Seeded with vendor namespaces: `mda`, `claude-code`, `codex`, `hermes`, `opencode`, `openclaw`, `skills-sh`. Added standard `requires` keys (§10-3), reserved Sigstore OIDC issuers + Rekor instances (§09-4), and reserved DSSE payload types (§09-3). |
