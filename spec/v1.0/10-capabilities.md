@@ -41,7 +41,8 @@ The following keys are defined in this spec. Authors are NOT required to use the
 ### §10-3.1 `runtime`
 
 - Value: array of runtime constraint strings.
-- Each string SHOULD be of the form `<runtime>[<comparator><version>]`, e.g. `python>=3.11`, `node>=20`, `bun`, `deno>=2`.
+- Each string SHOULD be of the form `<runtime>[<comparator><version>]`, e.g. `python>=3.11`, `node>=20`, `bun`, `deno>=2`, `rust>=1.75`.
+- MDA itself is language-neutral. The runtime token is whatever identifier the consumer ecosystem already uses; MDA does not parse or validate it beyond the string shape above.
 - Multiple entries are AND-combined.
 
 ### §10-3.2 `tools`
@@ -109,6 +110,20 @@ metadata:
       packages: ["pdftotext", "jq"]
   claude-code:
     allowed-tools: "Read Bash(pdftotext:*) Bash(jq:*)"
+```
+
+The same skill expressed with a Node.js / TypeScript runtime instead — the `requires` shape is identical, only the runtime token and packages change:
+
+```yaml
+metadata:
+  mda:
+    requires:
+      runtime: ["node>=20"]
+      tools: ["Read", "Bash"]
+      network: ["registry.npmjs.org"]
+      packages: ["@example/sdk@^2", "tsx"]
+  claude-code:
+    allowed-tools: "Read Bash(pnpm:*) Bash(tsx:*)"
 ```
 
 The `tools` list above is portable across runtimes; the Claude-Code-specific `Bash(...:*)` glob form lives under its vendor namespace where the intended consumer will read it.

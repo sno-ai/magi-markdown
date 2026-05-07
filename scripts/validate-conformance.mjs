@@ -253,6 +253,7 @@ const skillValidator = getValidator("schemas/frontmatter-skill-md.schema.json");
 
 for (const f of [
   "examples/source-only/intro.mda",
+  "examples/source-only/node-tools.mda",
 ]) {
   const fm = extractFrontmatter(readFileSync(join(REPO, f), "utf8"));
   if (sourceValidator(fm ?? {})) pass(`${f} valid against source schema`);
@@ -262,6 +263,7 @@ for (const f of [
 
 for (const f of [
   "examples/skill-md/intro/SKILL.md",
+  "examples/skill-md/node-tools/SKILL.md",
 ]) {
   const text = readFileSync(join(REPO, f), "utf8");
   const fm = extractFrontmatter(text);

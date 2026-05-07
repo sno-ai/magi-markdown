@@ -44,7 +44,7 @@ In a `.mda` source `name` MAY be omitted only if the compile target does not req
 
 - Type: string, ≤500 characters
 - Free-text description of runtime/environment requirements (intended product, system packages, network access, language runtimes).
-- Examples: `Designed for Claude Code (or similar products)`, `Requires git, docker, jq, and access to the internet`, `Requires Python 3.14+ and uv`.
+- Examples: `Designed for Claude Code (or similar products)`, `Requires git, docker, jq, and access to the internet`, `Requires Python 3.14+ and uv`, `Requires Node.js 20+ and pnpm`, `Requires Rust 1.75+ and cargo`.
 - Authors who need machine-readable capability declarations SHOULD use `metadata.mda.requires` (§10) instead of or in addition to `compatibility`.
 
 ### §02-2.5 `metadata` (OPTIONAL — the canonical extension hook)
