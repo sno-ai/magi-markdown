@@ -4,5 +4,9 @@
         "networkidle",
         "selftext",
         "subpages"
-    ]
+    ],
+    "git.autofetch": false,
+    "git.enableSmartCommit": false,
+    "git.confirmSync": true,
+    "git.pullTags": false
 }
