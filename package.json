@@ -1,7 +1,7 @@
 {
 	"name": "markdown-for-agent",
 	"version": "1.0.0",
-	"license": "MIT",
+	"license": "Apache-2.0",
 	"scripts": {
 		"sync:mdx": "tsx scripts/sync-mdx.ts"
 	},
