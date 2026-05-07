@@ -22,6 +22,7 @@ signatures:
     signature: "<base64>"
     rekor-log-id: "<optional, sigstore-only>"
     rekor-log-index: 9876543  # optional, sigstore-only
+    payload-type: "application/vnd.mda.integrity+json"  # optional; vendor types per §09-3.1
 ```
 
 | Field | Type | Required | Notes |
@@ -33,6 +34,7 @@ signatures:
 | `signature` | string | yes | Base64 (standard, RFC 4648 §4) of the raw signature bytes over the DSSE PAE envelope. |
 | `rekor-log-id` | string | no | Rekor transparency log identifier; required when `signer` starts with `sigstore-oidc:`. |
 | `rekor-log-index` | integer | no | Rekor entry index; required when `signer` starts with `sigstore-oidc:`. |
+| `payload-type` | string | no | DSSE `payloadType` declaring the semantic type of the signed payload (§09-3.1). When absent, MDA validators MUST treat the value as `application/vnd.mda.integrity+json`. Vendor-defined types follow RFC 6838 vendor tree: `application/vnd.<vendor>.<doc-type>+jcs+json`. Reserved entries listed in `REGISTRY.md`. |
 
 Schema: `_defs/signature.schema.json`. Unknown subfields are rejected.
 
@@ -50,12 +52,11 @@ PAE = "DSSEv1"
     + " " + len(payload-bytes) + " " + payload-bytes
 ```
 
-For MDA:
+For MDA, the default `payload-type` is `application/vnd.mda.integrity+json` and the `payload-bytes` are the JCS-canonicalized JSON of the form `{"algorithm":"<algo>","digest":"<algo>:<hex>"}` matching the top-level `integrity` exactly (the `digest` value carries the algorithm prefix per §08-2).
 
-- `payload-type` = `application/vnd.mda.integrity+json`
-- `payload-bytes` = JCS-canonicalized JSON of the form `{"algorithm":"<algo>","digest":"<algo>:<hex>"}` matching the top-level `integrity` exactly (the `digest` value carries the algorithm prefix per §08-2).
+The bytes signed are the PAE bytes computed above. When `signatures[i].payload-type` (§09-2) is absent, producers and verifiers MUST use the default `application/vnd.mda.integrity+json` for the PAE `payload-type` slot.
 
-The bytes signed are the PAE bytes computed above.
+**Vendor-defined payload types.** Applications that build on MDA's frontmatter conventions for their own canonical document types (e.g. a runtime LLM-config preset format, a workflow definition, an evaluation harness manifest) SHOULD declare `payload-type` (the optional `signatures[i].payload-type` field in §09-2) in the form `application/vnd.<vendor>.<doc-type>+jcs+json` per [RFC 6838 §3.2](https://www.rfc-editor.org/rfc/rfc6838#section-3.2) (vendor tree). Reserved payload types are listed in `REGISTRY.md` under "Reserved DSSE payload types"; vendors SHOULD register their payload type when registering their namespace under §04. A signature with a vendor-defined `payload-type` MUST still satisfy `payload-digest == integrity.digest` (§09-2); the vendor type declares the semantic context of the artifact, not a different digest target. Producers and verifiers MUST use the declared `payload-type` value verbatim in the PAE `payload-type` slot when computing or checking the envelope.
 
 ### §09-3.2 Why PAE rather than signing `integrity.digest` directly
 
@@ -72,7 +73,7 @@ This is the default path for both compiled and Human/Agent modes when network ac
 3. Authenticate to Fulcio via OIDC (the user's identity provider; reserved issuers in `REGISTRY.md`).
 4. Fulcio issues a short-lived (≤10 min) signing certificate bound to the OIDC identity claim.
 5. Sign the PAE bytes with the ephemeral key.
-6. Submit the signature + PAE + cert to Rekor; record the returned `log-id` and `log-index`.
+6. Submit the DSSE envelope (PAE bytes + signature + cert) to Rekor as a `dsse-v0.0.1` entry type; record the returned `log-id` and `log-index`. Verifiers refuse non-`dsse-v0.0.1` entry types (§09-4.2 step 3); producers MUST therefore use this entry type, not `hashedrekord-v0.0.1` or `intoto-v0.0.2`.
 7. Emit the signature entry with `signer = "sigstore-oidc:<oidc-issuer-url>"`, `key-id = "fulcio:<sha256-of-cert>"`, the rekor coordinates, and the base64 signature.
 
 The ephemeral private key is discarded.
@@ -81,7 +82,7 @@ The ephemeral private key is discarded.
 
 1. Validate `signatures[i].payload-digest == integrity.digest`.
 2. Reconstruct the PAE envelope from `integrity` per §09-3.1.
-3. Look up the Rekor entry by `rekor-log-id` + `rekor-log-index`.
+3. Look up the Rekor entry by `rekor-log-id` + `rekor-log-index`. The entry MUST be of type `dsse-v0.0.1`; verifiers MUST refuse other entry types (`hashedrekord-v0.0.1`, `intoto-v0.0.2`, etc.) as out-of-spec for MDA signatures.
 4. Verify the inclusion proof against the Rekor log root (cached or freshly fetched per the verifier's policy).
 5. Verify the Fulcio certificate chain to the Sigstore root.
 6. Verify the certificate's OIDC identity claim against the operator's allow-list (the verifier's policy decides which identities are trusted).

@@ -149,9 +149,11 @@ The specification is split into the following normative sections. They are desig
 | `08-integrity.md`              | `integrity` field — sha256 combined hash for tamper detection                                                | Stable          |
 | `09-signatures.md`             | `signatures[]` field — DSSE PAE envelope, Sigstore OIDC default, `mda-keys.json` air-gap alt                 | Stable          |
 | `10-capabilities.md`           | `metadata.mda.requires` — open key-value capability declarations, standard keys via REGISTRY                 | Stable          |
+| `11-implementer-guide.md`      | Recommended canonical loader algorithm + error category vocabulary (informative)                             | Informative     |
+| `12-sigstore-tooling.md`       | `cosign` / `sigstore-python` / `sigstore-go` bundle ↔ MDA `signatures[]` mapping (informative)               | Informative     |
 
 
-The companion `REGISTRY.md` (at the repository root) governs vendor namespace assignment, standard `requires` keys, reserved Sigstore OIDC issuers, and reserved transparency log providers. It is referenced normatively by §04, §08, §09, and §10.
+The companion `REGISTRY.md` (at the repository root) governs vendor namespace assignment, standard `requires` keys, reserved Sigstore OIDC issuers, reserved transparency log providers, and reserved DSSE `payload-type` values. It is referenced normatively by §04, §08, §09, and §10.
 
 ## §0.11 Citation
 

@@ -27,7 +27,7 @@ Schema: `_defs/integrity.schema.json`. Unknown subfields are rejected (`addition
 
 ## §08-3 Canonicalization
 
-To make the digest reproducible across YAML serializers, every implementation MUST canonicalize the artifact before hashing.
+To make the digest reproducible across YAML serializers, every implementation MUST canonicalize the artifact before hashing. The frontmatter and body inputs to the canonicalization steps below MUST be obtained per §02-1.1 (normative frontmatter extraction algorithm), which handles UTF-8 BOM stripping, line-ending normalization, the closing-fence rule for bodies that contain `---` horizontal rules, and the empty-body case. Two implementations that disagree on extraction WILL produce mismatched digests; §02-1.1 is the byte-for-byte alignment point.
 
 ### §08-3.1 Step 1 — Strip the integrity and signatures fields
 
@@ -41,11 +41,11 @@ Implementation note: every mainstream language has a JCS library. The reference 
 
 ### §08-3.3 Step 3 — Concatenate body bytes
 
-Take the Markdown body as it appears after the closing `---` line of the frontmatter, normalized as follows:
+Take the body string extracted per §02-1.1 (the bytes after the closing `---` line of the frontmatter), normalized as follows:
 
-1. Line endings: convert all `\r\n` to `\n` (LF).
+1. Line endings: §02-1.1 already replaces `\r\n` and standalone `\r` with `\n`. Restated here for completeness; no additional work is required if §02-1.1 was followed.
 2. Trailing whitespace: strip trailing spaces and tabs from each line.
-3. Final newline: ensure exactly one terminating `\n`. If the body is empty, the body bytes are the empty string.
+3. Final newline: ensure exactly one terminating `\n`. If the body string is empty (frontmatter-only file, §02-1.1 step 7), the body bytes are the empty string `b""` and no terminating newline is added.
 
 The frontmatter prefix (the literal bytes `---\n`), the JCS-canonicalized frontmatter object as a single JSON document followed by `\n`, and a separator line `---\n`, then the normalized body bytes, are concatenated in order to form the **canonical artifact bytes**.
 

@@ -36,7 +36,7 @@ Schema: `_defs/requires.schema.json`. The schema enforces only key shape; the pe
 
 ## §10-3 Standard keys (normative shape, optional usage)
 
-The following keys are defined in this spec. Authors are NOT required to use them, but when they DO use them they MUST use the shapes defined below. The current registry is `REGISTRY.md §requires-keys`.
+The following keys are defined in this spec. Authors are NOT required to use them, but when they DO use them they MUST use the shapes defined below. The current registry summary is in [`REGISTRY.md` "Standard `requires` keys (capabilities)"](../../REGISTRY.md#standard-requires-keys-capabilities).
 
 ### §10-3.1 `runtime`
 

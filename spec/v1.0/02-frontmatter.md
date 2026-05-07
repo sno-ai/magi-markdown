@@ -10,7 +10,68 @@
 
 ## §02-1 Synopsis
 
-Every MDA file — source or output — opens with a YAML frontmatter block delimited by `---` lines (with the AGENTS.md exception in §02-2 below). This section defines the universe of frontmatter fields, splits them into **open-standard fields**, **security fields**, and **MDA-extended fields**, and specifies how each is permitted to appear in source vs output.
+Every MDA file — source or output — opens with a YAML frontmatter block delimited by `---` lines (with the AGENTS.md exception defined in [`§06-targets/agents-md §06-1`](06-targets/agents-md.md), which permits a frontmatter-free body-only file). This section defines the universe of frontmatter fields, splits them into **open-standard fields**, **security fields**, and **MDA-extended fields**, and specifies how each is permitted to appear in source vs output.
+
+## §02-1.1 Frontmatter extraction algorithm (normative)
+
+To make frontmatter parsing and digest reproduction byte-identical across implementations, every conforming implementation MUST extract the frontmatter and body using the algorithm below. The algorithm operates on the raw file bytes and produces two outputs: the frontmatter string (to be parsed as YAML) and the body string (to be used by §08 integrity computation and consumer rendering).
+
+```
+Input:  file_bytes (the raw bytes of the .mda or .md file)
+Output: frontmatter_str, body_str
+
+1. UTF-8 BOM strip
+   If file_bytes starts with 0xEF 0xBB 0xBF, drop those three bytes.
+
+2. UTF-8 decode
+   Decode the (BOM-stripped) bytes as UTF-8.
+   On decode failure, the implementation MUST refuse the file with an
+   "invalid encoding" error.
+
+3. Line-ending normalization (parsing-time only)
+   Replace every "\r\n" with "\n", and every standalone "\r" with "\n".
+   This produces an LF-only string used by all subsequent steps.
+
+4. Locate the opening fence
+   The opening fence is the literal three characters "---" followed by
+   a newline ("\n"), positioned at byte offset 0 of the normalized string.
+   - If the normalized string starts with "---\n" exactly: continue.
+   - Otherwise: the file has NO MDA frontmatter. The implementation
+     MUST treat the entire file as body_str (frontmatter_str = "").
+     Targets that REQUIRE frontmatter (everything except AGENTS.md, see
+     §06-targets/agents-md §06-1) MUST then refuse the file.
+
+5. Locate the closing fence
+   Scan forward, line by line, from the byte immediately after the
+   opening "---\n". The closing fence is the FIRST subsequent line whose
+   contents are exactly the three characters "---" (no leading or
+   trailing whitespace, no other characters), terminated by either "\n"
+   or end-of-string.
+   - If found: frontmatter_str is the substring between (exclusive) the
+     opening "---\n" and (exclusive) the closing "---" line. body_str
+     is the remainder after the closing fence's terminating "\n" (or
+     "" if the closing fence is at end-of-string).
+   - If not found: the implementation MUST refuse the file with an
+     "unterminated frontmatter" error.
+
+6. Body horizontal-rule disambiguation
+   A body MAY contain Markdown horizontal-rule lines that are exactly
+   "---". Step 5 already handles this correctly: only the FIRST "---"
+   line after the opening fence closes the frontmatter; later "---"
+   lines are part of body_str. Implementations MUST NOT scan from the
+   end of file backwards to find the closing fence.
+
+7. Empty body
+   An empty body_str ("") is conformant. Targets that require body
+   content (see §06-targets/*) refuse separately on body grounds, not
+   on extraction grounds.
+```
+
+The frontmatter string from step 5 is the input to YAML parsing (§02-3.1, §02-3.2 apply to its scalar values). The body string is the input to §08-3.3 body normalization for digest computation.
+
+This algorithm is identical for `.mda` source and `.md` output files. A conformance fixture set for the algorithm itself MUST cover at least: BOM-prefixed input, CRLF input, body containing a `---` horizontal rule, frontmatter-only file (empty body), body-only file (no frontmatter), and unterminated frontmatter.
+
+**YAML version (normative).** Implementations MUST parse `frontmatter_str` as YAML 1.2 (the JSON-superset profile). Specifically: implementations MUST NOT apply YAML 1.1's "Norway problem" boolean rules (`yes`, `no`, `on`, `off`, `Y`, `N`) — strings that look like those tokens MUST round-trip as their string form, not coerce to booleans. The recommended parsers are `js-yaml` with `schema: 'core'` (TypeScript), `ruamel.yaml` with `typ='safe'` and `version='1.2'` (Python), and `gopkg.in/yaml.v3` (Go). Parsers that default to YAML 1.1 (e.g. `PyYAML.safe_load` without explicit configuration) WILL silently miscategorize these tokens and produce non-conformant frontmatter.
 
 ## §02-2 Open-standard fields (the interop floor)
 
