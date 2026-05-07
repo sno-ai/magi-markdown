@@ -10,7 +10,7 @@ MDA enhances standard Markdown by incorporating three key, but **optional** comp
 
 1.  **YAML Front Matter:** Provides structured metadata about the document (e.g., unique `doc-id`, `title`, `tags`, `dates`, `purpose`).
 2.  **`ai-script` Code Blocks:** Embeds specific instructions (as JSON) for LLM processing directly within the content (e.g., summarization prompts, entity extraction requests, model parameter settings).
-3.  **Markdown Footnotes with JSON Payloads:** Defines typed relationships between documents using a structured JSON format within standard footnotes (e.g., `parent`, `child`, `cites`, `related`), enabling knowledge graph construction.
+3.  **Markdown Footnotes with JSON Payloads:** Defines typed relationships between documents using a structured JSON format within standard footnotes (e.g., `parent`, `child`, `citation`, `related`), enabling knowledge graph construction.
 
 **Key Principle:** All components – Front Matter, `ai-script` blocks, and Footnotes – are optional, offering flexibility in how MDA is utilized. Standard Markdown renderers will parse `.mda` files perfectly, preserving human readability. For AI processing, sending the raw `.mda` file allows processors to leverage the embedded metadata and instructions natively, enabling more sophisticated understanding and interaction with the content.
 
@@ -20,7 +20,7 @@ MDA offers several advantages over plain Markdown, particularly when working wit
 
 1.  **Enhanced RAG Performance:**
     *   **Structured Metadata:** The Front Matter provides rich, queryable metadata (like `doc-id`, `tags`, `entities`, `created-date`, `updated-date`) that significantly improves document retrieval relevance and filtering in RAG systems. Instead of just relying on semantic similarity of the content, retrieval can target specific attributes, leading to more precise results.
-    *   **Explicit Relationships:** Footnotes define clear, typed connections (`parent`, `child`, `related`, `cites`, `supports`, `contradicts`) between documents, enabling the construction of knowledge graphs. RAG systems can traverse these graphs to find highly relevant, interconnected information that might be missed by simple vector search alone.
+    *   **Explicit Relationships:** Footnotes define clear, typed connections (`citation`, `parent`, `child`, `related`, `contradicts`, `supports`, `extends`) between documents, enabling the construction of knowledge graphs. RAG systems can traverse these graphs to find highly relevant, interconnected information that might be missed by simple vector search alone.
 
 2.  **Seamless LLM Agent Integration:**
     *   **Embedded Instructions:** `ai-script` blocks allow developers and content creators to embed specific prompts or instructions directly within the `.mda` content. AI agents can parse these JSON instructions (e.g., "Summarize this section," "Extract key entities mentioned below," "Adopt a formal tone for the following explanation," "Use model X with temperature Y") and execute them in context, enabling more sophisticated, automated content processing and generation workflows.

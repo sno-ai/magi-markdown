@@ -60,7 +60,7 @@ MDA uses JSON within Markdown footnotes to define typed relationships. In MDX, t
 ```markdown
 This document references specifications[^spec1] and related guides[^guide2].
 
-[^spec1]: `{"rel-type": "cites", "doc-id": "SPEC-UUID-123", "rel-desc": "Cites the core specification"}`
+[^spec1]: `{"rel-type": "citation", "doc-id": "SPEC-UUID-123", "rel-desc": "Cites the core specification"}`
 [^guide2]: `{"rel-type": "related", "source-url": "https://example.com/guide", "rel-desc": "Related implementation guide"}`
 ```
 
@@ -73,7 +73,7 @@ Convert footnotes into standard Markdown links, potentially adding custom `data-
 ```mdx
 import { Tooltip } from '@/components'; // Example component
 
-This document references specifications<Tooltip content='{"rel-type": "cites", "doc-id": "SPEC-UUID-123", "rel-desc": "Cites the core specification"}'><sup>[1]</sup></Tooltip> and related guides<Tooltip content='{"rel-type": "related", "source-url": "https://example.com/guide", "rel-desc": "Related implementation guide"}'><sup>[2]</sup></Tooltip>.
+This document references specifications<Tooltip content='{"rel-type": "citation", "doc-id": "SPEC-UUID-123", "rel-desc": "Cites the core specification"}'><sup>[1]</sup></Tooltip> and related guides<Tooltip content='{"rel-type": "related", "source-url": "https://example.com/guide", "rel-desc": "Related implementation guide"}'><sup>[2]</sup></Tooltip>.
 
 {/* Link rendering could be handled by a Remark/Rehype plugin or post-processing */}
 {/* Actual links would point to resolved internal paths or external URLs */}
@@ -89,7 +89,7 @@ Replace the footnote reference directly with a custom React component that handl
 ```mdx
 import { DocLink } from '@/components';
 
-This document references specifications <DocLink docId="SPEC-UUID-123" relType="cites" relDesc="Cites the core specification" /> and related guides <DocLink sourceUrl="https://example.com/guide" relType="related" relDesc="Related implementation guide" />.
+This document references specifications <DocLink docId="SPEC-UUID-123" relType="citation" relDesc="Cites the core specification" /> and related guides <DocLink sourceUrl="https://example.com/guide" relType="related" relDesc="Related implementation guide" />.
 
 {/* The DocLink component would handle rendering the link text/number and tooltip/popover logic. */}
 ```

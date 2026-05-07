@@ -1,9 +1,9 @@
 ---
 doc-id: da7b1a9e-4f8c-4b7d-8e1f-9c0a2d3b4c5d
-title: Dynamic Content Example with AIMD
+title: Dynamic Content Example with MDA
 description: Demonstrates using ai-script to request summaries and explanations.
 tags:
-  - aimd-example
+  - mda-example
   - ai-script
   - dynamic-content
 created-date: 2024-07-26T10:00:00Z
@@ -11,15 +11,15 @@ created-date: 2024-07-26T10:00:00Z
 
 # Generating Content Dynamically
 
-AIMD allows embedding instructions directly into the document. This can be used by AI agents to generate or modify content based on the context.
+MDA allows embedding instructions directly into the document. This can be used by AI agents to generate or modify content based on the context.
 
 ## Section 1: Complex Topic Explanation
 
 Quantum entanglement is a physical phenomenon that occurs when a group of particles are generated, interact, or share spatial proximity in such a way that the quantum state of each particle of the group cannot be described independently of the state of the others, including when the particles are separated by a large distance.
 
 
-```ai-script
 <!-- AI-PROCESSOR: The block below asks for a simplified explanation -->
+```ai-script
 {
   "script-id": "explain-entanglement-simple-v1",
   "prompt": "Explain the concept of quantum entanglement described above in simpler terms, suitable for a high school student.",

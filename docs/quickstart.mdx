@@ -15,7 +15,7 @@ To start working with MDA, you'll need:
     
     1. **YAML Front Matter**: Provides structured metadata (like `title`, `doc-id`).
     2. **ai-script blocks**: Embeds JSON instructions for AI/LLM processing.
-    3. **Footnotes with JSON**: Defines typed relationships between documents (e.g., `[^ref1]: {"rel-type": ...}`).
+    3. **Footnotes with JSON**: Defines typed relationships between documents (e.g., `` [^ref1]: `{"rel-type": ...}` ``).
     
     ![MDA Components](/images/three-parts.svg)
     
@@ -43,9 +43,9 @@ This is standard Markdown content.
 
 This document is related to our documentation[^ref1].
 
-[^ref1]: See JSON definition below.
-
+[^ref1]: `{"rel-type": "related", "doc-id": "MDA-DOCS-UUID", "rel-desc": "Linked to the main MDA documentation"}`
 ```
+
 ### Adding AI Instructions
 
 Inside your `.mda` file, you can add an `ai-script` block like this:
@@ -85,5 +85,4 @@ MDA is fully open source and includes tools like url2mda that you can run locall
 
 View MDA examples in the `docs/mda-examples` directory to see MDA in action for various use cases.
 
-You're now ready to create AI-friendly content with MDA.
 That's it! You're now ready to create AI-friendly content with MDA.
