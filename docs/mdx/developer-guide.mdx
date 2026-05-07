@@ -1,11 +1,11 @@
-# MAGI Developer Guide: Encoding & Decoding
+# MDA Developer Guide: Encoding & Decoding
 
-This guide provides examples of how to programmatically encode (create) and decode (parse) MAGI (Markdown for Agent Guidance & Instruction) documents in different environments. MAGI files typically use the `.mda` extension.
+This guide provides examples of how to programmatically encode (create) and decode (parse) MDA (Markdown for Agent) documents in different environments. MDA files typically use the `.mda` extension.
 
 ## Core Concepts
 
-*   **Encoding:** Combining separate pieces of information (metadata from Front Matter, human-readable Markdown content, AI instructions within `ai-script` blocks, and document relationships defined in Footnotes) into the MAGI string format (`.mda`).
-*   **Decoding:** Parsing a MAGI string (from an `.mda` file or source) to extract its distinct structured components: YAML Front Matter, the main Markdown content, `ai-script` JSON blocks, and Footnote relationship JSON payloads.
+*   **Encoding:** Combining separate pieces of information (metadata from Front Matter, human-readable Markdown content, AI instructions within `ai-script` blocks, and document relationships defined in Footnotes) into the MDA string format (`.mda`).
+*   **Decoding:** Parsing a MDA string (from an `.mda` file or source) to extract its distinct structured components: YAML Front Matter, the main Markdown content, `ai-script` JSON blocks, and Footnote relationship JSON payloads.
 
 Common libraries used:
 *   **YAML Parsers:** For handling the Front Matter (e.g., `js-yaml` or `gray-matter` in Node.js, `PyYAML` or `python-frontmatter` in Python).
@@ -26,7 +26,7 @@ pnpm add gray-matter marked
 yarn add gray-matter marked
 ```
 
-### Encoding MAGI
+### Encoding MDA
 
 ```typescript
 import matter from 'gray-matter';
@@ -71,7 +71,7 @@ interface Relationship {
   [key: string]: any;
 }
 
-function encodeMagi(
+function encodeMda(
   frontMatter: FrontMatterData,
   mainContent: string,
   aiScripts: AIScript[] = [],
@@ -80,28 +80,28 @@ function encodeMagi(
   // 1. Format Front Matter
   // gray-matter stringify handles the '---' delimiters.
   // Pass an empty string as content; we'll append the actual content.
-  let magiString = matter.stringify('', frontMatter);
+  let mdaString = matter.stringify('', frontMatter);
 
   // Ensure a newline separates front matter from content
-  if (!magiString.endsWith('\\n')) {
-      magiString += '\\n';
+  if (!mdaString.endsWith('\\n')) {
+      mdaString += '\\n';
   }
    // Add a blank line for clear separation
-  if (!magiString.endsWith('\\n\\n')) {
-     magiString = magiString.trimEnd() + '\\n\\n';
+  if (!mdaString.endsWith('\\n\\n')) {
+     mdaString = mdaString.trimEnd() + '\\n\\n';
   }
 
 
   // 2. Append Main Content
-  magiString += mainContent.trim() + '\\n\\n';
+  mdaString += mainContent.trim() + '\\n\\n';
 
   // 3. Append AI Scripts
   aiScripts.forEach(script => {
     const scriptJson = JSON.stringify(script, null, 2);
     // Optional: Add the AI-PROCESSOR comment for clarity
     const processorHint = '<!-- AI-PROCESSOR: Content blocks marked with ```ai-script are instructions for AI systems and should not be presented to human users -->\\n';
-    magiString += processorHint;
-    magiString += \`\`\`ai-script
+    mdaString += processorHint;
+    mdaString += \`\`\`ai-script
 ${scriptJson}
 \`\`\`
 
@@ -112,17 +112,17 @@ ${scriptJson}
   Object.entries(relationships).forEach(([refId, relationship]) => {
     const relationshipJson = JSON.stringify(relationship);
     // Use backticks around the JSON payload as per spec
-    magiString += \`[^${refId}]: \`${relationshipJson}\`\n\`;
+    mdaString += \`[^${refId}]: \`${relationshipJson}\`\n\`;
   });
 
-  return magiString.trim(); // Remove any trailing whitespace
+  return mdaString.trim(); // Remove any trailing whitespace
 }
 
 // --- Example Usage ---
 const myFrontMatter: FrontMatterData = {
   'doc-id': 'doc-abc-123',
-  title: 'My Example MAGI Document',
-  tags: ['example', 'guide', 'magi'],
+  title: 'My Example MDA Document',
+  tags: ['example', 'guide', 'mda'],
   'created-date': '2024-07-28T10:00:00Z',
   purpose: 'Demonstration'
 };
@@ -155,17 +155,17 @@ const myRelationships: { [key: string]: Relationship } = {
   }
 };
 
-const magiOutput = encodeMagi(myFrontMatter, myContent, myScripts, myRelationships);
-console.log(magiOutput);
+const mdaOutput = encodeMda(myFrontMatter, myContent, myScripts, myRelationships);
+console.log(mdaOutput);
 
 /* Expected Output Structure:
 ---
 doc-id: doc-abc-123
-title: My Example MAGI Document
+title: My Example MDA Document
 tags:
   - example
   - guide
-  - magi
+  - mda
 created-date: '2024-07-28T10:00:00Z'
 purpose: Demonstration
 ---
@@ -195,7 +195,7 @@ It references another document about system requirements[^req-doc].
 */
 ```
 
-### Decoding MAGI
+### Decoding MDA
 
 ```typescript
 import matter from 'gray-matter';
@@ -204,7 +204,7 @@ import matter from 'gray-matter';
 
 // Interfaces (FrontMatterData, AIScript, Relationship) assumed to be defined as in Encoding example
 
-interface DecodedMagi {
+interface DecodedMda {
   frontMatter: { [key: string]: any };
   content: string; // Raw Markdown content (without frontmatter, scripts, footnotes)
   aiScripts: AIScript[];
@@ -216,9 +216,9 @@ const aiScriptRegex = /(?:<!-- AI-PROCESSOR:.*?-->\s*)?^\s*```ai-script\s*\n([\s
 // Regex to find footnote definitions with JSON in backticks
 const footnoteRegex = /^\[\^(.+?)\]:\s*`({.*?})`\s*$/gm;
 
-function decodeMagi(magiString: string): DecodedMagi {
+function decodeMda(mdaString: string): DecodedMda {
   // 1. Extract Front Matter and initial content using gray-matter
-  const { data: frontMatter, content: rawContent } = matter(magiString);
+  const { data: frontMatter, content: rawContent } = matter(mdaString);
 
   let remainingContent = rawContent;
 
@@ -265,14 +265,14 @@ function decodeMagi(magiString: string): DecodedMagi {
 }
 
 // --- Example Usage ---
-const magiInput = \`
+const mdaInput = \`
 ---
 doc-id: doc-abc-123
-title: My Example MAGI Document
+title: My Example MDA Document
 tags:
   - example
   - guide
-  - magi
+  - mda
 created-date: '2024-07-28T10:00:00Z'
 purpose: Demonstration
 ---
@@ -304,18 +304,18 @@ Some more text here.
 [^ext-src]: \`{"rel-type":"citation","source-url":"https://example.com/source","rel-desc":"External source material"}\`
 \`;
 
-const decoded = decodeMagi(magiInput);
+const decoded = decodeMda(mdaInput);
 console.log(JSON.stringify(decoded, null, 2));
 
 /* Expected Output Structure:
 {
   "frontMatter": {
     "doc-id": "doc-abc-123",
-    "title": "My Example MAGI Document",
+    "title": "My Example MDA Document",
     "tags": [
       "example",
       "guide",
-      "magi"
+      "mda"
     ],
     "created-date": "2024-07-28T10:00:00Z",
     "purpose": "Demonstration"
@@ -360,7 +360,7 @@ Libraries needed: `python-frontmatter` (handles YAML front matter effectively), 
 pip install python-frontmatter PyYAML
 ```
 
-### Encoding MAGI
+### Encoding MDA
 
 ```python
 import frontmatter
@@ -368,8 +368,8 @@ import json
 import re
 from io import StringIO # Use StringIO for in-memory string manipulation
 
-def encode_magi(front_matter_dict, main_content, ai_scripts_list=[], relationships_dict={}):
-    """Encodes MAGI components into a string (.mda format)."""
+def encode_mda(front_matter_dict, main_content, ai_scripts_list=[], relationships_dict={}):
+    """Encodes MDA components into a string (.mda format)."""
 
     # 1. Create a post object with front matter
     # Content is initially empty; we add it manually for better control over spacing.
@@ -405,8 +405,8 @@ def encode_magi(front_matter_dict, main_content, ai_scripts_list=[], relationshi
 # --- Example Usage ---
 my_front_matter = {
     'doc-id': 'doc-abc-123',
-    'title': 'My Example MAGI Document',
-    'tags': ['example', 'guide', 'magi'],
+    'title': 'My Example MDA Document',
+    'tags': ['example', 'guide', 'mda'],
     'created-date': '2024-07-28T10:00:00Z', # ISO 8601 format
     'purpose': 'Demonstration'
 }
@@ -440,13 +440,13 @@ my_relationships = {
     }
 }
 
-magi_output = encode_magi(my_front_matter, my_content, my_scripts, my_relationships)
-print(magi_output)
+mda_output = encode_mda(my_front_matter, my_content, my_scripts, my_relationships)
+print(mda_output)
 
 # Expected output structure is similar to the TypeScript example
 ```
 
-### Decoding MAGI
+### Decoding MDA
 
 ```python
 import frontmatter
@@ -458,19 +458,19 @@ ai_script_regex = re.compile(r"(?:<!-- AI-PROCESSOR:.*?-->\s*)?^\s*```ai-script\
 # Regex to find footnote definitions with JSON in backticks
 footnote_regex = re.compile(r"^\[\^(.+?)\]:\s*`({.*?})`\s*$", re.MULTILINE)
 
-def decode_magi(magi_string):
-    """Decodes a MAGI string (.mda format) into its components."""
+def decode_mda(mda_string):
+    """Decodes a MDA string (.mda format) into its components."""
 
     # 1. Extract Front Matter and initial content using python-frontmatter
     try:
-        post = frontmatter.loads(magi_string)
+        post = frontmatter.loads(mda_string)
         fm = post.metadata
         raw_content = post.content
     except Exception as e:
         # Handle cases with invalid or missing front matter
         print(f"Warning: Could not parse front matter ({e}). Treating entire input as content.")
         fm = {}
-        raw_content = magi_string # Assume no front matter
+        raw_content = mda_string # Assume no front matter
 
     remaining_content = raw_content
 
@@ -515,14 +515,14 @@ def decode_magi(magi_string):
     }
 
 # --- Example Usage ---
-magi_input = """
+mda_input = """
 ---
 doc-id: doc-abc-123
-title: My Example MAGI Document
+title: My Example MDA Document
 tags:
   - example
   - guide
-  - magi
+  - mda
 created-date: '2024-07-28T10:00:00Z'
 purpose: Demonstration
 ---
@@ -554,7 +554,7 @@ Some more text here.
 [^ext-src]: `{"rel-type":"citation","source-url":"https://example.com/source","rel-desc":"External source material"}`
 """
 
-decoded = decode_magi(magi_input)
+decoded = decode_mda(mda_input)
 print(json.dumps(decoded, indent=2))
 
 # Expected output structure is similar to the TypeScript example
@@ -564,9 +564,9 @@ print(json.dumps(decoded, indent=2))
 
 ## Command Line / API (`url2mda` Example)
 
-This section demonstrates using the reference `url2mda` service (as described in `README.md`) to *generate* MAGI (`.mda`) files from web URLs. It focuses on the encoding aspect via an API endpoint.
+This section demonstrates using the reference `url2mda` service (as described in `README.md`) to *generate* MDA (`.mda`) files from web URLs. It focuses on the encoding aspect via an API endpoint.
 
-### Generating MAGI from a URL (Encoding via `url2mda` Service)
+### Generating MDA from a URL (Encoding via `url2mda` Service)
 
 This uses the Cloudflare worker API. Replace `<your-worker-domain>` with your deployed instance's URL.
 
@@ -574,20 +574,20 @@ This uses the Cloudflare worker API. Replace `<your-worker-domain>` with your de
 # Set worker URL (replace with your actual domain)
 WORKER_URL="https://url2mda.<your-account>.workers.dev/convert"
 # Target URL to convert
-TARGET_URL="https://github.com/snoai/magi-markdown"
+TARGET_URL="https://github.com/sno-ai/mda"
 
-# Basic request for MAGI (.mda) format (returned within JSON response by default)
-echo "Fetching basic MAGI conversion for $TARGET_URL..."
+# Basic request for MDA (.mda) format (returned within JSON response by default)
+echo "Fetching basic MDA conversion for $TARGET_URL..."
 curl -s -X POST "$WORKER_URL" \\
   -H "Content-Type: application/json" \\
   -d '{
     "url": "'"$TARGET_URL"'",
     "subpages": false,       # Convert only the specified URL
     "llmFilter": false       # Don't use experimental LLM filtering
-  }' | jq '.mdaContent' # Extract the MAGI string from the JSON response
+  }' | jq '.mdaContent' # Extract the MDA string from the JSON response
 
-# Request plain text MAGI (.mda) directly using Accept header
-echo "\\nFetching plain text MAGI conversion..."
+# Request plain text MDA (.mda) directly using Accept header
+echo "\\nFetching plain text MDA conversion..."
 curl -s -X POST "$WORKER_URL" \\
   -H "Content-Type: application/json" \\
   -H "Accept: text/plain" \\
@@ -603,9 +603,9 @@ curl -s -X POST "$WORKER_URL" \\
   }' | jq '.mdaContent'
 ```
 
-### Decoding MAGI via Command Line (Conceptual)
+### Decoding MDA via Command Line (Conceptual)
 
-Directly and reliably decoding MAGI (`.mda`) files using only standard Unix command-line tools (`grep`, `sed`, `awk`) is complex due to the nested structures (YAML, JSON within Markdown).
+Directly and reliably decoding MDA (`.mda`) files using only standard Unix command-line tools (`grep`, `sed`, `awk`) is complex due to the nested structures (YAML, JSON within Markdown).
 
 A more robust command-line approach typically involves a dedicated script:
 
@@ -616,21 +616,21 @@ A more robust command-line approach typically involves a dedicated script:
 **Example Python Script Snippet (Conceptual):**
 
 ```python
-# Example: cli_decoder.py (requires decode_magi function from above)
+# Example: cli_decoder.py (requires decode_mda function from above)
 import sys
 import json
-# from your_module import decode_magi # Assuming decode_magi is available
+# from your_module import decode_mda # Assuming decode_mda is available
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         file_path = sys.argv[1]
         with open(file_path, 'r', encoding='utf-8') as f:
-            magi_content = f.read()
+            mda_content = f.read()
     else:
         # Read from stdin if no file provided
-        magi_content = sys.stdin.read()
+        mda_content = sys.stdin.read()
 
-    decoded_data = decode_magi(magi_content)
+    decoded_data = decode_mda(mda_content)
     # Output the structured data as JSON to stdout
     print(json.dumps(decoded_data, indent=2))
 
@@ -638,4 +638,4 @@ if __name__ == "__main__":
 # Or: cat input.mda | python cli_decoder.py > output.json
 ```
 
-This scripted approach provides a reliable way to integrate MAGI parsing into command-line workflows.
+This scripted approach provides a reliable way to integrate MDA parsing into command-line workflows.

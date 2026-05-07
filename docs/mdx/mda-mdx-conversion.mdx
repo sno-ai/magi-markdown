@@ -1,20 +1,20 @@
-# MAGI (.mda) to MDX (.mdx) Conversion
+# MDA (.mda) to MDX (.mdx) Conversion
 
-This document outlines the technical approach for converting MAGI (`.mda`) files into MDX (`.mdx`) format. The goal is to leverage the strengths of both formats: MAGI for structured AI guidance and MDX for rich, interactive web content.
+This document outlines the technical approach for converting MDA (`.mda`) files into MDX (`.mdx`) format. The goal is to leverage the strengths of both formats: MDA for structured AI guidance and MDX for rich, interactive web content.
 
-The conversion process focuses on mapping the three core MAGI components (Front Matter, `ai-script` blocks, Footnote Relationships) into functional MDX equivalents.
+The conversion process focuses on mapping the three core MDA components (Front Matter, `ai-script` blocks, Footnote Relationships) into functional MDX equivalents.
 
 ## 1. Front Matter Conversion
 
-MAGI's YAML Front Matter can be directly mapped to MDX's front matter.
+MDA's YAML Front Matter can be directly mapped to MDX's front matter.
 
-**MAGI (`.mda`):**
+**MDA (`.mda`):**
 
 ```yaml
 ---
 doc-id: "38f5a922-81b2-4f1a-8d8c-3a5be4ea7511"
-title: "Introduction to MAGI"
-description: "Explains the MAGI format."
+title: "Introduction to MDA"
+description: "Explains the MDA format."
 tags: ["markdown", "ai", "rag"]
 created-date: "2024-01-15T09:00:00Z"
 updated-date: "2024-06-01T15:30:00Z"
@@ -29,8 +29,8 @@ Standard Markdown content...
 ```yaml
 ---
 docId: "38f5a922-81b2-4f1a-8d8c-3a5be4ea7511" # Note: Consider consistent casing (e.g., camelCase)
-title: "Introduction to MAGI"
-description: "Explains the MAGI format."
+title: "Introduction to MDA"
+description: "Explains the MDA format."
 tags: ["markdown", "ai", "rag"]
 createdDate: "2024-01-15T09:00:00Z"
 updatedDate: "2024-06-01T15:30:00Z"
@@ -46,16 +46,16 @@ Standard Markdown content...
 
 **Implementation Notes:**
 
-*   A script or pre-processor during the build step should parse the MAGI YAML front matter and inject it into the MDX file's front matter section.
-*   **Case Convention:** Decide on a consistent case convention for front matter keys within the MDX context. While MAGI uses kebab-case (e.g., `doc-id`), JavaScript/TypeScript typically uses camelCase (e.g., `docId`). Converting to camelCase (`frontmatter.docId`) is often more idiomatic for component logic. However, keeping kebab-case and accessing via bracket notation (`frontmatter['doc-id']`) is also valid. This conversion, if done, should happen during the pre-processing step. Ensure consistency throughout your MDX components.
-*   Field names might need case conversion (e.g., kebab-case in MAGI to camelCase in MDX JavaScript/TypeScript environments) for easier consumption.
+*   A script or pre-processor during the build step should parse the MDA YAML front matter and inject it into the MDX file's front matter section.
+*   **Case Convention:** Decide on a consistent case convention for front matter keys within the MDX context. While MDA uses kebab-case (e.g., `doc-id`), JavaScript/TypeScript typically uses camelCase (e.g., `docId`). Converting to camelCase (`frontmatter.docId`) is often more idiomatic for component logic. However, keeping kebab-case and accessing via bracket notation (`frontmatter['doc-id']`) is also valid. This conversion, if done, should happen during the pre-processing step. Ensure consistency throughout your MDX components.
+*   Field names might need case conversion (e.g., kebab-case in MDA to camelCase in MDX JavaScript/TypeScript environments) for easier consumption.
 *   The MDX environment can then access this data via `frontmatter` or similar mechanisms provided by the MDX loader/framework.
 
 ## 2. Footnote Relationship Conversion
 
-MAGI uses JSON within Markdown footnotes to define typed relationships. In MDX, these can be converted into enhanced links or custom React components.
+MDA uses JSON within Markdown footnotes to define typed relationships. In MDX, these can be converted into enhanced links or custom React components.
 
-**MAGI (`.mda`):**
+**MDA (`.mda`):**
 
 ```markdown
 This document references specifications[^spec1] and related guides[^guide2].
@@ -104,7 +104,7 @@ This document references specifications <DocLink docId="SPEC-UUID-123" relType="
 
 This is the most complex conversion, transforming declarative JSON instructions into executable TypeScript/JavaScript logic within MDX. The conversion depends heavily on the `auto-run` field.
 
-**MAGI (`.mda`):**
+**MDA (`.mda`):**
 
 ```markdown
 Some context before the script.
@@ -348,4 +348,4 @@ The conversion process needs to generate appropriate TypeScript/JavaScript code,
 *   The design of the client-side API routes (`/api/ai-generate`, `/api/ai-generate-stream`) is critical for security and correctly interpreting the `ai-script` parameters (including `system-prompt`, `output-schema`, `stream`, etc.).
 *   Error handling and loading states are essential for a good user experience, including handling potential errors during streaming.
 
-This technical document provides a blueprint for the MAGI-to-MDX conversion process, highlighting the key considerations for each component type. The actual implementation will depend heavily on the specific MDX framework and tooling used.
+This technical document provides a blueprint for the MDA-to-MDX conversion process, highlighting the key considerations for each component type. The actual implementation will depend heavily on the specific MDX framework and tooling used.

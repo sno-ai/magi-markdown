@@ -1,10 +1,10 @@
-# MAGI Specification
+# MDA Specification
 
-This document provides detailed specifications for the three optional components of MAGI (Markdown for Agent Guidance & Instruction): YAML Front Matter, `ai-script` Code Blocks, and Markdown Footnotes for Relationships.
+This document provides detailed specifications for the three optional components of MDA (Markdown for Agent): YAML Front Matter, `ai-script` Code Blocks, and Markdown Footnotes for Relationships.
 
-MAGI is designed to be saved in files with the `.mda` extension to clearly signal the presence of enhanced components. While standard Markdown files (`.md`) can contain MAGI elements for backward compatibility, processors optimized for MAGI might prioritize `.mda` files or treat `.md` files as standard Markdown, potentially ignoring `ai-script` blocks or footnote relationships unless explicitly configured to parse them.
+MDA is designed to be saved in files with the `.mda` extension to clearly signal the presence of enhanced components. While standard Markdown files (`.md`) can contain MDA elements for backward compatibility, processors optimized for MDA might prioritize `.mda` files or treat `.md` files as standard Markdown, potentially ignoring `ai-script` blocks or footnote relationships unless explicitly configured to parse them.
 
-The MAGI format, represented as a string, is suitable for transmission via REST APIs, either as request payloads (e.g., sending content to be processed) or response bodies (e.g., returning processed or generated content in MAGI format).
+The MDA format, represented as a string, is suitable for transmission via REST APIs, either as request payloads (e.g., sending content to be processed) or response bodies (e.g., returning processed or generated content in MDA format).
 
 ## 1. Front Matter Schema
 
@@ -15,8 +15,8 @@ Provides structured metadata using YAML syntax, enclosed by `---` delimiters at 
 | Field           | Type          | Description                                                                 | Example                     | Required/Optional | Notes                                    |
 | --------------- | ------------- | --------------------------------------------------------------------------- | --------------------------- |-------------------|------------------------------------------|
 | `doc-id`        | `string`      | A unique identifier (UUID format recommended) for this document. Crucial for `footnote relationships`.| `"38f5a922-81b2-4f1a-8d8c-3a5be4ea7511"` | Optional          | Strongly recommended for linking         |
-| `title`         | `string`      | The main title of the document.                                             | `"Introduction to MAGI"`      | Optional          |                                          |
-| `description`   | `string`      | A brief summary or abstract of the document's content.                      | `"Explains the MAGI format."` | Optional          |                                          |
+| `title`         | `string`      | The main title of the document.                                             | `"Introduction to MDA"`      | Optional          |                                          |
+| `description`   | `string`      | A brief summary or abstract of the document's content.                      | `"Explains the MDA format."` | Optional          |                                          |
 | `author`        | `string`      | The primary author's name.                                                   | `"Jane Doe"`                  | Optional          |                                          |
 | `author-id`     | `string`      | Unique identifier for the author (CUID2 or UUID recommended).               | `"usr_abcdef12345"`         | Optional          | Useful for linking author profiles       |
 | `image`         | `string`      | URL for a primary cover image associated with the document.                 | `"https://example.com/cover.jpg"` | Optional          |                                          |
@@ -29,7 +29,7 @@ Provides structured metadata using YAML syntax, enclosed by `---` delimiters at 
 | `globs`         | `list[string]`| File or URL patterns this metadata applies to (e.g., `["docs/**/*.md", "*.ts"]`). | `["*.mda", "!legacy/*"]`   | Optional          | Used for external/meta `.mda` files      |
 | `audience`      | `list[string]`| Describes the intended audience(s) (e.g., `["developers", "end-users"]`).| `["Developers"]`              | Optional          |                                          |
 | `purpose`       | `string`      | The primary goal or objective of the document (e.g., "tutorial", "reference").| `"Reference"`               | Optional          |                                          |
-| `entities`      | `list[string]`| Key named entities (people, places, organizations, concepts) mentioned.       | `["MAGI", "RAG", "LLM"]`    | Optional          | Useful for RAG filtering/extraction    |
+| `entities`      | `list[string]`| Key named entities (people, places, organizations, concepts) mentioned.       | `["MDA", "RAG", "LLM"]`    | Optional          | Useful for RAG filtering/extraction    |
 | `relationships` | `list[string]`| High-level summary of relationships defined in footnotes (human-readable).  | `["Extends Markdown"]`      | Optional          | Primarily for human readers              |
 | `source-url`    | `string`      | The original URL if the content was sourced or derived from the web.         | `"https://example.com/doc"` | Optional          |                                          |
 
@@ -64,7 +64,7 @@ Embeds instructions for AI processing within standard Markdown fenced code block
 
 A comment like `<!-- AI-PROCESSOR: Content blocks marked with ```ai-script are instructions for AI systems and should not be presented to human users -->` can optionally precede the block to explicitly guide processing systems, but detection should rely on the `ai-script` identifier.
 
-**Alternative:** Instructions can also be passed externally (e.g., via API metadata alongside the MAGI content string) for separation of concerns, especially in complex multi-agent systems.
+**Alternative:** Instructions can also be passed externally (e.g., via API metadata alongside the MDA content string) for separation of concerns, especially in complex multi-agent systems.
 
 ## 3. Footnote Relationships
 
@@ -88,4 +88,4 @@ Leverages standard Markdown footnote syntax (`[^ref-id]` and `[^ref-id]: ...`) t
 
 *   Ensure the `doc-id` used in footnotes corresponds accurately to a `doc-id` defined in the Front Matter of the target `.mda` document for internal links.
 *   Consistent use of `rel-type` values is crucial for building reliable knowledge graphs.
-*   Standard Markdown parsers will render the footnote with the backticks and JSON string as the literal content. MAGI-aware parsers extract and interpret the JSON.
+*   Standard Markdown parsers will render the footnote with the backticks and JSON string as the literal content. MDA-aware parsers extract and interpret the JSON.
