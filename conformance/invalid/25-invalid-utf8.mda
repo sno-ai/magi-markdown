@@ -1,0 +1,8 @@
+---
+name: invalid-utf8-source
+description: Body contains a stray 0xFF byte; UTF-8 decode MUST fail per ยง02-1.1 step 2.
+---
+
+# Invalid UTF-8
+
+This line ends with a stray byte: ÿ and that byte is not a valid UTF-8 continuation, so the strict TextDecoder raises and the runner records an invalid-encoding rejection.

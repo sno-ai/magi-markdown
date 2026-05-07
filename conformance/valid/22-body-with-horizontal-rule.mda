@@ -1,0 +1,16 @@
+---
+name: body-with-hr
+description: Body containing Markdown `---` horizontal rules does not confuse the closing-fence scan. Use to validate §02-1.1 step 6.
+---
+
+# Body with horizontal rules
+
+The first `---` line below this paragraph is a Markdown horizontal rule, not a frontmatter close — the closing fence has already been consumed.
+
+---
+
+This paragraph follows the first horizontal rule.
+
+---
+
+And another rule. A naive backwards scan would mistake one of these for the closing frontmatter fence; §02-1.1 step 6 forbids that strategy.
