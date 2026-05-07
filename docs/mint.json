@@ -21,10 +21,6 @@
       "url": "mailto:info@sno.ai"
     }
   ],
-  "topbarCtaButton": {
-    "name": "Dashboard",
-    "url": "https://magi-mda.org"
-  },
   "tabs": [
     {
       "name": "MDA Markdown",
