@@ -1,6 +1,6 @@
 # 📝 MDA Open Spec — Markdown for Agent
 
-> A Markdown superset for authoring agent-facing documents that compile to drop-in `SKILL.md`, `AGENTS.md`, `CLAUDE.md`, and `MCP-SERVER.md` outputs aligned with the 2026 agent-runtime ecosystem.
+> A Markdown superset that compiles one authored source into portable, verifiable artifacts every major agent runtime can load — replacing cross-vendor copy-paste with one source of truth, a real dependency graph, and reproducible artifact identity.
 
 [![CI](https://img.shields.io/github/actions/workflow/status/sno-ai/mda/sync-mdx.yml?branch=main)](https://github.com/sno-ai/mda/actions/workflows/sync-mdx.yml)
 [![License](https://img.shields.io/github/license/sno-ai/mda)](https://github.com/sno-ai/mda/blob/main/LICENSE)
@@ -8,7 +8,7 @@
 
 ## What MDA is
 
-You author one rich `.mda` source. The MDA compiler emits one or more `.md` outputs, each drop-in compatible with whichever third-party agent standard the filename names:
+AI Agent or you author one rich `.mda` source. The MDA compiler emits one or more `.md` outputs, each drop-in compatible with whichever third-party agent standard the filename names:
 
 ```
                 ┌─────────────────────────┐
