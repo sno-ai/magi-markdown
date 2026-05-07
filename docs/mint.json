@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/schema.json",
-  "name": "MAGI (Markdown for AI Agents)",
+  "name": "MDA (Markdown for Agent)",
   "logo": {
     "dark": "/logo/dark.svg",
     "light": "/logo/light.svg"
@@ -27,7 +27,7 @@
   },
   "tabs": [
     {
-      "name": "MAGI Markdown",
+      "name": "MDA Markdown",
       "url": "/"
     },
     {
@@ -47,7 +47,7 @@
     {
       "name": "Github",
       "icon": "github",
-      "url": "https://github.com/snoai/magi-markdown"
+      "url": "https://github.com/sno-ai/mda"
     },
     {
       "name": "X (Twitter)",
