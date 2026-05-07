@@ -1,0 +1,33 @@
+---
+name: node-tools
+description: Run a TypeScript script via tsx to fetch an HTTP endpoint and stream the response. Use when you need a small Node.js helper for HTTP calls.
+title: Node Tools
+doc-id: 8c1a4d96-2e7b-44a3-9f1c-3d6f8b2a9e10
+author: Sno Lab
+tags: [example, typescript, node]
+created-date: "2026-05-07T00:00:00Z"
+metadata:
+  mda:
+    version: "1.0.0"
+    requires:
+      runtime: ["node>=20"]
+      tools: ["Read", "Bash"]
+      network: ["api.example.com"]
+      packages: ["tsx", "undici"]
+  claude-code:
+    allowed-tools: "Read Bash(pnpm:*) Bash(tsx:*)"
+---
+
+# Node Tools
+
+This skill runs a small TypeScript script via `tsx` to fetch an HTTP endpoint
+and process the response. It demonstrates the MDA `requires` shape for a
+Node.js / TypeScript runtime: the only difference from a Python skill is the
+`runtime` token and the `packages` ecosystem — the surrounding contract is
+identical.
+
+## A relationship
+
+This skill cites the MDA capabilities specification[^capabilities-spec].
+
+[^capabilities-spec]: {"rel-type": "cites", "doc-id": "spec-capabilities-v1.0", "rel-desc": "MDA capabilities (metadata.mda.requires) reference"}

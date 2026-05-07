@@ -32,7 +32,7 @@ The tier-2 budgets in this table are **informative authoring guidance**, not nor
 
 Contents:
 
-- Code the consumer runs as a subprocess (commonly Python, Bash, or JavaScript; the supported set depends on the consumer).
+- Code the consumer runs as a subprocess. MDA is language-neutral; common choices include Python, TypeScript / JavaScript (Node, Deno, Bun), Bash, and Rust. The supported set depends on the consumer.
 
 Each script:
 
@@ -73,7 +73,7 @@ Assets are typically used in output produced by the artifact (e.g. as fill-in te
 
 When the body of a compiled output references a file in any subdirectory:
 
-- MUST use a path relative to the artifact's root directory (`scripts/extract.py`, `references/REFERENCE.md`).
+- MUST use a path relative to the artifact's root directory (`scripts/extract.py`, `scripts/build.ts`, `references/REFERENCE.md`).
 - MUST NOT use absolute paths or paths that escape the artifact directory (`../`, `/etc/...`).
 - SHOULD keep references one level deep. Avoid `references/sub/sub/file.md`-style nested chains.
 - The compiler MUST validate that every relative path resolves inside the artifact directory.

@@ -20,7 +20,7 @@ A SKILL.md package is a directory:
 ```
 <skill-name>/
 ├── SKILL.md          # required: frontmatter + Markdown instructions
-├── scripts/          # optional: executable code (Python, Bash, JS, ...)
+├── scripts/          # optional: executable code (Python, TypeScript, Bash, Rust, ...)
 ├── references/       # optional: docs loaded on demand
 ├── assets/           # optional: templates, images, schemas
 └── ...               # any additional files
