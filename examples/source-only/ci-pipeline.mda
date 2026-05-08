@@ -1,0 +1,46 @@
+---
+name: ci-pipeline-example
+description: MDA source demonstrating how to document a CI/CD pipeline with agent-readable runbooks and typed stage-dependency relationships.
+title: CI/CD Pipeline Documentation
+doc-id: 909b01d9-1149-48c8-bfd7-c732d67be1c4
+author: Biao Park
+tags: [example, ci-cd, devops, runbook]
+created-date: "2026-05-08T00:00:00Z"
+metadata:
+  mda:
+    version: "1.0.0"
+    targets: [SKILL.md, AGENTS.md]
+  ai-script:
+    version: "1"
+    instructions: |
+      Use this document to understand the CI/CD pipeline topology.
+      When diagnosing failures, start with the stage-dependency graph.
+      Follow parent relationships to identify upstream blockers.
+---
+
+# CI/CD Pipeline Documentation
+
+This document describes the validation pipeline and its integration points
+for agent-assisted incident response and automated remediation.
+
+## Pipeline Stages
+
+Our build pipeline consists of four sequential stages, each with defined
+health checks and rollback conditions[^pipeline-spec]. Stage failures
+propagate downstream unless a rollback boundary is declared.
+
+## Agent Integration
+
+The on-call agent uses this document to correlate stage failures with
+known runbook procedures[^runbook-index]. The relationship graph determines
+which runbook applies to a given failure mode.
+
+## Validation Script
+
+```bash
+# Run conformance checks on pipeline config
+mda validate --target AGENTS.md ci-pipeline.mda
+```
+
+[^pipeline-spec]: {"rel-type": "implements", "doc-id": "pipeline-spec-v2.1", "rel-desc": "CI/CD stage specification and health-check contract"}
+[^runbook-index]: {"rel-type": "references", "doc-id": "runbook-index-v1", "rel-desc": "On-call runbook index with failure-mode mappings"}
