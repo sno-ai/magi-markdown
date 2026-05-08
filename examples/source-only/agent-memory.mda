@@ -1,0 +1,52 @@
+---
+name: agent-memory-example
+description: MDA source demonstrating MEMORY.md target patterns for agent session management, including session vs. user scope taxonomy and eviction policy in the MDA 2.0 agentic environment.
+title: Agent Memory Management
+doc-id: fe485acb-478e-4760-b02a-5c91b8055e71
+author: Merritt Underwood
+tags: [example, agent-memory, session, mda-2.0, memory-scope]
+created-date: "2026-05-08T00:00:00Z"
+metadata:
+  mda:
+    version: "1.0.0"
+    targets: [SKILL.md, MEMORY.md]
+  ai-script:
+    version: "1"
+    instructions: |
+      This document defines memory scope boundaries for the platform agent.
+      [session] — persist within current conversation only.
+      [user]    — persist across sessions for the same user identity.
+      [ephemeral] — do not persist; discard after immediate use.
+      When writing to MEMORY.md, always tag facts with the appropriate scope.
+---
+
+# Agent Memory Management
+
+This document specifies memory scope boundaries for platform agents operating
+within the MDA 2.0 agentic environment, targeting both SKILL.md and MEMORY.md.
+
+## Scope Taxonomy
+
+Memory items are classified into three scopes[^memory-spec]:
+
+| Scope | Lifecycle | Example |
+|-------|-----------|---------|
+| `[session]` | Current conversation | User's stated goal for this session |
+| `[user]` | Across sessions | User's preferred response format |
+| `[ephemeral]` | Single use | Intermediate calculation result |
+
+## MEMORY.md Target
+
+When compiling to the MEMORY.md target, only `[user]`-scoped facts are
+written[^mda-2-spec]. Session and ephemeral facts are excluded from
+the compiled output.
+
+## Eviction Policy
+
+User-scoped memory is subject to retention limits defined in the platform
+policy[^retention-policy]. The agent must respect `max_age` and `max_items`
+constraints when writing new facts.
+
+[^memory-spec]: {"rel-type": "implements", "doc-id": "memory-spec-v1", "rel-desc": "MDA memory scope taxonomy"}
+[^mda-2-spec]: {"rel-type": "parent", "doc-id": "mda-2-spec", "rel-desc": "MDA 2.0 agentic environment specification"}
+[^retention-policy]: {"rel-type": "references", "doc-id": "retention-policy-v1", "rel-desc": "Platform memory retention and eviction policy"}
