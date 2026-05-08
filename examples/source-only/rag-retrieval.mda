@@ -1,0 +1,43 @@
+---
+name: rag-retrieval-example
+description: MDA source illustrating how typed footnote relationships encode retrieval graph edges for a RAG pipeline, enabling author-asserted document relationships to augment vector similarity.
+title: RAG Retrieval Pipeline
+doc-id: b3be8a43-b79a-4ea8-b169-bfca74fcccbc
+author: Landon Kavanaugh
+tags: [example, rag, retrieval, knowledge-graph, llm]
+created-date: "2026-05-08T00:00:00Z"
+metadata:
+  mda:
+    version: "1.0.0"
+  ai-script:
+    version: "1"
+    instructions: |
+      Use the relationship graph in this document to determine retrieval order.
+      Parent relationships indicate primary sources with higher retrieval weight.
+      Child relationships indicate derived documents — retrieve if parent is insufficient.
+      Peer relationships indicate complementary context — retrieve in parallel.
+---
+
+# RAG Retrieval Pipeline
+
+This document models a retrieval-augmented generation pipeline using MDA
+footnote relationships as typed edges in the retrieval graph.
+
+## Retrieval Graph Structure
+
+Documents declare their position in the retrieval graph via typed
+footnote relationships[^retrieval-spec]. The agent runtime traverses
+this graph to assemble context windows[^context-assembly].
+
+## Ranking Heuristics
+
+- **Parent** relationships → primary sources, highest retrieval weight
+- **Peer** relationships → complementary context, retrieved in parallel
+- **Child** relationships → derived documents, retrieved on fallback
+
+This ranking reduces hallucination on multi-hop queries compared to
+pure semantic similarity, because relationships are author-asserted
+rather than inferred by the embedding model.
+
+[^retrieval-spec]: {"rel-type": "implements", "doc-id": "retrieval-spec-v1", "rel-desc": "RAG retrieval graph specification"}
+[^context-assembly]: {"rel-type": "references", "doc-id": "context-assembly-v1", "rel-desc": "Context window assembly strategy for multi-hop queries"}
