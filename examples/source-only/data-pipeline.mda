@@ -1,0 +1,44 @@
+---
+name: data-pipeline-example
+description: MDA source showing how to document schema contracts and data lineage for a multi-stage pipeline using typed footnote edges.
+title: Data Pipeline Schema Documentation
+doc-id: a9a7a881-9c2f-455b-9411-391af6f7dafe
+author: Lara Blackwell
+tags: [example, data-pipeline, schema, lineage]
+created-date: "2026-05-08T00:00:00Z"
+metadata:
+  mda:
+    version: "1.0.0"
+  ai-script:
+    version: "1"
+    instructions: |
+      Reference this document to understand data flow and schema contracts
+      between pipeline stages. Use the lineage graph to trace data provenance
+      and assess the impact of schema changes.
+---
+
+# Data Pipeline Schema Documentation
+
+This document captures schema contracts and lineage relationships for a
+multi-stage data processing pipeline.
+
+## Schema Contracts
+
+Each pipeline stage declares its input and output schemas as typed
+entities[^schema-registry]. Schema compatibility is validated at
+pipeline assembly time, not at runtime.
+
+## Lineage Graph
+
+The footnote relationships encode upstream dependencies, enabling agents
+to reason about the blast radius of schema changes[^data-catalog].
+A breaking change in stage N invalidates all downstream stage contracts.
+
+## Example Lineage Query
+
+Given a schema change in the `user_events` table, the agent traverses
+the lineage graph to identify all downstream stages that must be
+re-validated before deployment.
+
+[^schema-registry]: {"rel-type": "references", "doc-id": "schema-registry-v3", "rel-desc": "Central schema registry for pipeline stage contracts"}
+[^data-catalog]: {"rel-type": "child", "doc-id": "data-catalog-v1", "rel-desc": "Data catalog with full lineage metadata"}
