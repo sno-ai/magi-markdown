@@ -1,0 +1,43 @@
+---
+name: api-service-example
+description: MDA source for documenting a REST API service with typed endpoint relationships and ai-script guidance for agent-assisted integration and troubleshooting.
+title: API Service Documentation
+doc-id: 217eba64-4c70-410a-9b2a-a312c69e7264
+author: Lara Dalton
+tags: [example, api, rest, service-documentation]
+created-date: "2026-05-08T00:00:00Z"
+metadata:
+  mda:
+    version: "1.0.0"
+    targets: [SKILL.md]
+  ai-script:
+    version: "1"
+    instructions: |
+      Use this document when integrating with or troubleshooting the service API.
+      Resolve auth endpoints before resource endpoints (see parent relationship).
+      Reference the error-runbook footnote for recovery actions by error code.
+---
+
+# API Service Documentation
+
+This document describes the service API surface with relationship annotations
+to enable agent-assisted integration and automated troubleshooting.
+
+## Endpoint Relationships
+
+Authentication endpoints must be resolved before resource endpoints[^auth-spec].
+Read endpoints are idempotent; write endpoints require verified ownership[^ownership-spec].
+
+## Error Taxonomy
+
+Each HTTP error code maps to a documented recovery action[^error-runbook].
+The agent should surface the relevant runbook step before escalating to on-call.
+
+## Rate Limiting
+
+Endpoints are rate-limited per PAT. The agent should cache responses
+where `Cache-Control: max-age` is present and avoid redundant calls.
+
+[^auth-spec]: {"rel-type": "parent", "doc-id": "auth-spec-v2", "rel-desc": "Authentication and credential specification"}
+[^ownership-spec]: {"rel-type": "references", "doc-id": "ownership-model-v1", "rel-desc": "Resource ownership and ACL model"}
+[^error-runbook]: {"rel-type": "references", "doc-id": "error-runbook-v3", "rel-desc": "Error taxonomy and recovery runbook"}
