@@ -5,7 +5,7 @@ description: "Entry point to the MDA Open Spec v1.0 — every § linked, with wh
 
 # MDA Open Spec
 
-The current normative version is **MDA Open Spec v1.0**, frozen at `v1.0.0-rc.1`.
+The current normative version is **MDA Open Spec v1.0**, release candidate `v1.0.0-rc.2`.
 
 - Canonical URL: https://mda.sno.dev/spec/v1.0/
 - Repo: [github.com/sno-ai/mda](https://github.com/sno-ai/mda)
@@ -25,7 +25,7 @@ The wedge: **cross-runtime portability + machine-readable dependency graph + ope
 Every MDA design decision follows P0 > P1 > P2:
 
 - **P0 — AI-agent authorability.** An LLM with only this Open Spec in context MUST be able to produce conforming output.
-- **P1 — Human authorability.** A human with a text editor and `sha256sum` + `cosign` MUST be able to produce conforming output.
+- **P1 — Human authorability.** A human with a text editor, standard hashing tools, and a DSSE-capable signing path MUST be able to produce conforming output.
 - **P2 — Tooling convenience.** Reference implementations are convenience, not requirement.
 
 Normative statement: [`spec/v1.0/00-overview.md §0.5`](https://github.com/sno-ai/mda/blob/main/spec/v1.0/00-overview.md).
@@ -38,7 +38,7 @@ MDA artifacts MAY be produced in any of three equivalent ways:
 2. **Human mode** — a human writes the `.md` directly with standard tooling.
 3. **Compiled mode** — an author writes a `.mda` source; the MDA compiler emits one or more `.md` outputs.
 
-See [`spec/v1.0/00-overview.md §0.6`](https://github.com/sno-ai/mda/blob/main/spec/v1.0/00-overview.md) and [`docs/manual-workflow.md`](https://github.com/sno-ai/mda/blob/main/docs/manual-workflow.md) for the manual and agent-author paths.
+See [`spec/v1.0/00-overview.md §0.6`](https://github.com/sno-ai/mda/blob/main/spec/v1.0/00-overview.md) and [`docs/create-sign-verify-mda.md`](https://github.com/sno-ai/mda/blob/main/docs/create-sign-verify-mda.md) for the human and agent-author paths.
 
 ## Spec sections
 
@@ -56,15 +56,16 @@ See [`spec/v1.0/00-overview.md §0.6`](https://github.com/sno-ai/mda/blob/main/s
 | [§09](https://github.com/sno-ai/mda/blob/main/spec/v1.0/09-signatures.md) | Signatures | DSSE PAE envelope; Sigstore OIDC keyless default with Rekor inclusion + Fulcio certificate chain verification; `did:web` + `mda-keys.json` air-gap fallback. Rekor entry type pinned to `dsse-v0.0.1`. |
 | [§10](https://github.com/sno-ai/mda/blob/main/spec/v1.0/10-capabilities.md) | Capabilities | `metadata.mda.requires` open key-value with six standard keys: `runtime`, `tools`, `network`, `packages`, `model`, `cost-hints`. |
 | [§11](https://github.com/sno-ai/mda/blob/main/spec/v1.0/11-implementer-guide.md) | Implementer's Guide | Informative. Canonical loader pseudocode, error category vocabulary. |
-| [§12](https://github.com/sno-ai/mda/blob/main/spec/v1.0/12-sigstore-tooling.md) | Sigstore tooling integration | Informative. Mapping from `cosign` / `sigstore-python` / `sigstore-go` bundles into MDA `signatures[]`. |
+| [§12](https://github.com/sno-ai/mda/blob/main/spec/v1.0/12-sigstore-tooling.md) | Sigstore tooling integration | Informative. Mapping from Sigstore SDK bundles into MDA `signatures[]`, with `cosign` compatibility limits documented. |
+| [§13](https://github.com/sno-ai/mda/blob/main/spec/v1.0/13-trusted-runtime.md) | Trusted Runtime Profile | Production verification profile, trust policy file, and fail-closed runtime behavior. |
 
 ## Companion artifacts
 
-- **JSON Schemas** — [`schemas/`](https://github.com/sno-ai/mda/tree/main/schemas) — `frontmatter-source`, `frontmatter-skill-md`, `frontmatter-agents-md`, `frontmatter-mcp-server-md`, `relationship-footnote`, plus `_defs/` for `integrity`, `signature`, `requires`, `depends-on`, `version-range`, `metadata-namespaces`, `mda-keys`.
-- **Conformance suite** — [`conformance/`](https://github.com/sno-ai/mda/tree/main/conformance) — 35 fixtures (positive + negative) bound to spec rule IDs in `manifest.yaml`. Runner: `node scripts/validate-conformance.mjs`.
+- **JSON Schemas** — [`schemas/`](https://github.com/sno-ai/mda/tree/main/schemas) — `frontmatter-source`, `frontmatter-skill-md`, `frontmatter-agents-md`, `frontmatter-mcp-server-md`, `relationship-footnote`, `mda-trust-policy`, plus `_defs/` for `integrity`, `signature`, `requires`, `depends-on`, `version-range`, `metadata-namespaces`, `mda-keys`.
+- **Conformance suite** — [`conformance/`](https://github.com/sno-ai/mda/tree/main/conformance) — positive and negative fixtures bound to spec rule IDs in `manifest.yaml`. Runner: `node scripts/validate-conformance.mjs`.
 - **Examples** — [`examples/`](https://github.com/sno-ai/mda/tree/main/examples) — `source-only/`, `skill-md/` (additional target examples land alongside reference-implementation maturity).
 - **Vendor namespace registry** — [`REGISTRY.md`](https://github.com/sno-ai/mda/blob/main/REGISTRY.md) — vendor namespaces, standard `requires` keys, reserved Sigstore OIDC issuers, reserved Rekor instances, reserved DSSE `payload-type` values.
-- **Manual-workflow recipes** — [`docs/manual-workflow.md`](https://github.com/sno-ai/mda/blob/main/docs/manual-workflow.md) — hand-author and sign without the MDA CLI.
+- **Create, sign, and verify guide** — [`docs/create-sign-verify-mda.md`](https://github.com/sno-ai/mda/blob/main/docs/create-sign-verify-mda.md) — practical human and agent-author flow without the MDA CLI.
 - **Reference implementation** — [`packages/mda/`](https://github.com/sno-ai/mda/tree/main/packages/mda) — TypeScript, npm: `@mda/cli`. Architecture spec: [`packages/mda/IMPL-SPEC.md`](https://github.com/sno-ai/mda/blob/main/packages/mda/IMPL-SPEC.md).
 
 ## Governance
@@ -74,7 +75,7 @@ MDA is an independent project. It actively serves AAIF (Linux Foundation Agentic
 ## Versioning
 
 - **Patch releases** (`v1.0.1`, `v1.0.2`, …) deliver editorial fixes and reference-implementation maturity. They do not change the conformance contract.
-- **Pre-release cycle.** The spec freezes at `v1.0.0-rc.1`. Subsequent `v1.0.0-rc.N` tags ship reference-implementation maturity. The final `v1.0.0` lands when the reference implementation passes 100% conformance.
+- **Pre-release cycle.** The current release candidate is `v1.0.0-rc.2`. The final `v1.0.0` lands when the reference implementation passes 100% conformance.
 - **Minor releases** (`v1.1.0`) are not pre-planned. They emerge from observed adoption.
 - **Major releases** (`v2.0.0`) ship breaking changes in a new directory; previous versions remain immutable at their canonical URLs.
 
@@ -82,7 +83,7 @@ See [`spec/v1.0/00-overview.md §0.9`](https://github.com/sno-ai/mda/blob/main/s
 
 ## What v1.0 doesn't ship
 
-The contract is locked. The consumer-side ecosystem that enforces or routes through that contract is mostly nascent. For the truthful gap, see [What v1.0 doesn't ship](https://github.com/sno-ai/mda/blob/main/ai-doc/what-v1.0-does-not-ship.md).
+The current release-candidate contract is defined. The consumer-side ecosystem that enforces or routes through that contract is mostly nascent. For the truthful gap, see [What v1.0 doesn't ship](https://github.com/sno-ai/mda/blob/main/ai-doc/what-v1.0-does-not-ship.md).
 
 For the long-form value framing, two documents go deeper. Both trace every claim back to a section of the spec, and both call out current ecosystem gaps inline:
 

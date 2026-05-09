@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "trustedSigners": [
+    {
+      "type": "did-web",
+      "domain": "tools.example.com"
+    }
+  ]
+}

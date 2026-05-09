@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "minSignatures": 2,
+  "trustedSigners": [
+    {
+      "type": "did-web",
+      "domain": "tools.example.com"
+    },
+    {
+      "type": "did-web",
+      "domain": "review.example.com"
+    }
+  ]
+}

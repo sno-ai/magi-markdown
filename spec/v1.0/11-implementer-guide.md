@@ -1,6 +1,6 @@
 # §11 — Implementer's Guide (informative)
 
-> **Status:** Informative. Pseudocode patterns to help independent implementations of MDA validators, verifiers, and consumers converge on identical observable behavior. Nothing in this section adds normative requirements; every requirement referenced here is normatively defined in §02–§10.
+> **Status:** Informative. Pseudocode patterns to help independent implementations of MDA validators, verifiers, and consumers converge on identical observable behavior. Nothing in this section adds normative requirements; every requirement referenced here is normatively defined in §02–§10 and §13.
 
 ## §11-1 Why this section exists
 
@@ -67,9 +67,20 @@ function loadMdaArtifact(file_bytes, target, target_schema, options):
     elif frontmatter.signatures and not frontmatter.integrity:
         REJECT "signatures-without-integrity"
 
-    # === Stage D: Integrity verification (optional, gated by options) ===
+    # === Stage D: Integrity verification (optional unless required by profile) ===
+    # `trusted-runtime` is the production profile from §13. It makes integrity
+    # and signatures fail-closed requirements instead of best-effort checks.
+    trusted_runtime = options.profile == "trusted-runtime"
+    require_integrity = trusted_runtime or options.requireIntegrity
+    require_signatures = trusted_runtime or options.requireSignatures
+
+    integrity_verified = false
+
+    if require_integrity and not frontmatter.integrity:
+        REJECT "missing-required-integrity"
+
     # `integrity` MAY appear without `signatures[]`; the verifier still checks it.
-    if options.verifyIntegrity and frontmatter.integrity:
+    if (options.verifyIntegrity or require_integrity or options.verifySignatures) and frontmatter.integrity:
         # §08-3 canonicalization. The helper MUST:
         #   1. Strip top-level `integrity` and `signatures[]` from `frontmatter`
         #      (§08-3.1) before serializing; it does NOT mutate the caller's copy.
@@ -86,9 +97,21 @@ function loadMdaArtifact(file_bytes, target, target_schema, options):
         expected = parseDigest(frontmatter.integrity.digest)
         if computed_digest != expected.hex:
             REJECT "integrity-mismatch"
+        integrity_verified = true
 
-    # === Stage E: Signature verification (optional, gated by options) ===
-    if options.verifySignatures and frontmatter.signatures:
+    # === Stage E: Signature verification (optional unless required by profile) ===
+    if require_signatures and (not frontmatter.signatures or len(frontmatter.signatures) == 0):
+        REJECT "missing-required-signature"
+
+    if (options.verifySignatures or require_signatures) and frontmatter.signatures:
+        # Signatures prove who signed the declared digest. They do not prove the
+        # current artifact bytes still match that digest. A verifier that treats
+        # signatures as a trust gate MUST verify integrity first (§13-2).
+        if not integrity_verified:
+            REJECT "missing-required-integrity"
+
+        trusted_signer_identities = set()
+
         for sig in frontmatter.signatures:
             # §09-3.1 PAE envelope reconstruction. When sig.payload-type is
             # absent the verifier MUST use the default `application/vnd.mda.integrity+json`
@@ -111,21 +134,46 @@ function loadMdaArtifact(file_bytes, target, target_schema, options):
                 cert = extractFulcioCert(rekor_entry)
                 if not verifyFulcioChain(cert, options.sigstoreRoot):
                     REJECT "fulcio-chain-failure"
-                if cert.oidcIdentity not in options.allowedIssuers:
-                    REJECT "untrusted-issuer"
                 if not verifyEcdsaOrEd25519(pae, sig.signature, cert.publicKey):
                     REJECT "signature-verification-failure"
+                if trustPolicyMatches(
+                    options.trustPolicy,
+                    type = "sigstore-oidc",
+                    issuer = cert.oidcIssuer,
+                    subject = cert.oidcSubject
+                ):
+                    trusted_signer_identities.add(
+                        "sigstore-oidc:" + cert.oidcIssuer + "\n" + cert.oidcSubject
+                    )
             elif sig.signer starts with "did-web:":
                 # §09-5.2 verification flow
-                domain = sig.signer.split(":")[1]
-                if domain not in options.allowedDidWebDomains:
-                    REJECT "untrusted-did-web-domain"
+                domain = parseDidWebDomain(sig.signer)
+                if domain == null:
+                    REJECT "unknown-signer-method"
+                if options.trustPolicy and not trustPolicyMatches(
+                    options.trustPolicy,
+                    type = "did-web",
+                    domain = domain
+                ):
+                    continue
                 keys = httpsGet("https://" + domain + "/.well-known/mda-keys.json")
                 key = lookupKeyById(keys, sig.key-id)
                 if not verifyEcdsaOrEd25519(pae, sig.signature, key.public-key):
                     REJECT "signature-verification-failure"
+                if trustPolicyMatches(
+                    options.trustPolicy,
+                    type = "did-web",
+                    domain = domain
+                ):
+                    trusted_signer_identities.add("did-web:" + domain)
             else:
                 REJECT "unknown-signer-method"
+
+        min_signatures = options.trustPolicy?.minSignatures or options.minSignatures or 1
+        if require_signatures and len(trusted_signer_identities) == 0:
+            REJECT "no-trusted-signature"
+        if require_signatures and len(trusted_signer_identities) < min_signatures:
+            REJECT "insufficient-trusted-signatures"
 
     # === Stage F: Capability requirements (optional, gated by options) ===
     # The `requires` block lives in different locations in source vs output mode:
@@ -173,8 +221,11 @@ For interoperable error reporting between MDA tools and downstream observability
 | `rekor-inclusion-failure` | Rekor entry missing or inclusion proof did not verify against the configured log root | §09-4.2 |
 | `fulcio-chain-failure` | Fulcio certificate chain did not verify to the configured Sigstore root | §09-4.2 |
 | `signature-verification-failure` | Cryptographic signature did not verify on the PAE envelope | §09-4.2, §09-5.2 |
-| `untrusted-issuer` | OIDC identity not in operator allow-list | §09-7 |
-| `untrusted-did-web-domain` | did:web domain not in operator allow-list | §09-7 |
+| `missing-required-integrity` | The selected verifier profile requires `integrity`, but the artifact does not declare it or has not successfully verified it before signature trust decisions. | §13 |
+| `missing-required-signature` | The selected verifier profile requires at least one signature, but `signatures[]` is absent or empty. | §13 |
+| `insufficient-trusted-signatures` | Fewer than the configured `minSignatures` distinct signer identities verified and matched the trust policy. | §13 |
+| `no-trusted-signature` | Signatures verified cryptographically, but none matched the configured trust policy. | §13 |
+| `trust-policy-violation` | Trust policy file is malformed, unsupported, or impossible to satisfy. | §13 |
 | `unknown-signer-method` | `signer` prefix is neither `sigstore-oidc:` nor `did-web:` | §09-2 |
 | `requires-not-satisfied` | Standard `requires` key cannot be honored | §10-4 |
 | `project-schema-violation` | Vendor / project-specific schema (non-MDA) | out of scope |
@@ -197,6 +248,9 @@ Many consumers will read MDA artifacts without performing integrity or signature
 - Apply §09-2 cross-field check IF they observe both `integrity` and `signatures[]` (a consumer that sees a mismatch and silently loads anyway is misleading)
 
 They MAY skip Stages D, E, F, G. They SHOULD document which stages they apply.
+Consumers that skip Stage D or Stage E are not running the §13
+`trusted-runtime` profile and MUST NOT present the loaded artifact as trusted
+signed configuration.
 
 A consumer that wants tamper detection without identity attestation MAY perform Stage D (`integrity` verification) without performing Stage E (`signatures[]` verification). The two stages are independent: `integrity` MAY appear without `signatures[]`, and a verifier that does so still benefits from §08 reproducibility. The reverse is not permitted: §09-2 forbids `signatures[]` without `integrity`, and Stage C catches it before any cryptographic work.
 

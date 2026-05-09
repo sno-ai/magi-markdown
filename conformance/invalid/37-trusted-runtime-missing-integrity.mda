@@ -1,0 +1,11 @@
+---
+name: trusted-runtime-missing-integrity
+description: Schema-valid source that trusted-runtime must reject because integrity is absent.
+metadata:
+  mda:
+    version: "1.0.0"
+---
+
+# Missing integrity
+
+Schema validation can pass, but production trusted-runtime cannot load it.

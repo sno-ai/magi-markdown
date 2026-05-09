@@ -8,7 +8,7 @@ In five minutes you'll write a `.mda` source, compile it to a `SKILL.md` that lo
 ## What you need
 
 1. A text editor.
-2. The `@mda/cli` reference implementation, or — if you'd rather not install anything — the [manual workflow](https://github.com/sno-ai/mda/blob/main/docs/manual-workflow.md), which uses only `sha256sum` and `cosign`.
+2. The `@mda/cli` reference implementation, or — if you'd rather not install anything — the [create-sign-verify guide](https://github.com/sno-ai/mda/blob/main/docs/create-sign-verify-mda.md), which uses only standard hashing and DSSE-capable signing tools.
 3. A basic grasp of Markdown.
 
 ## A minimal `.mda` source
@@ -97,7 +97,7 @@ Compile with the `--sign` flag and Sigstore OIDC keyless signing kicks in:
 npx @mda/cli compile pdf-tools.mda --target SKILL.md --sign
 ```
 
-The output `SKILL.md` gets `metadata.mda.integrity.digest` (a JCS-canonicalized hash of the canonical bytes) and `metadata.mda.signatures[]` (DSSE-enveloped signature with Rekor inclusion proof and Fulcio certificate metadata). A verifier rederives the digest, looks up Rekor, verifies the cert chain, and applies an OIDC identity allow-list against operator policy.
+The output `SKILL.md` gets top-level `integrity.digest` (a JCS-canonicalized hash of the canonical bytes) and top-level `signatures[]` (DSSE-enveloped signature with Rekor inclusion proof and Fulcio certificate metadata). A verifier rederives the digest, looks up Rekor, verifies the cert chain and signature, then applies the operator trust policy.
 
 For the air-gap path (no Sigstore reachability), `did:web` + `mda-keys.json` is the documented fallback. See `spec/v1.0/09-signatures.md`.
 
@@ -118,8 +118,8 @@ For the air-gap path (no Sigstore reachability), `did:web` + `mda-keys.json` is 
   <Card title="Specification" icon="book" href="/mdx/specification">
     The normative entry point — every § of the v1.0 spec, linked.
   </Card>
-  <Card title="Manual workflow" icon="terminal" href="https://github.com/sno-ai/mda/blob/main/docs/manual-workflow.md">
-    Hand-author and sign without the reference CLI. Just a text editor, `sha256sum`, and `cosign`.
+  <Card title="Create, sign, and verify MDA" icon="terminal" href="https://github.com/sno-ai/mda/blob/main/docs/create-sign-verify-mda.md">
+    Hand-author, add integrity, sign, and verify without the reference CLI.
   </Card>
   <Card title="More examples" icon="code" href="/mda-examples/quickstart-hello-world">
     Worked `.mda` files covering common patterns.

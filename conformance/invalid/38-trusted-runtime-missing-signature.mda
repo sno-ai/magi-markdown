@@ -1,0 +1,14 @@
+---
+name: trusted-runtime-missing-signature
+description: Schema-valid source that trusted-runtime must reject because signatures are absent.
+integrity:
+  algorithm: sha256
+  digest: "sha256:a4f9c0d2e8b3a16e9c01b8f3d2a5c7b14e9f8a3d6c2b1e7f0a8d4c3b9e2f1a05"
+metadata:
+  mda:
+    version: "1.0.0"
+---
+
+# Missing signature
+
+Integrity alone is not enough for trusted-runtime.
