@@ -93,7 +93,7 @@ A consumer that reads `requires`:
 ## §10-5 Why open key-value (rationale)
 
 - **Match the vendor-namespace philosophy.** §04 already lets vendors add namespaces under `metadata.<vendor>` without coordination. Forcing `requires` into a closed enum would create the only closed surface in MDA, which is inconsistent.
-- **The risk of LLM-invented inconsistent keys is real but bounded.** The standard-keys registry in `REGISTRY.md` gives agents a strong default; the prompt template in `docs/manual-workflow.md` lists the standard keys verbatim. Observed inconsistency that becomes load-bearing graduates into a registered standard key (no breaking change).
+- **The risk of LLM-invented inconsistent keys is real but bounded.** The standard-keys registry in `REGISTRY.md` gives agents a strong default; the prompt template in `docs/create-sign-verify-mda.md` lists the standard keys verbatim. Observed inconsistency that becomes load-bearing graduates into a registered standard key (no breaking change).
 - **The cost of being wrong is low.** Unknown keys are ignored. The worst case is "consumer cannot decide programmatically; falls back to `compatibility`." The best case is rapid evolution without spec churn.
 
 ## §10-6 Examples

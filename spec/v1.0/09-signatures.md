@@ -34,7 +34,7 @@ signatures:
 | `signature` | string | yes | Base64 (standard, RFC 4648 §4) of the raw signature bytes over the DSSE PAE envelope. |
 | `rekor-log-id` | string | no | Rekor transparency log identifier; required when `signer` starts with `sigstore-oidc:`. |
 | `rekor-log-index` | integer | no | Rekor entry index; required when `signer` starts with `sigstore-oidc:`. |
-| `payload-type` | string | no | DSSE `payloadType` declaring the semantic type of the signed payload (§09-3.1). When absent, MDA validators MUST treat the value as `application/vnd.mda.integrity+json`. Vendor-defined types follow RFC 6838 vendor tree: `application/vnd.<vendor>.<doc-type>+jcs+json`. Reserved entries listed in `REGISTRY.md`. |
+| `payload-type` | string | no | DSSE `payloadType` declaring the semantic type of the signed payload (§09-3.1). When absent, MDA validators MUST treat the value as `application/vnd.mda.integrity+json`. Vendor-defined types follow RFC 6838 vendor tree: `application/vnd.<vendor>.<doc-type>+json`. Reserved entries listed in `REGISTRY.md`. |
 
 Schema: `_defs/signature.schema.json`. Unknown subfields are rejected.
 
@@ -85,8 +85,8 @@ The ephemeral private key is discarded.
 3. Look up the Rekor entry by `rekor-log-id` + `rekor-log-index`. The entry MUST be of type `dsse-v0.0.1`; verifiers MUST refuse other entry types (`hashedrekord-v0.0.1`, `intoto-v0.0.2`, etc.) as out-of-spec for MDA signatures.
 4. Verify the inclusion proof against the Rekor log root (cached or freshly fetched per the verifier's policy).
 5. Verify the Fulcio certificate chain to the Sigstore root.
-6. Verify the certificate's OIDC identity claim against the operator's allow-list (the verifier's policy decides which identities are trusted).
-7. Verify the signature on the PAE envelope using the certificate's public key.
+6. Verify the signature on the PAE envelope using the certificate's public key.
+7. Verify the certificate's OIDC identity claim against the operator's trust policy. A signature that verifies cryptographically but does not match policy is not trusted.
 
 A verification failure at any step MUST cause the verifier to refuse the artifact.
 
@@ -108,16 +108,18 @@ When Sigstore is unreachable (air-gapped CI, regulated environment, or when an o
 ### §09-5.2 Verifying a `did:web` signature
 
 1. Validate `payload-digest == integrity.digest`.
-2. Fetch `https://<domain-from-signer>/.well-known/mda-keys.json` over HTTPS.
-3. Look up the key by `key-id` in the document.
-4. Verify the signature on the PAE envelope using that public key.
-5. Apply operator policy (which domains are trusted, key rotation cadence).
+2. Parse `<domain-from-signer>` from `signer`. If an operator trust policy is active, the domain MUST match that policy before the verifier performs any network fetch.
+3. Fetch `https://<domain-from-signer>/.well-known/mda-keys.json` over HTTPS.
+4. Look up the key by `key-id` in the document.
+5. Verify the signature on the PAE envelope using that public key.
 
 `did:web` provides identity-of-domain at the time of fetch. It does NOT provide transparency-log inclusion guarantees, so it MUST NOT be used where third-party tampering of past attestations is part of the threat model. Operators who need transparency MUST use the Sigstore path (or run their own air-gapped Rekor instance, which is out of scope for v1.0).
 
 ## §09-6 Multiple signatures
 
-The `signatures[]` array MAY contain entries from different signers (e.g. an author signature plus a reviewer signature plus a CI signature). All entries MUST share the same `payload-digest`. Verifiers apply policy over the array (e.g. "require at least one signature from issuer X and one from issuer Y").
+The `signatures[]` array MAY contain entries from different signers (e.g. an author signature plus a reviewer signature plus a CI signature). All entries MUST share the same `payload-digest`. In the `trusted-runtime` profile (§13), `minSignatures` counts distinct trusted signer identities from the configured policy; duplicate entries for the same identity count once.
+
+Role-specific quorum rules such as "one CI signature and one human reviewer signature" are out of scope for v1.0 unless a future trust-policy version adds them.
 
 The order of entries is not significant.
 
@@ -128,7 +130,7 @@ This spec defines what a signature *is*, not *which signatures must be trusted*.
 - Allow-list of OIDC issuers and identity claims.
 - Allow-list of Rekor instances.
 - Allow-list of `did:web` domains.
-- Minimum number of valid signatures.
+- Minimum number of distinct trusted signer identities.
 - Maximum age of Rekor entries.
 
 The reference CLI in `packages/mda/` ships a default-deny policy with explicit allow-list flags; see `packages/mda/IMPL-SPEC.md`.
