@@ -134,9 +134,8 @@ function extractFrontmatterStrict(buf) {
   return { kind: "ok", frontmatter: parsed ?? null, body };
 }
 
-// Backwards-compatible wrapper used by the rest of the runner: returns the
-// parsed frontmatter object or null. Errors degrade to null so existing
-// fixtures keep their previous behavior; new fixtures use extractFrontmatterStrict.
+// Convenience wrapper used by schema-level fixtures: returns the parsed
+// frontmatter object or null. Runtime-level fixtures use extractFrontmatterStrict.
 function extractFrontmatter(text) {
   const buf = Buffer.isBuffer(text) ? text : Buffer.from(text);
   const r = extractFrontmatterStrict(buf);

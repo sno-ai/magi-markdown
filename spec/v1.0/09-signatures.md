@@ -88,7 +88,10 @@ The ephemeral private key is discarded.
 6. Verify the signature on the PAE envelope using the certificate's public key.
 7. Verify the certificate's OIDC identity claim against the operator's trust policy. A signature that verifies cryptographically but does not match policy is not trusted.
 
-A verification failure at any step MUST cause the verifier to refuse the artifact.
+A verification failure at any step means this signature is not trusted. In the
+`trusted-runtime` profile, §13 defines the artifact-level decision: only
+distinct signatures that both verify and match policy count toward
+`minSignatures`.
 
 ### §09-4.3 Reserved Sigstore parameters
 
@@ -114,6 +117,11 @@ When Sigstore is unreachable (air-gapped CI, regulated environment, or when an o
 5. Verify the signature on the PAE envelope using that public key.
 
 `did:web` provides identity-of-domain at the time of fetch. It does NOT provide transparency-log inclusion guarantees, so it MUST NOT be used where third-party tampering of past attestations is part of the threat model. Operators who need transparency MUST use the Sigstore path (or run their own air-gapped Rekor instance, which is out of scope for v1.0).
+
+Implementations may use an injected `did:web` verifier instead of performing
+the HTTPS fetch themselves. If a verifier exposes the `trusted-runtime` profile
+but cannot verify `did:web`, it MUST reject matching policies or artifacts
+fail-closed; it must not describe `did:web` as outside the v1.0 format.
 
 ## §09-6 Multiple signatures
 

@@ -65,7 +65,7 @@ The returned `Bundle` follows the Sigstore Bundle v0.3 protobuf-JSON shape:
 
 | MDA field | Source in Sigstore bundle | Transformation |
 |-----------|---------------------------|----------------|
-| `signer` | OIDC issuer claim from `verificationMaterial.certificate` | Decode the cert, read the OIDC issuer extension (OID `1.3.6.1.4.1.57264.1.8` for v2 issuers, or `1.3.6.1.4.1.57264.1.1` for v1 legacy), prefix with `sigstore-oidc:` |
+| `signer` | OIDC issuer claim from `verificationMaterial.certificate` | Decode the cert, read the OIDC issuer extension (OID `1.3.6.1.4.1.57264.1.8` for v2 issuers, or `1.3.6.1.4.1.57264.1.1` for v1 issuer extension), prefix with `sigstore-oidc:` |
 | `key-id` | `verificationMaterial.certificate.rawBytes` | sha256 of cert DER bytes, lowercase hex, prefix with `fulcio:` |
 | `payload-digest` | (must equal `integrity.digest`) | Copy from frontmatter `integrity.digest`; verify equality (§09-2) |
 | `algorithm` | Cert public key algorithm | `ed25519`, `ecdsa-p256`, or `rsa-pss-sha256`; sigstore-python emits `ecdsa-p256` for keyless |

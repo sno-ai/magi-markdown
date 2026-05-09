@@ -18,6 +18,12 @@ The `trusted-runtime` profile combines those checks into one fail-closed
 decision so operators do not accidentally treat "verify signatures if present"
 as "require trusted signed content".
 
+Implementations MAY expose this profile as a CLI flag, a `trustedRuntime`
+option, or a dedicated helper such as `verifyTrustedRuntime(...)`. A generic
+`verifySignatures` option is not the same profile unless it also requires
+integrity, requires at least one signature, applies a validated trust policy,
+and enforces the `minSignatures` threshold defined here.
+
 ## §13-2 Required verifier behavior
 
 A verifier running the `trusted-runtime` profile MUST reject an artifact when
@@ -38,6 +44,21 @@ Signature verification in this profile MUST happen only after the integrity
 check has succeeded. A verifier MUST NOT report an artifact as trusted merely
 because a signature over the declared `integrity` object verifies; the declared
 digest must first be proven to match the artifact bytes.
+
+Schema validation and the cross-field `payload-digest == integrity.digest`
+check apply to every entry in `signatures[]`; schema-invalid signature entries
+still reject the artifact. Cryptographic verification then counts only
+signatures that verify successfully and match the trust policy. Unverifiable,
+untrusted, or duplicate signatures MUST NOT count toward `minSignatures`. A
+verifier MAY report the most specific failure it saw while evaluating candidate
+signatures, but the artifact-level trust decision is the threshold check over
+distinct trusted identities.
+
+An implementation that claims support for `trusted-runtime` MUST fail closed
+for any signer method or trust-policy shape it cannot enforce. If a policy uses
+a standard signer method, such as `did-web`, but the implementation has no
+verifier for that method, the implementation MUST reject the policy or artifact
+with `trust-policy-violation` and MUST NOT report the artifact as trusted.
 
 ## §13-3 Recommended CLI shape
 
@@ -132,6 +153,13 @@ For Sigstore policies, `rekor.url` is required and means Rekor inclusion is
 required. There is no `required: false` switch. `did:web` policies do not use a
 `rekor` block.
 
+When a verifier uses an injected Rekor transport instead of constructing its
+own HTTP client, that transport MUST be bound to the policy's `rekor.url`.
+Passing `rekor.url` into the transport call, or constructing a transport scoped
+to that URL and checking the URL before use, are both acceptable. Treating
+`rekor.url` as documentation while fetching from an unrelated log is not
+conformant.
+
 The reserved issuer list in `REGISTRY.md` means "MDA recognizes this as an
 on-topic Sigstore issuer"; it does not mean a verifier should trust every
 identity from that issuer.
@@ -153,6 +181,10 @@ when exposing `trusted-runtime` results:
 | `insufficient-trusted-signatures` | Fewer than `minSignatures` distinct signer identities verified successfully and matched the trust policy. |
 | `no-trusted-signature` | Signatures verified cryptographically, but none matched the trust policy. |
 | `trust-policy-violation` | The trust policy is malformed, unsupported, or impossible to satisfy. |
+
+RC2 trusted-runtime tools SHOULD report policy mismatches as
+`no-trusted-signature` or `insufficient-trusted-signatures`, because issuer-only
+trust is not a valid policy model.
 
 ## §13-6 Previous-good runtime behavior
 
