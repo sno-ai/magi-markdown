@@ -35,7 +35,7 @@ Security hardening release for signed MDA and production trusted-runtime loading
 
 ## [1.0.0-rc.1] - 2026-05-07
 
-First release-candidate baseline of the MDA v1.0 specification. `1.0.0-rc.2` supersedes this baseline for signed-MDA trusted-runtime behavior. The final `1.0.0` lands when `@mda/cli` passes 100 % of the conformance suite.
+First release-candidate baseline of the MDA v1.0 specification. `1.0.0-rc.2` supersedes this baseline for signed-MDA trusted-runtime behavior. The final `1.0.0` lands when `@markdown-ai/cli` passes 100 % of the conformance suite.
 
 ### Specification baseline
 
@@ -62,7 +62,7 @@ First release-candidate baseline of the MDA v1.0 specification. `1.0.0-rc.2` sup
 - Conformance suite: 24 fixtures (valid + invalid) bound to spec rule IDs in `conformance/manifest.yaml`; runner at `scripts/validate-conformance.mjs` enforces schema validity, the §02-1.1 frontmatter-extraction algorithm (BOM strip, CRLF normalization, body-with-`---`-horizontal-rule, empty body, unterminated frontmatter, invalid UTF-8, body-only files at frontmatter-required targets), and the cross-field signature/integrity equality rule.
 - `REGISTRY.md`: vendor namespaces, standard `requires` keys, reserved Sigstore OIDC issuers, reserved Rekor instances, reserved DSSE payload types.
 - `docs/manual-workflow.md`: hand-author and agent-author paths without the reference CLI.
-- `packages/mda/IMPL-SPEC.md`: reference-implementation architecture (TypeScript, npm `@mda/cli`).
+- `apps/cli/IMPL-SPEC.md`: reference-implementation architecture (TypeScript, npm `@markdown-ai/cli`).
 
 ### Removed / not in v1.0
 

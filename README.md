@@ -133,7 +133,7 @@ JSON Schemas live in [`schemas/`](schemas/) — `frontmatter-source`, `frontmatt
 
 ## Reference implementation
 
-The TypeScript CLI lives in [`packages/mda/`](packages/mda/) (npm package: `@mda/cli`). The architecture spec is [`packages/mda/IMPL-SPEC.md`](packages/mda/IMPL-SPEC.md). The CLI matures across `v1.0.0-rc.N` tags. The final `1.0.0` lands when the CLI passes 100% of the conformance suite.
+The TypeScript CLI lives in [`apps/cli/`](apps/cli/) (npm package: `@markdown-ai/cli`). The architecture spec is [`apps/cli/IMPL-SPEC.md`](apps/cli/IMPL-SPEC.md). The CLI matures across `v1.0.0-rc.N` tags. The final `1.0.0` lands when the CLI passes 100% of the conformance suite.
 
 ![v1.0 ships the contract — schemas, conformance, and compiler — with verifier, resolver, registry, graph indexer, and runtime routing as future ecosystem work](images/status-contract-and-ecosystem.png)
 

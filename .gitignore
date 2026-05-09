@@ -74,14 +74,6 @@ coverage/
 ## Serverless
 .serverless/
 
-# Wrangler directories
-.wrangler/
-apps/url2aimd/.wrangler/
-
-# Cloudflare Workers config file (ignored) and example (included)
-apps/url2aimd/wrangler.toml
-!apps/url2aimd/wrangler.example.toml
-
 # Database
 .dynamodb/
 
@@ -103,5 +95,4 @@ apps/url2aimd/wrangler.toml
 ai-doc/
 .codex/
 .claude/
-
-wrangler.toml
+openspec/*
