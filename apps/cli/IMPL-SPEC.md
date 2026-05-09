@@ -1,16 +1,16 @@
-# `@mda/cli` — reference implementation specification
+# `@markdown-ai/cli` — reference implementation specification
 
 > **Status:** Scaffold (v1.0.0-rc.1 freeze; implementation matures across rc.N)
 > **Audience:** Implementers of the MDA reference CLI and of independent compatible compilers/validators.
 > **Spec dependency:** [`spec/v1.0/`](../../spec/v1.0/) is normative. This document is informative architecture for the reference implementation.
 
-The reference implementation is published as `@mda/cli` on npm, written in TypeScript, and lives in this directory tree (`packages/mda/`). It is the only package the spec endorses. Independent implementations are welcome and held to the same conformance suite.
+The reference implementation is published as `@markdown-ai/cli` on npm, written in TypeScript, and lives in this directory tree (`apps/cli/`). It is the only package the spec endorses. Independent implementations are welcome and held to the same conformance suite.
 
 ---
 
 ## 1. Scope
 
-What `@mda/cli` MUST do at v1.0.0:
+What `@markdown-ai/cli` MUST do at v1.0.0:
 
 - **Parse** a `.mda` source file: extract YAML frontmatter, body, footnote-encoded relationships.
 - **Validate** any `.mda` source against `schemas/frontmatter-source.schema.json`.
@@ -21,7 +21,7 @@ What `@mda/cli` MUST do at v1.0.0:
 - **Verify** signatures and integrity against operator-supplied policy.
 - **Run** the conformance suite at `conformance/` and report pass/fail per fixture.
 
-What `@mda/cli` MUST NOT do at v1.0.0:
+What `@markdown-ai/cli` MUST NOT do at v1.0.0:
 
 - Edit body prose for size budgets (the compiler is structural, not editorial).
 - Project vendor namespaces into sibling files (cut from v1.0).
@@ -54,7 +54,7 @@ Every subcommand:
 ## 3. Module layout (planned)
 
 ```
-packages/mda/
+apps/cli/
 ├── src/
 │   ├── parse/        # frontmatter + body + footnote extraction
 │   ├── schema/       # ajv loader, registry of target schemas
@@ -101,7 +101,7 @@ The implementation MAY ship before `v1.0.0` final under the rc tag; users opt in
 | JCS canonicalization | `@truestamp/canonify` | RFC 8785. |
 | Sigstore client | `sigstore-js` | Fulcio + Rekor. |
 | did:web fetcher | `node:fetch` + `node:crypto` | No third-party dep. |
-| CLI framework | `commander` or `citty` | TBD; pick one and stick. |
+| CLI framework | `commander` | Stable subcommand API; sufficient for v1.0. |
 
 All deps MUST be Apache-2.0 / MIT / BSD / ISC compatible.
 
