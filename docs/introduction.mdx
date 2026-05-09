@@ -45,7 +45,7 @@ A `.mda` source with only the open-standard frontmatter compiles unchanged into 
 MDA artifacts may be produced three ways. They're equivalent under validation.
 
 1. **Agent mode** — an AI agent writes the `.md` directly. The primary near-term use case.
-2. **Human mode** — a human writes the `.md` directly, with `sha256sum` and `cosign`.
+2. **Human mode** — a human writes the `.md` directly, then adds integrity and signs it with a DSSE-capable signing path.
 3. **Compiled mode** — an author writes a `.mda` source; the MDA compiler emits one or more `.md` outputs.
 
 Whichever path you take, the artifact is judged against the same JSON Schema 2020-12 target schema and the same conformance suite. There's no second code path for "this came from an agent."
@@ -69,7 +69,7 @@ Whichever path you take, the artifact is judged against the same JSON Schema 202
 
 ## Status, honestly
 
-v1.0 ships the **contract**, not the entire ecosystem around it. What works today: you author a `.mda`, compile it to one or more conforming `.md` outputs, and validate them against the target JSON Schemas and the 35-fixture conformance suite.
+v1.0 ships the **contract**, not the entire ecosystem around it. What works today: you author a `.mda`, compile it to one or more conforming `.md` outputs, and validate them against the target JSON Schemas and the conformance suite.
 
 What's still being built: a bundled signature verifier, a working dependency resolver, a central artifact registry, a graph indexer, harnesses that route through `requires`. The `.mda` you write today still produces conforming `.md` outputs that load in every runtime listed above.
 

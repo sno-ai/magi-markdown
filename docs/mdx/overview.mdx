@@ -49,7 +49,7 @@ Spec sections: [§08 Integrity](https://github.com/sno-ai/mda/blob/main/spec/v1.
 MDA artifacts may be produced three ways. They're equivalent under validation.
 
 1. **Agent mode** — an AI agent writes the `.md` directly. The primary near-term use case. The v1.0 contract requires an LLM with only the spec in context to be able to produce conforming output.
-2. **Human mode** — a human writes the `.md` directly with `sha256sum` and `cosign`. See [`docs/manual-workflow.md`](https://github.com/sno-ai/mda/blob/main/docs/manual-workflow.md).
+2. **Human mode** — a human writes the `.md` directly with standard hashing and DSSE-capable signing tools. See [`docs/create-sign-verify-mda.md`](https://github.com/sno-ai/mda/blob/main/docs/create-sign-verify-mda.md).
 3. **Compiled mode** — an author writes a `.mda` source; the MDA compiler emits one or more `.md` outputs.
 
 Whichever path you take, the artifact is judged against the same JSON Schema 2020-12 target schema, the same conformance suite, and the same cross-field check that `signatures[].payload-digest` equals `integrity.digest`. There's no second code path for "this came from an agent."
@@ -59,7 +59,7 @@ Whichever path you take, the artifact is judged against the same JSON Schema 202
 - **One source of truth.** Stop maintaining four near-identical files.
 - **A real dependency graph.** Pin versions and content digests in frontmatter. The resolver refuses load when a candidate's digest doesn't match.
 - **Typed relationships, not prose.** Knowledge-graph and RAG indexers have something machine-readable to traverse.
-- **Verifiable trust at load.** Sigstore-anchored signatures with operator-controlled OIDC identity allow-lists.
+- **Verifiable trust at load.** Integrity checks and signatures that must match an operator trust policy.
 - **Strict validation early.** JSON Schema rejects "almost conformant" artifacts before they ship, instead of letting them silently drift in a runtime.
 - **Open spec.** Vendor-neutral. Per-vendor extensions live under reserved namespaces. Loaders read only their own namespace.
 
@@ -67,7 +67,7 @@ Whichever path you take, the artifact is judged against the same JSON Schema 202
 
 v1.0 ships the **contract**, not the entire ecosystem around it.
 
-What works today: you can author a `.mda`, compile it to one or more conforming `.md` outputs, and validate them against the JSON Schema target schemas and the 35-fixture conformance suite.
+What works today: you can author a `.mda`, compile it to one or more conforming `.md` outputs, and validate them against the JSON Schema target schemas and the conformance suite.
 
 What's still being built: a bundled signature verifier, a working dependency resolver, a central artifact registry, a graph indexer, and harnesses that route through `metadata.mda.requires`. The `.mda` you write today still produces conforming `.md` outputs that load in every runtime listed above.
 

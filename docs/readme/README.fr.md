@@ -64,12 +64,12 @@ Pour la version longue, deux documents creusent le sujet. Tous deux rattachent c
 Les artefacts MDA peuvent être produits de trois manières. Toutes équivalentes du point de vue de la validation.
 
 1. **Mode agent** — un agent IA écrit directement le `.md`. Le cas d'usage principal à court terme.
-2. **Mode humain** — un humain écrit directement le `.md`, avec `sha256sum` et `cosign`.
+2. **Mode humain** — un humain écrit directement le `.md`, ajoute l'integrity, puis signe avec un chemin de signature compatible DSSE/Rekor.
 3. **Mode compilé** — un auteur écrit une source `.mda` ; le compilateur MDA en émet une ou plusieurs sorties `.md`.
 
 Quel que soit le chemin, l'artefact est jugé sur le même target schema JSON Schema 2020-12 et sur la même suite de conformance. Il n'y a pas de second chemin de code pour « ça vient d'un agent ».
 
-Voir [`docs/manual-workflow.md`](../../docs/manual-workflow.md) pour les chemins manuel et écrit-par-agent sans la CLI de référence, et [`spec/v1.0/00-overview.md §0.5–§0.6`](../../spec/v1.0/00-overview.md) pour l'énoncé normatif des priorités et des modes.
+Voir [`docs/create-sign-verify-mda.md`](../../docs/create-sign-verify-mda.md) pour les chemins manuel et écrit-par-agent sans la CLI de référence, et [`spec/v1.0/00-overview.md §0.5–§0.6`](../../spec/v1.0/00-overview.md) pour l'énoncé normatif des priorités et des modes.
 
 ## Exemple minimal
 
@@ -127,8 +127,9 @@ La spec normative MDA Open Spec se trouve dans [**SPEC.md**](../../SPEC.md) → 
 - [§10 Capabilities](../../spec/v1.0/10-capabilities.md) — `metadata.mda.requires`
 - [§11 Implementer's Guide](../../spec/v1.0/11-implementer-guide.md) (informatif)
 - [§12 Sigstore tooling integration](../../spec/v1.0/12-sigstore-tooling.md) (informatif)
+- [§13 Trusted Runtime Profile](../../spec/v1.0/13-trusted-runtime.md) — vérification de production et trust policy
 
-Les JSON Schemas sont dans [`schemas/`](../../schemas/) — `frontmatter-source`, `frontmatter-skill-md`, `frontmatter-agents-md`, `frontmatter-mcp-server-md`, `relationship-footnote`, plus le `_defs/` partagé pour `integrity`, `signature`, `requires`, `depends-on` et `version-range`. Les fixtures de conformance et le runner de validation sont dans [`conformance/`](../../conformance/) (`node scripts/validate-conformance.mjs`).
+Les JSON Schemas sont dans [`schemas/`](../../schemas/) — `frontmatter-source`, `frontmatter-skill-md`, `frontmatter-agents-md`, `frontmatter-mcp-server-md`, `relationship-footnote`, `mda-trust-policy`, plus le `_defs/` partagé pour `integrity`, `signature`, `requires`, `depends-on` et `version-range`. Les fixtures de conformance et le runner de validation sont dans [`conformance/`](../../conformance/) (`node scripts/validate-conformance.mjs`).
 
 ## Implémentation de référence
 
@@ -140,11 +141,11 @@ La CLI TypeScript se trouve dans [`packages/mda/`](../../packages/mda/) (paquet 
 
 v1.0 livre le **contrat**, pas tout l'écosystème qui l'entoure.
 
-**Ce qui marche aujourd'hui :** tu peux écrire un `.mda`, le compiler vers une ou plusieurs sorties `.md` conformes, et les valider contre les JSON Schemas cibles et la suite de conformance à 35 fixtures.
+**Ce qui marche aujourd'hui :** tu peux écrire un `.mda`, le compiler vers une ou plusieurs sorties `.md` conformes, et les valider contre les JSON Schemas cibles et la suite de conformance.
 
 **Ce qui reste à construire :**
 
-- Un verifier groupé pour les signatures n'est pas encore livré. Pour l'instant, les opérateurs assemblent eux-mêmes `cosign` et une bibliothèque JCS.
+- Un verifier groupé pour les signatures n'est pas encore livré. Pour l'instant, les opérateurs assemblent une bibliothèque JCS avec des outils Sigstore de signature et vérification compatibles DSSE/Rekor.
 - Un resolver de dépendances opérationnel et un registre central d'artefacts n'existent pas encore.
 - Un indexeur de graphe qui consomme `metadata.mda.relationships` n'est pas livré.
 - Aucun harness multi-agents de 2026 connu ne route aujourd'hui via `metadata.mda.requires`.

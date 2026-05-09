@@ -83,9 +83,9 @@ Spec section: [§03 Relationships](https://github.com/sno-ai/mda/blob/main/spec/
 
 A reproducible content digest plus DSSE-enveloped signatures, both carried in frontmatter. Lets a verifier or operator make a load-time trust decision instead of an unsigned-content assumption.
 
-**Integrity.** `metadata.mda.integrity.digest` is the JCS-canonicalized hash of the canonical bytes of the artifact (with multi-file boundary literals for skills that bundle scripts, references, or assets). Self-describing format: `<algorithm>:<hex>`. The same format is used in `signatures[].payload-digest` and `depends-on.digest`.
+**Integrity.** Top-level `integrity.digest` is the JCS-canonicalized hash of the canonical bytes of the artifact (with multi-file boundary literals for skills that bundle scripts, references, or assets). Self-describing format: `<algorithm>:<hex>`. The same format is used in `signatures[].payload-digest` and `depends-on.digest`.
 
-**Signatures.** `metadata.mda.signatures[]` carries DSSE PAE-enveloped signatures. Sigstore OIDC keyless is the default — the entry stores `rekor-log-id`, `rekor-log-index`, and `key-id = "fulcio:<sha256-of-cert>"`. A verifier rederives the digest, looks up Rekor, verifies inclusion against the log root, verifies the Fulcio certificate chain, and applies an OIDC identity allow-list against operator policy. The `did:web` + `mda-keys.json` air-gap fallback covers cases where Sigstore reachability cannot be assumed.
+**Signatures.** Top-level `signatures[]` carries DSSE PAE-enveloped signatures. Sigstore OIDC keyless is the default — the entry stores `rekor-log-id`, `rekor-log-index`, and `key-id = "fulcio:<sha256-of-cert>"`. A verifier rederives the digest, looks up Rekor, verifies inclusion against the log root, verifies the Fulcio certificate chain and signature, and applies the operator trust policy. The `did:web` + `mda-keys.json` air-gap fallback covers cases where Sigstore reachability cannot be assumed.
 
 **Cross-field check.** The conformance runner enforces that every `signatures[].payload-digest` equals `integrity.digest` byte-for-byte (§07-2.1). Multi-signature, signed third-party countersignatures, and operator-policy hooks are specified in §09-6 and §09-7.
 
@@ -99,7 +99,7 @@ Spec sections: [§08 Integrity](https://github.com/sno-ai/mda/blob/main/spec/v1.
 
 3. **Cross-field semantic checks.** The conformance runner enforces `signatures[].payload-digest == integrity.digest` byte-for-byte and validates the §02-1.1 frontmatter-extraction edge cases (BOM strip, CRLF normalization, body-with-`---`-horizontal-rule, empty body, unterminated frontmatter, invalid UTF-8, body-only files at frontmatter-required targets).
 
-4. **Verification (optional).** If signatures are present and verification is wired to operator policy: rederive the integrity digest, equality-check it against `signatures[].payload-digest`, look up Rekor inclusion, verify the Fulcio certificate chain, apply the OIDC identity allow-list.
+4. **Verification.** Local/dev consumers may skip verification. Production trusted-runtime requires `integrity` and `signatures[]`: rederive the integrity digest, equality-check it against `signatures[].payload-digest`, look up Rekor inclusion, verify the Fulcio certificate chain and signature, then apply the operator trust policy.
 
 5. **Use.** Capability declarations (`metadata.mda.requires`) inform routing and activation. Dependency edges (`metadata.mda.depends-on`) inform resolution. Relationship edges (`metadata.mda.relationships`) populate graph indexers. The Markdown body is rendered for human consumption. Frontmatter, footnote-relationship JSON, and signature blocks are typically omitted from final user-facing views.
 
@@ -130,4 +130,4 @@ Spec sections: [§01 Source and output](https://github.com/sno-ai/mda/blob/main/
 
 - [Specification](/mdx/specification) — the normative entry point with links to every §.
 - [Quickstart](/quickstart) — author a minimal `.mda` and compile it.
-- [Manual workflow](https://github.com/sno-ai/mda/blob/main/docs/manual-workflow.md) — hand-author and sign without the reference CLI.
+- [Create, sign, and verify MDA](https://github.com/sno-ai/mda/blob/main/docs/create-sign-verify-mda.md) — hand-author and sign without the reference CLI.
