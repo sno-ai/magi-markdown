@@ -64,12 +64,12 @@ MDA 把这些信息放进了 frontmatter 和脚注里，形态可以用 JSON Sch
 MDA 产物可以通过三种方式产出，在校验层面它们等价。
 
 1. **Agent 模式** —— AI Agent 直接写出 `.md`。短期内的主要场景。
-2. **Human 模式** —— 人直接写 `.md`，配合 `sha256sum` 和 `cosign`。
+2. **Human 模式** —— 人直接写 `.md`，再加上 integrity，并用能产生 DSSE/Rekor 输出的签名流程签名。
 3. **Compiled 模式** —— 作者写 `.mda` 源码，由 MDA 编译器产出一个或多个 `.md`。
 
 不论走哪条路，产物都按同一份 JSON Schema 2020-12 目标 schema 和同一套一致性测试集来评判。不存在一条专给"这是 Agent 写的"开的二等代码路径。
 
-不依赖参考 CLI 的人工流程和 Agent 直写流程见 [`docs/manual-workflow.md`](../../docs/manual-workflow.md)；优先级与模式的规范性陈述见 [`spec/v1.0/00-overview.md §0.5–§0.6`](../../spec/v1.0/00-overview.md)。
+不依赖参考 CLI 的人工流程和 Agent 直写流程见 [`docs/create-sign-verify-mda.md`](../../docs/create-sign-verify-mda.md)；优先级与模式的规范性陈述见 [`spec/v1.0/00-overview.md §0.5–§0.6`](../../spec/v1.0/00-overview.md)。
 
 ## 最小示例
 
@@ -127,8 +127,9 @@ metadata:
 - [§10 Capabilities](../../spec/v1.0/10-capabilities.md) —— `metadata.mda.requires`
 - [§11 Implementer's Guide](../../spec/v1.0/11-implementer-guide.md)（参考性）
 - [§12 Sigstore tooling integration](../../spec/v1.0/12-sigstore-tooling.md)（参考性）
+- [§13 Trusted Runtime Profile](../../spec/v1.0/13-trusted-runtime.md) —— 生产环境校验模式与信任策略
 
-JSON Schema 位于 [`schemas/`](../../schemas/) —— `frontmatter-source`、`frontmatter-skill-md`、`frontmatter-agents-md`、`frontmatter-mcp-server-md`、`relationship-footnote`，以及共享的 `_defs/`，包含 `integrity`、`signature`、`requires`、`depends-on` 和 `version-range`。一致性测试用例与校验器位于 [`conformance/`](../../conformance/)（`node scripts/validate-conformance.mjs`）。
+JSON Schema 位于 [`schemas/`](../../schemas/) —— `frontmatter-source`、`frontmatter-skill-md`、`frontmatter-agents-md`、`frontmatter-mcp-server-md`、`relationship-footnote`、`mda-trust-policy`，以及共享的 `_defs/`，包含 `integrity`、`signature`、`requires`、`depends-on` 和 `version-range`。一致性测试用例与校验器位于 [`conformance/`](../../conformance/)（`node scripts/validate-conformance.mjs`）。
 
 ## 参考实现
 
@@ -140,11 +141,11 @@ TypeScript CLI 位于 [`packages/mda/`](../../packages/mda/)（npm 包：`@mda/c
 
 v1.0 交付的是**契约**，不是围绕它的整个生态。
 
-**今天就能用的部分：** 你可以写一份 `.mda`、把它编译成一个或多个合规的 `.md`，并对照目标 JSON Schema 和 35 个用例的一致性测试集进行校验。
+**今天就能用的部分：** 你可以写一份 `.mda`、把它编译成一个或多个合规的 `.md`，并对照目标 JSON Schema 和一致性测试集进行校验。
 
 **还在建设中的部分：**
 
-- 内置的签名验签器尚未发布。运维当前需要自己把 `cosign` 和某个 JCS 库拼起来用。
+- 内置的签名验签器尚未发布。运维当前需要把 JCS 库和能处理 DSSE/Rekor 的 Sigstore 签名/验签工具接起来用。
 - 完整可用的依赖解析器和中心化产物注册表尚不存在。
 - 消费 `metadata.mda.relationships` 的图索引器尚未发布。
 - 目前还没有任何已知的 2026 年多 Agent harness 通过 `metadata.mda.requires` 做路由。
