@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0-rc.3] - 2026-05-09
+
+Reference CLI release candidate. This release promotes the TypeScript CLI from
+repo implementation work to the shipped npm package `@markdown-ai/cli`.
+
+### CLI
+
+- Published the `mda` command for authoring, validating, compiling,
+  canonicalizing, integrity-checking, and conformance-checking MDA artifacts.
+- Refreshed the npm-facing package README and metadata so humans and AI agents
+  can discover the command surface from the npm package page.
+- Kept the MDA file-format and conformance contract unchanged from rc.2; rc.3's
+  primary change is the installable reference CLI.
+
 ## [1.0.0-rc.2] - 2026-05-09
 
 Security hardening release for signed MDA and production trusted-runtime loading. This release candidate updates the conformance contract because rc.1 left trust-policy and runtime verification behavior too easy to implement unsafely.
@@ -35,7 +49,7 @@ Security hardening release for signed MDA and production trusted-runtime loading
 
 ## [1.0.0-rc.1] - 2026-05-07
 
-First release-candidate baseline of the MDA v1.0 specification. `1.0.0-rc.2` supersedes this baseline for signed-MDA trusted-runtime behavior. The final `1.0.0` lands when `@markdown-ai/cli` passes 100 % of the conformance suite.
+First release-candidate baseline of the MDA v1.0 specification. `1.0.0-rc.2` superseded this baseline for signed-MDA trusted-runtime behavior. `1.0.0-rc.3` adds the shipped `@markdown-ai/cli` reference package. The final `1.0.0` lands when `@markdown-ai/cli` passes 100 % of the conformance suite.
 
 ### Specification baseline
 

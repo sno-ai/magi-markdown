@@ -1,6 +1,6 @@
 # `@markdown-ai/cli` — reference implementation specification
 
-> **Status:** Scaffold (v1.0.0-rc.1 freeze; implementation matures across rc.N)
+> **Status:** Implemented reference CLI (v1.0.0-rc.3; implementation continues to mature toward v1.0.0)
 > **Audience:** Implementers of the MDA reference CLI and of independent compatible compilers/validators.
 > **Spec dependency:** [`spec/v1.0/`](../../spec/v1.0/) is normative. This document is informative architecture for the reference implementation.
 
@@ -31,7 +31,7 @@ What `@markdown-ai/cli` MUST NOT do at v1.0.0:
 
 ---
 
-## 2. CLI surface (planned)
+## 2. CLI surface
 
 ```
 mda                                                       # print full help
@@ -146,4 +146,4 @@ These remain candidates for future minors (`v1.1+`) governed by the registry / R
 
 ## 9. Bootstrap status
 
-This document is a scaffold. The `src/` tree is empty as of v1.0.0-rc.1 freeze; the canonical conformance runner remains [`scripts/validate-conformance.mjs`](../../scripts/validate-conformance.mjs) until the TypeScript reference is online. Contributors picking up the implementation should start with the `parse/` and `schema/` modules, port the `scripts/validate-conformance.mjs` logic into `src/conformance/`, then layer compile / canonical / integrity / sign / verify on top.
+As of v1.0.0-rc.3, the TypeScript CLI is implemented under `src/` and publishes as `@markdown-ai/cli`. The legacy runner at [`scripts/validate-conformance.mjs`](../../scripts/validate-conformance.mjs) remains useful as an independent check, but `mda conformance` is the reference CLI entry point.

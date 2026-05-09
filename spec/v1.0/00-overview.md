@@ -1,7 +1,7 @@
 # MDA Open Spec — Overview
 
 > **Version:** v1.0
-> **Status:** Draft (current release candidate: v1.0.0-rc.2; final on v1.0.0)
+> **Status:** Draft (current release candidate: v1.0.0-rc.3; final on v1.0.0)
 > **Date:** 2026-05-09
 > **Canonical URL:** [https://mda.sno.dev/spec/v1.0/](https://mda.sno.dev/spec/v1.0/)
 > **License:** This specification (`spec/`) is licensed under [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/). Reference schemas (`schemas/`) and tooling are licensed under [Apache-2.0](../../LICENSE).
@@ -114,7 +114,7 @@ Other targets (SKILL.md, CLAUDE.md) are equally supported but are not AAIF-gover
 MDA v1.0 is the only major+minor planned. Future development follows SemVer:
 
 - **Patch releases** (`v1.0.1`, `v1.0.2`, …) deliver editorial fixes, schema bug fixes, and reference-implementation improvements that do not change the conformance contract. They are recorded in `CHANGES.md` when published.
-- **Pre-release cycle within v1.0**: the current release candidate is `v1.0.0-rc.2`. The final `v1.0.0` release lands when the reference implementation passes 100% conformance.
+- **Pre-release cycle within v1.0**: the current release candidate is `v1.0.0-rc.3`. The final `v1.0.0` release lands when the reference implementation passes 100% conformance.
 - **Minor releases** (`v1.1.0`) ship new fields or new normative behavior that does not break existing v1.0 artifacts. The MDA project intentionally does not pre-plan v1.1 features; they emerge from observed adoption.
 - **Major releases** (`v2.0.0`) ship breaking changes. They land in a new directory (`spec/v2.0/`), and previous versions remain immutable at their canonical URLs.
 

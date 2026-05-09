@@ -1,6 +1,6 @@
 # What MDA v1.0 doesn't ship
 
-v1.0 is in release-candidate review at `v1.0.0-rc.2`. That candidate covers the spec, the target schemas, the integrity rules, the signature envelope, the trusted-runtime profile, the trust-policy schema, the capability declarations, and the conformance suite.
+v1.0 is in release-candidate review at `v1.0.0-rc.3`. That candidate covers the spec, the target schemas, the integrity rules, the signature envelope, the trusted-runtime profile, the trust-policy schema, the capability declarations, the conformance suite, and the shipped TypeScript reference CLI at `@markdown-ai/cli`.
 
 The consumer side is a different story. The verifiers, resolvers, indexers, harnesses — the things that actually enforce or route through that contract — are mostly nascent. This page is the gap.
 

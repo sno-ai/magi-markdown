@@ -133,7 +133,7 @@ JSON Schemas live in [`schemas/`](schemas/) — `frontmatter-source`, `frontmatt
 
 ## Reference implementation
 
-The TypeScript CLI lives in [`apps/cli/`](apps/cli/) (npm package: `@markdown-ai/cli`). The architecture spec is [`apps/cli/IMPL-SPEC.md`](apps/cli/IMPL-SPEC.md). The CLI matures across `v1.0.0-rc.N` tags. The final `1.0.0` lands when the CLI passes 100% of the conformance suite.
+The TypeScript CLI lives in [`apps/cli/`](apps/cli/) (npm package: `@markdown-ai/cli`). The architecture spec is [`apps/cli/IMPL-SPEC.md`](apps/cli/IMPL-SPEC.md). The current release candidate is `v1.0.0-rc.3`, whose primary change is the shipped npm CLI. The final `1.0.0` lands when the CLI passes 100% of the conformance suite.
 
 Use the CLI as an authoring, CI, and agent-side checking tool, not as an application runtime dependency. The clean boundary is simple: `@markdown-ai/cli` helps humans and agents create, validate, compile, canonicalize, and integrity-check MDA artifacts before they are trusted or shipped; runtime libraries should keep their own lightweight loaders and verifier hooks instead of shelling out to `mda`. An AI agent may still run `mda` during a task as an external gate before it edits, compiles, or acts on an artifact, especially with `--json` and explicit `--target`. See [`apps/cli/HOW-TO-USE.md`](apps/cli/HOW-TO-USE.md) for the practical command flow.
 
