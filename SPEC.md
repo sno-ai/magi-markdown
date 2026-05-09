@@ -69,7 +69,7 @@ MDA is an independent project. It actively serves AAIF (Linux Foundation Agentic
 MDA v1.0 is the only major+minor planned. Future development:
 
 - **Patch releases** (`v1.0.1`, `v1.0.2`, …) deliver editorial fixes and reference-implementation maturity. They do not change the conformance contract.
-- **Pre-release cycle**: the current release candidate is `v1.0.0-rc.2`. The final `v1.0.0` lands when the reference implementation passes 100% conformance.
+- **Pre-release cycle**: the current release candidate is `v1.0.0-rc.3`. The final `v1.0.0` lands when the reference implementation passes 100% conformance.
 - **Minor releases** (`v1.1.0`) are not pre-planned. They emerge from observed adoption.
 - **Major releases** (`v2.0.0`) ship breaking changes in a new directory; previous versions remain immutable at their canonical URLs.
 

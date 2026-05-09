@@ -1,14 +1,14 @@
 {
   "name": "@markdown-ai/cli",
-  "version": "1.0.0-rc.2",
-  "description": "Reference CLI for Markdown AI / MDA artifacts.",
+  "version": "1.0.0-rc.3",
+  "description": "MDA command-line tools for authoring, validating, compiling, and checking Markdown AI artifacts.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/sno-ai/mda.git",
     "directory": "apps/cli"
   },
-  "homepage": "https://github.com/sno-ai/mda/tree/main/apps/cli",
+  "homepage": "https://github.com/sno-ai/mda",
   "bugs": {
     "url": "https://github.com/sno-ai/mda/issues"
   },
@@ -28,8 +28,14 @@
   "keywords": [
     "mda",
     "markdown-ai",
+    "markdown",
+    "ai-agent",
     "agent",
     "cli",
+    "skill",
+    "agents-md",
+    "mcp",
+    "integrity",
     "conformance"
   ],
   "engines": {
