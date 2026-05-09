@@ -26,7 +26,7 @@ A consumer or validator runs five steps on every artifact:
 2. **Schema validation.** The target schema is selected by the filename literal — `SKILL.md`, `AGENTS.md`, `MCP-SERVER.md`, or `CLAUDE.md`. JSON Schema 2020-12 with `unevaluatedProperties: false`. Unknown top-level fields fail fast.
 3. **Cross-field semantic checks.** The conformance runner enforces `signatures[].payload-digest == integrity.digest` byte-for-byte and the §02-1.1 edge cases.
 4. **Integrity rederivation (if signed).** JCS-canonicalize the canonical bytes (with multi-file boundary literal for skills bundling scripts/references/assets), hash, compare to declared `integrity.digest`.
-5. **Signature verification (if signed and policy-wired).** Verify the DSSE PAE envelope. For Sigstore signatures: look up Rekor inclusion, verify the Fulcio certificate chain, apply an OIDC identity allow-list against operator policy. For `did:web`: resolve `mda-keys.json`, verify the signature against the listed keys.
+5. **Signature verification (if signed and policy-wired).** Verify the DSSE PAE envelope. For Sigstore signatures: look up Rekor inclusion, verify the Fulcio certificate chain and signature, then apply the operator trust policy. For `did:web`: match the signer domain against policy before fetching `mda-keys.json`, then verify the signature against the listed keys.
 
 ## TypeScript: minimal validator
 
@@ -155,19 +155,19 @@ Self-describing format: the same `<algorithm>:<hex>` is used in `signatures[].pa
 
 ## Verifying Sigstore signatures
 
-For each entry in `signatures[]` where `signer-method` is `sigstore-keyless` (§09-4.2):
+For each entry in `signatures[]` where `signer` starts with `sigstore-oidc:` (§09-4.2):
 
-1. Look up the entry in Rekor by `rekor-log-id` and `rekor-log-index`. Verify inclusion against the log root.
-2. Verify the Fulcio certificate chain to the Sigstore root of trust.
-3. Verify the DSSE PAE envelope signature with the leaf certificate public key.
-4. Apply the OIDC identity allow-list defined in operator policy.
-5. Confirm `payload-digest == integrity.digest`. The conformance runner enforces this; a verifier should rely on it explicitly, not inherit it from upstream validation.
+1. Confirm `payload-digest == integrity.digest`. The conformance runner enforces this; a verifier should rely on it explicitly, not inherit it from upstream validation.
+2. Look up the entry in Rekor by `rekor-log-id` and `rekor-log-index`. Verify inclusion against the log root.
+3. Verify the Fulcio certificate chain to the Sigstore root of trust.
+4. Verify the DSSE PAE envelope signature with the leaf certificate public key.
+5. Apply the operator trust policy to the issuer and subject.
 
-`@mda/cli` and the verifier helpers in `packages/mda/` glue `cosign` and a JCS helper. For the manual workflow with just `cosign` and `sha256sum`, see [`docs/manual-workflow.md`](https://github.com/sno-ai/mda/blob/main/docs/manual-workflow.md).
+`@mda/cli` and the verifier helpers in `packages/mda/` glue a JCS helper and DSSE-capable signing/verification helpers. For the create-sign-verify guide with standard hashing and DSSE-capable signing tools, see [`docs/create-sign-verify-mda.md`](https://github.com/sno-ai/mda/blob/main/docs/create-sign-verify-mda.md).
 
 ## Conformance suite
 
-The 35 fixtures at [`conformance/manifest.yaml`](https://github.com/sno-ai/mda/blob/main/conformance/manifest.yaml) bind every spec rule to a positive and negative fixture. Run them locally:
+The fixtures at [`conformance/manifest.yaml`](https://github.com/sno-ai/mda/blob/main/conformance/manifest.yaml) bind spec rules to positive and negative fixtures. Run them locally:
 
 ```bash
 node scripts/validate-conformance.mjs
@@ -186,6 +186,6 @@ The contract is locked. The consumer-side ecosystem that enforces or routes thro
 ## Next
 
 - [Specification](/mdx/specification) — entry point with every §.
-- [Manual workflow](https://github.com/sno-ai/mda/blob/main/docs/manual-workflow.md) — hand-author and sign without the reference CLI.
+- [Create, sign, and verify MDA](https://github.com/sno-ai/mda/blob/main/docs/create-sign-verify-mda.md) — hand-author and sign without the reference CLI.
 - [Reference implementation](https://github.com/sno-ai/mda/tree/main/packages/mda) — TypeScript CLI source.
 - [IMPL-SPEC](https://github.com/sno-ai/mda/blob/main/packages/mda/IMPL-SPEC.md) — reference-implementation architecture.

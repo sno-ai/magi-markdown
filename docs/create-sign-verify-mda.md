@@ -90,12 +90,13 @@ To compute the digest, use the canonical bytes defined in §08:
    frontmatter.
 2. Convert the remaining frontmatter to JSON.
 3. Canonicalize that JSON with JCS (RFC 8785).
-4. Normalize the Markdown body to LF line endings and one final newline.
+4. Normalize the Markdown body to LF line endings and append one final newline,
+   unless the body is empty.
 5. Hash the exact canonical byte sequence with SHA-256.
 6. Put the prefixed digest back into `integrity.digest`.
 
 If a tool provides `mda canonicalize`, use that instead of doing the steps by
-hand.
+hand. Do not hash the raw `.mda` file; hash the canonical bytes only.
 
 For `MCP-SERVER.md`, the digest covers both the Markdown file and the
 `mcp-server.json` sidecar. See §08-3.4.
@@ -147,7 +148,6 @@ For a GitHub Actions release:
 ```json
 {
   "version": 1,
-  "minSignatures": 1,
   "trustedSigners": [
     {
       "type": "sigstore-oidc",
@@ -156,8 +156,7 @@ For a GitHub Actions release:
     }
   ],
   "rekor": {
-    "url": "https://rekor.sigstore.dev",
-    "required": true
+    "url": "https://rekor.sigstore.dev"
   }
 }
 ```
@@ -167,7 +166,6 @@ For a human maintainer signing with a Google account:
 ```json
 {
   "version": 1,
-  "minSignatures": 1,
   "trustedSigners": [
     {
       "type": "sigstore-oidc",
@@ -176,19 +174,24 @@ For a human maintainer signing with a Google account:
     }
   ],
   "rekor": {
-    "url": "https://rekor.sigstore.dev",
-    "required": true
+    "url": "https://rekor.sigstore.dev"
   }
 }
 ```
 
 Do not trust a Sigstore issuer by itself. For example, GitHub Actions signs for
 many repositories. A production policy must match both the issuer and the
-subject.
+subject. For GitHub Actions, the subject usually starts with
+`repo:<owner>/<repo>:`; pin it to the repo and ref or workflow allowed to
+publish.
+
+Omit `minSignatures` unless you really need more than one distinct trusted
+signer identity. The default is `1`.
 
 ## 5. Verify before loading
 
-Production runtimes should use the trusted runtime profile:
+Production runtimes that claim MDA `trusted-runtime` must use the trusted
+runtime profile:
 
 ```sh
 mda verify --profile trusted-runtime \
@@ -202,11 +205,15 @@ That profile means:
 - at least one signature is required;
 - the content digest must be recomputed and match;
 - signatures are checked only after the digest matches;
-- at least one verified signature must match the trust policy;
+- at least `minSignatures` distinct verified signer identities must match the
+  trust policy (`1` by default);
 - if verification fails, the runtime must not load the new file.
 
 For long-running services, keep the previous verified config active when a
 refresh fails. On first startup, if there is no verified config, fail closed.
+
+The website, CDN, or cloud storage that serves the file does not need to
+understand MDA. It can host bytes. The runtime verifies before loading.
 
 ## 6. Use `did:web` only when needed
 
@@ -235,16 +242,12 @@ A `did:web` trust policy looks like this:
 ```json
 {
   "version": 1,
-  "minSignatures": 1,
   "trustedSigners": [
     {
       "type": "did-web",
       "domain": "tools.example.com"
     }
-  ],
-  "rekor": {
-    "required": false
-  }
+  ]
 }
 ```
 
@@ -270,7 +273,9 @@ When asking a coding agent to create or update an MDA file, give it this:
 Create or update this MDA artifact.
 
 Follow docs/create-sign-verify-mda.md.
-Use metadata.mda for MDA fields.
+Put MDA extension fields such as version/requires/depends-on under metadata.mda
+in compiled .md output.
+Keep integrity and signatures[] top-level.
 Quote versions and timestamps.
 If adding signatures, first add integrity, then sign the integrity object.
 For Sigstore, use a DSSE/Rekor dsse-v0.0.1 signing path. Do not use cosign

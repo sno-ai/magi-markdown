@@ -1,6 +1,6 @@
 # What MDA v1.0 doesn't ship
 
-v1.0 freezes the contract. The spec, the target schemas, the integrity rules, the signature envelope, the capability declarations, the 35-fixture conformance suite. All of that's locked at `v1.0.0-rc.1`.
+v1.0 is in release-candidate review at `v1.0.0-rc.2`. That candidate covers the spec, the target schemas, the integrity rules, the signature envelope, the trusted-runtime profile, the trust-policy schema, the capability declarations, and the conformance suite.
 
 The consumer side is a different story. The verifiers, resolvers, indexers, harnesses — the things that actually enforce or route through that contract — are mostly nascent. This page is the gap.
 
@@ -8,7 +8,7 @@ The consumer side is a different story. The verifiers, resolvers, indexers, harn
 
 1. **No central artifact registry** (§0.2). MDA does not host or mandate a registry of `.mda` artifacts. Resolution stays operator-defined.
 
-2. **No deployed verifier and no bundled verifier in v1.0.** Operators currently glue `cosign` plus a JCS library themselves to run integrity, signature, and Sigstore checks (§09-7).
+2. **No deployed verifier and no bundled verifier in v1.0.** Operators currently combine a JCS library with DSSE/Rekor-capable Sigstore signing and verification helpers to run integrity, signature, and Sigstore checks (§09-7).
 
 3. **No working v1.0 dependency resolver implementation.** Resolver behavior is normative (§03-3.3): refuse load on digest mismatch, prefer highest satisfying SemVer. The reference implementation matures across `v1.0.0-rc.N` tags. The final `1.0.0` releases when the conformance suite passes 100%.
 

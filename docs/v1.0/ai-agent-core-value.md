@@ -22,13 +22,13 @@ The catch: no shipped 2026 multi-agent harness is known to route through MDA `re
 
 ## 2. Verifiable trust at load time
 
-Before activating a signed third-party artifact, a consumer or verifier can rederive `integrity.digest` from the JCS-canonicalized canonical bytes (§08-3), require every `signatures[].payload-digest` to equal `integrity.digest` byte-for-byte (the cross-field semantic check enforced by the conformance runner, §07-2.1, §09-2), and verify the DSSE PAE envelope that binds each signature to its semantic payload type (§09-3). For Sigstore entries, the frontmatter stores `rekor-log-id`, `rekor-log-index`, and `key-id = "fulcio:<sha256-of-cert>"`. The verifier looks up Rekor, verifies inclusion against the log root, verifies the Fulcio certificate chain, and applies an OIDC identity allow-list (§09-4.2, §09-7). The `did:web` + `mda-keys.json` air-gap fallback covers cases where Sigstore reachability can't be assumed, with no transparency-log guarantee (§09-5).
+Before activating a signed third-party artifact, a consumer or verifier can rederive `integrity.digest` from the JCS-canonicalized canonical bytes (§08-3), require every `signatures[].payload-digest` to equal `integrity.digest` byte-for-byte (the cross-field semantic check enforced by the conformance runner, §07-2.1, §09-2), and verify the DSSE PAE envelope that binds each signature to its semantic payload type (§09-3). For Sigstore entries, the frontmatter stores `rekor-log-id`, `rekor-log-index`, and `key-id = "fulcio:<sha256-of-cert>"`. The verifier looks up Rekor, verifies inclusion against the log root, verifies the Fulcio certificate chain and signature, then applies the operator trust policy (§09-4.2, §09-7). The `did:web` + `mda-keys.json` air-gap fallback covers cases where Sigstore reachability can't be assumed, with no transparency-log guarantee (§09-5).
 
 The uniform self-describing `<algorithm>:<hex>` digest format applies across `integrity.digest`, `signatures[].payload-digest`, and `depends-on.digest` (§08-2). Multi-signature shapes and operator-policy hooks are in §09-6 and §09-7. The combination is unusual for an agent-format YAML: JCS canonicalization, DSSE PAE, runner-enforced cross-field equality, uniform digest format, Sigstore by default with did:web as fallback.
 
 Load-time trust becomes a verifiable policy decision instead of an unsigned-content assumption.
 
-What this depends on: verification actually running, and being wired to local policy. Sigstore-path verification depends on Fulcio and Rekor reachability. v1.0 doesn't bundle a verifier. Operators currently glue `cosign` and a JCS library themselves. Reserved Sigstore OIDC issuers in `REGISTRY.md` are recognition, not blanket trust.
+What this depends on: verification actually running, and being wired to local policy. Sigstore-path verification depends on Fulcio and Rekor reachability. v1.0 doesn't bundle a verifier. Operators currently combine a JCS library with DSSE/Rekor-capable Sigstore signing and verification helpers. Reserved Sigstore OIDC issuers in `REGISTRY.md` are recognition, not blanket trust.
 
 ---
 
@@ -56,11 +56,11 @@ None of this forces non-MDA runtimes to read MDA metadata beyond their existing 
 
 MDA's design priority is **P0 (AI-agent authorability) > P1 (human authorability) > P2 (tooling convenience)** (§0.5). The v1.0 contract requires an LLM with only the spec in context, no MDA tooling, and no examples from prior turns, to produce conforming output (§0.5, §0.6).
 
-Agent mode, Human mode, and Compiled mode are three equivalent authoring paths. Each one produces artifacts that are byte-equivalent to consumers and pass the same target-schema validation (§01-1). An agent-authored artifact and a compiler-emitted artifact get judged against the same normative contract: the same JSON Schema 2020-12 target schemas, the same `unevaluatedProperties: false` rejection of stray top-level fields, the same 35-fixture conformance suite with its negative-path fixtures and runner-enforced `payload-digest == integrity.digest` cross-field check (§01-4, §07-2, §07-2.1).
+Agent mode, Human mode, and Compiled mode are three equivalent authoring paths. Each one produces artifacts that are byte-equivalent to consumers and pass the same target-schema validation (§01-1). An agent-authored artifact and a compiler-emitted artifact get judged against the same normative contract: the same JSON Schema 2020-12 target schemas, the same `unevaluatedProperties: false` rejection of stray top-level fields, the same conformance suite with its negative-path fixtures and runner-enforced `payload-digest == integrity.digest` cross-field check (§01-4, §07-2, §07-2.1).
 
 A harness or validator can apply the same dispatch + validation pipeline regardless of how the artifact was produced. No second code path for "this came from an agent" versus "this came from a compiler."
 
-P0 is a design constraint and a conformance target. Not yet evidence from large-scale arbitrary LLM output in production. The 35-fixture suite at `conformance/manifest.yaml` covers positive and negative paths including signature/integrity equality. Compile-side fixtures remain future work (§07).
+P0 is a design constraint and a conformance target. Not yet evidence from large-scale arbitrary LLM output in production. The suite at `conformance/manifest.yaml` covers positive and negative paths including signature/integrity equality. Compile-side fixtures remain future work (§07).
 
 ---
 
