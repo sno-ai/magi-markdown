@@ -340,6 +340,16 @@ fixtures:
     rules: [§13-2, §13-4]
     description: A Sigstore signature with a trusted issuer but untrusted verified subject MUST reject.
 
+  - id: "45-trusted-runtime-malformed-policy"
+    path: valid/07-did-web-signed.mda
+    against: [schemas/frontmatter-source.schema.json]
+    semantic-checks: [signature-digest-equality, trusted-runtime-policy]
+    runtime-policy: invalid/45-runtime-policy-version-2.json
+    expected-error: trust-policy-violation
+    verdict: reject
+    rules: [§13-4]
+    description: A runtime policy that would match semantically but fails the trust-policy schema MUST reject before policy matching.
+
   # ─── invalid (output-side rejection — compiled .md against target schema) ─
   - id: "13-skill-output-mda-extended-toplevel"
     path: invalid/13-skill-output-mda-extended-toplevel.md
