@@ -31,7 +31,7 @@ Security hardening release for signed MDA and production trusted-runtime loading
 
 - Extended `scripts/validate-conformance.mjs` to validate raw JSON fixtures, enforce trusted-runtime semantic checks, match expected machine-readable errors, and test Sigstore policy matching using post-crypto `verified-identities`.
 - Added fixtures for issuer-only policy rejection, Sigstore without Rekor, did:web with Rekor, invalid payload-type suffix, trusted-runtime missing integrity/signature, duplicate signer threshold failure, untrusted `did:web` signer, trusted Sigstore signer, untrusted Sigstore subject, and did:web-only policy with Rekor.
-- Replaced the old manual workflow guide with `docs/create-sign-verify-mda.md`, focused on human create/sign/verify steps, local-dev vs production boundaries, trust-policy examples, and runtime verification.
+- Added `docs/create-sign-verify-mda.md`, focused on human create/sign/verify steps, local-dev vs production boundaries, trust-policy examples, and runtime verification.
 
 ## [1.0.0-rc.1] - 2026-05-07
 
@@ -61,7 +61,7 @@ First release-candidate baseline of the MDA v1.0 specification. `1.0.0-rc.2` sup
 - JSON Schemas (2020-12, `unevaluatedProperties: false`) for source frontmatter, every Tier-1 / Tier-2 target frontmatter, and shared `_defs/` (integrity, signature, requires, depends-on, version-range, metadata-namespaces, mda-keys, relationship-footnote).
 - Conformance suite: 24 fixtures (valid + invalid) bound to spec rule IDs in `conformance/manifest.yaml`; runner at `scripts/validate-conformance.mjs` enforces schema validity, the §02-1.1 frontmatter-extraction algorithm (BOM strip, CRLF normalization, body-with-`---`-horizontal-rule, empty body, unterminated frontmatter, invalid UTF-8, body-only files at frontmatter-required targets), and the cross-field signature/integrity equality rule.
 - `REGISTRY.md`: vendor namespaces, standard `requires` keys, reserved Sigstore OIDC issuers, reserved Rekor instances, reserved DSSE payload types.
-- `docs/manual-workflow.md`: hand-author and agent-author paths without the reference CLI.
+- `docs/create-sign-verify-mda.md`: human create/sign/verify workflow without requiring the reference CLI.
 - `apps/cli/IMPL-SPEC.md`: reference-implementation architecture (TypeScript, npm `@markdown-ai/cli`).
 
 ### Removed / not in v1.0

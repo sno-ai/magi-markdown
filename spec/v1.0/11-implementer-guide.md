@@ -102,6 +102,8 @@ function loadMdaArtifact(file_bytes, target, target_schema, options):
     # === Stage E: Signature verification (optional unless required by profile) ===
     if require_signatures and (not frontmatter.signatures or len(frontmatter.signatures) == 0):
         REJECT "missing-required-signature"
+    if require_signatures and not validateTrustPolicy(options.trustPolicy):
+        REJECT "trust-policy-violation"
 
     if (options.verifySignatures or require_signatures) and frontmatter.signatures:
         # Signatures prove who signed the declared digest. They do not prove the
@@ -111,6 +113,7 @@ function loadMdaArtifact(file_bytes, target, target_schema, options):
             REJECT "missing-required-integrity"
 
         trusted_signer_identities = set()
+        candidate_errors = []
 
         for sig in frontmatter.signatures:
             # §09-3.1 PAE envelope reconstruction. When sig.payload-type is
@@ -124,18 +127,27 @@ function loadMdaArtifact(file_bytes, target, target_schema, options):
             )
             if sig.signer starts with "sigstore-oidc:":
                 # §09-4.2 verification flow
-                rekor_entry = fetchRekorEntry(sig.rekor-log-id, sig.rekor-log-index)
+                rekor_entry = fetchRekorEntry(
+                    options.trustPolicy.rekor.url,
+                    sig.rekor-log-id,
+                    sig.rekor-log-index
+                )
                 if rekor_entry == null:
-                    REJECT "rekor-inclusion-failure"
+                    candidate_errors.add("rekor-inclusion-failure")
+                    continue
                 if rekor_entry.kind != "dsse-v0.0.1":
-                    REJECT "rekor-entry-type-mismatch"
+                    candidate_errors.add("rekor-entry-type-mismatch")
+                    continue
                 if not verifyRekorInclusion(rekor_entry, options.rekorRoots):
-                    REJECT "rekor-inclusion-failure"
+                    candidate_errors.add("rekor-inclusion-failure")
+                    continue
                 cert = extractFulcioCert(rekor_entry)
                 if not verifyFulcioChain(cert, options.sigstoreRoot):
-                    REJECT "fulcio-chain-failure"
+                    candidate_errors.add("fulcio-chain-failure")
+                    continue
                 if not verifyEcdsaOrEd25519(pae, sig.signature, cert.publicKey):
-                    REJECT "signature-verification-failure"
+                    candidate_errors.add("signature-verification-failure")
+                    continue
                 if trustPolicyMatches(
                     options.trustPolicy,
                     type = "sigstore-oidc",
@@ -150,16 +162,19 @@ function loadMdaArtifact(file_bytes, target, target_schema, options):
                 domain = parseDidWebDomain(sig.signer)
                 if domain == null:
                     REJECT "unknown-signer-method"
+                if not options.didWebVerifier:
+                    REJECT "trust-policy-violation"
                 if options.trustPolicy and not trustPolicyMatches(
                     options.trustPolicy,
                     type = "did-web",
                     domain = domain
                 ):
                     continue
-                keys = httpsGet("https://" + domain + "/.well-known/mda-keys.json")
+                keys = options.didWebVerifier.fetchKeys(domain)
                 key = lookupKeyById(keys, sig.key-id)
                 if not verifyEcdsaOrEd25519(pae, sig.signature, key.public-key):
-                    REJECT "signature-verification-failure"
+                    candidate_errors.add("signature-verification-failure")
+                    continue
                 if trustPolicyMatches(
                     options.trustPolicy,
                     type = "did-web",
@@ -171,6 +186,8 @@ function loadMdaArtifact(file_bytes, target, target_schema, options):
 
         min_signatures = options.trustPolicy?.minSignatures or options.minSignatures or 1
         if require_signatures and len(trusted_signer_identities) == 0:
+            if len(candidate_errors) > 0:
+                REJECT candidate_errors[0]
             REJECT "no-trusted-signature"
         if require_signatures and len(trusted_signer_identities) < min_signatures:
             REJECT "insufficient-trusted-signatures"
