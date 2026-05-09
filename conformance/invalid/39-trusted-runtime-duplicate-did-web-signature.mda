@@ -1,0 +1,25 @@
+---
+name: trusted-runtime-duplicate-did-web-signature
+description: Two valid-looking signatures from the same trusted did:web identity must count once.
+integrity:
+  algorithm: sha256
+  digest: "sha256:a4f9c0d2e8b3a16e9c01b8f3d2a5c7b14e9f8a3d6c2b1e7f0a8d4c3b9e2f1a05"
+signatures:
+  - signer: "did-web:tools.example.com"
+    key-id: "ed25519-9c4e7b"
+    payload-digest: "sha256:a4f9c0d2e8b3a16e9c01b8f3d2a5c7b14e9f8a3d6c2b1e7f0a8d4c3b9e2f1a05"
+    algorithm: ed25519
+    signature: "BASE64ILLUSTRATIVE=="
+  - signer: "did-web:tools.example.com"
+    key-id: "ed25519-9c4e7b"
+    payload-digest: "sha256:a4f9c0d2e8b3a16e9c01b8f3d2a5c7b14e9f8a3d6c2b1e7f0a8d4c3b9e2f1a05"
+    algorithm: ed25519
+    signature: "BASE64ILLUSTRATIVE=="
+metadata:
+  mda:
+    version: "1.0.0"
+---
+
+# Duplicate signer
+
+Duplicate entries do not satisfy a two-identity quorum.

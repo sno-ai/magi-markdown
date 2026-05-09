@@ -7,6 +7,9 @@
 //    when both `integrity` and `signatures[]` are present in the frontmatter,
 //    every signature's `payload-digest` MUST equal `integrity.digest`
 //    byte-for-byte (§09-2).
+// 4. Applies lightweight trusted-runtime policy checks for fixtures that opt in:
+//    required integrity/signature gates, policy matching, and minSignatures
+//    over distinct trusted signer identities (§13).
 //
 // Usage: node scripts/validate-conformance.mjs
 
@@ -174,6 +177,92 @@ function checkSignatureDigestEquality(fm) {
   return errs;
 }
 
+function didWebDomainFromSigner(signer) {
+  const prefix = "did-web:";
+  if (typeof signer !== "string" || !signer.startsWith(prefix)) return null;
+  const domain = signer.slice(prefix.length);
+  if (!/^[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?$/.test(domain)) {
+    return null;
+  }
+  return domain;
+}
+
+function trustPolicyAllowsDidWebDomain(policy, domain) {
+  return Array.isArray(policy?.trustedSigners) &&
+    policy.trustedSigners.some(s => s?.type === "did-web" && s.domain === domain);
+}
+
+function sigstoreIssuerFromSigner(signer) {
+  const prefix = "sigstore-oidc:";
+  if (typeof signer !== "string" || !signer.startsWith(prefix)) return null;
+  const issuer = signer.slice(prefix.length);
+  return issuer.length > 0 ? issuer : null;
+}
+
+function verifiedSigstoreIdentityForIndex(verifiedIdentities, index) {
+  if (!Array.isArray(verifiedIdentities)) return null;
+  return verifiedIdentities.find(identity =>
+    identity?.type === "sigstore-oidc" && identity["signature-index"] === index
+  ) ?? null;
+}
+
+function trustPolicyAllowsSigstoreIdentity(policy, identity) {
+  return Array.isArray(policy?.trustedSigners) &&
+    policy.trustedSigners.some(s =>
+      s?.type === "sigstore-oidc" &&
+      s.issuer === identity?.issuer &&
+      s.subject === identity?.subject
+    );
+}
+
+// Minimal trusted-runtime semantic check (§13). This intentionally does not
+// perform live crypto or network verification; it exercises policy gating and
+// threshold behavior that JSON Schema cannot express.
+function checkTrustedRuntimePolicy(fm, policy, verifiedIdentities) {
+  if (!fm || typeof fm !== "object" || !fm.integrity) {
+    return ["missing-required-integrity: trusted-runtime requires integrity"];
+  }
+
+  const sigs = fm.signatures;
+  if (!Array.isArray(sigs) || sigs.length === 0) {
+    return ["missing-required-signature: trusted-runtime requires signatures[]"];
+  }
+
+  const digestErrors = checkSignatureDigestEquality(fm);
+  if (digestErrors.length) {
+    return digestErrors.map(e => `signature-digest-mismatch: ${e}`);
+  }
+
+  const trustedIdentities = new Set();
+  for (const [index, sig] of sigs.entries()) {
+    const domain = didWebDomainFromSigner(sig?.signer);
+    if (domain && trustPolicyAllowsDidWebDomain(policy, domain)) {
+      trustedIdentities.add(`did-web:${domain}`);
+    }
+
+    const issuer = sigstoreIssuerFromSigner(sig?.signer);
+    const identity = verifiedSigstoreIdentityForIndex(verifiedIdentities, index);
+    if (
+      issuer &&
+      identity?.issuer === issuer &&
+      trustPolicyAllowsSigstoreIdentity(policy, identity)
+    ) {
+      trustedIdentities.add(`sigstore-oidc:${identity.issuer}\n${identity.subject}`);
+    }
+  }
+
+  if (trustedIdentities.size === 0) {
+    return ["no-trusted-signature: no signature matched the trust policy"];
+  }
+
+  const minSignatures = Number.isInteger(policy?.minSignatures) ? policy.minSignatures : 1;
+  if (trustedIdentities.size < minSignatures) {
+    return [`insufficient-trusted-signatures: ${trustedIdentities.size} trusted signer identities < ${minSignatures}`];
+  }
+
+  return [];
+}
+
 // ─── 3. Manifest-driven conformance run ───────────────────────────────────────
 console.log(`\n${BOLD}2. Conformance fixtures${RESET}`);
 const manifest = yaml.load(readFileSync(MANIFEST, "utf8"));
@@ -185,9 +274,33 @@ function getValidator(schemaPath) {
   return compiled;
 }
 
-function runValidator(fixturePath, schemaPaths, expectedVerdict, fixtureId, semanticChecks, extractionExpected) {
+function runValidator(
+  fixturePath,
+  schemaPaths,
+  expectedVerdict,
+  fixtureId,
+  semanticChecks,
+  extractionExpected,
+  runtimePolicyPath,
+  expectedError,
+  verifiedIdentities
+) {
   const buf = readFileSync(fixturePath);
   const ext = extractFrontmatterStrict(buf);
+  let rawJson = null;
+
+  if (fixturePath.endsWith(".json")) {
+    try {
+      rawJson = JSON.parse(buf.toString("utf8"));
+    } catch (e) {
+      if (expectedVerdict === "reject") {
+        pass(`[${fixtureId}] reject: invalid JSON (${e.message})`);
+      } else {
+        fail(`[${fixtureId}] invalid JSON`, e.message);
+      }
+      return;
+    }
+  }
 
   // §02-1.1 extraction-time verdict (when the manifest opts in via `extraction-expected`).
   if (extractionExpected) {
@@ -220,6 +333,16 @@ function runValidator(fixturePath, schemaPaths, expectedVerdict, fixtureId, sema
 
   let allOk = true;
   let firstErrors = [];
+  let runtimePolicy = null;
+
+  if (runtimePolicyPath) {
+    try {
+      runtimePolicy = JSON.parse(readFileSync(resolve(REPO, "conformance", runtimePolicyPath), "utf8"));
+    } catch (e) {
+      allOk = false;
+      firstErrors.push(`trust-policy-violation: ${runtimePolicyPath} could not be loaded (${e.message})`);
+    }
+  }
 
   for (const sp of schemaPaths) {
     let validator;
@@ -231,7 +354,9 @@ function runValidator(fixturePath, schemaPaths, expectedVerdict, fixtureId, sema
     }
 
     const subjectsToCheck = [];
-    if (
+    if (rawJson !== null) {
+      subjectsToCheck.push({ label: "json", value: rawJson });
+    } else if (
       sp.endsWith("frontmatter-source.schema.json") ||
       sp.endsWith("frontmatter-skill-md.schema.json") ||
       sp.endsWith("frontmatter-agents-md.schema.json") ||
@@ -270,6 +395,17 @@ function runValidator(fixturePath, schemaPaths, expectedVerdict, fixtureId, sema
           allOk = false;
           firstErrors.push(...errs);
         }
+      } else if (checkName === "trusted-runtime-policy") {
+        if (!runtimePolicy) {
+          allOk = false;
+          firstErrors.push("trust-policy-violation: trusted-runtime-policy requires runtime-policy");
+          continue;
+        }
+        const errs = checkTrustedRuntimePolicy(fm, runtimePolicy, verifiedIdentities);
+        if (errs.length) {
+          allOk = false;
+          firstErrors.push(...errs);
+        }
       }
     }
   }
@@ -278,7 +414,12 @@ function runValidator(fixturePath, schemaPaths, expectedVerdict, fixtureId, sema
     if (allOk) pass(`[${fixtureId}] accept: all schemas valid`);
     else fail(`[${fixtureId}] expected accept but got reject`, firstErrors.join(" | "));
   } else if (expectedVerdict === "reject") {
-    if (!allOk) pass(`[${fixtureId}] reject: ${firstErrors[0] ?? "validation failed"}`);
+    if (!allOk && expectedError) {
+      const matched = firstErrors.some(e => e === expectedError || e.startsWith(`${expectedError}:`));
+      if (matched) pass(`[${fixtureId}] reject: ${expectedError}`);
+      else fail(`[${fixtureId}] expected reject ${expectedError} but got ${firstErrors[0] ?? "validation failed"}`,
+                firstErrors.join(" | "));
+    } else if (!allOk) pass(`[${fixtureId}] reject: ${firstErrors[0] ?? "validation failed"}`);
     else fail(`[${fixtureId}] expected reject but all schemas accepted`);
   } else {
     fail(`[${fixtureId}] unknown verdict: ${expectedVerdict}`);
@@ -335,7 +476,9 @@ for (const entry of manifest.fixtures) {
       continue;
     }
     runValidator(fixturePath, entry.against || [], entry.verdict, entry.id,
-                 entry["semantic-checks"], entry["extraction-expected"]);
+                 entry["semantic-checks"], entry["extraction-expected"],
+                 entry["runtime-policy"], entry["expected-error"],
+                 entry["verified-identities"]);
   }
 }
 
