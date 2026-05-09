@@ -3,7 +3,6 @@
   "language": "en",
   "ignorePaths": [
     "**/node_modules/**",
-    "**/.wrangler/**",
     "**/dist/**",
     "pnpm-lock.yaml",
     "package.json",
@@ -13,7 +12,6 @@
   "words": [
     "AAIF",
     "ai-markdown",
-    "Cloudflare",
     "cspell",
     "css",
     "devs",
@@ -37,7 +35,6 @@
     "tsconfig",
     "turndown",
     "vitepress",
-    "wrangler",
     "yml"
   ],
   "allowCompoundWords": true,
