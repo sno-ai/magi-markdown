@@ -1,0 +1,105 @@
+# MDA Open Spec
+
+> MDA is a Markdown superset for AI-agent artifacts. One `.mda` source can compile into the Markdown files that agent runtimes already load, including `SKILL.md`, `AGENTS.md`, `MCP-SERVER.md`, and `CLAUDE.md`, while preserving machine-readable metadata, dependencies, capabilities, relationships, integrity digests, and signatures.
+
+This file is the LLM-readable entry point for the `mda-markdown` repository. It follows the `llms.txt` style: short project context first, then a curated map of the most useful Markdown resources. Prefer these linked files over inferred memory when answering questions about MDA.
+
+MDA v1.0 defines the contract, schemas, conformance suite, and TypeScript reference CLI. Use it to author, validate, compile, integrity-check, and implement agent-facing Markdown artifacts in a way that is portable across supported target formats.
+
+High-priority rules for AI agents:
+
+- Start from `spec/v1.0/` for normative behavior, then use README and docs for explanation and examples.
+- Validate artifacts with `schemas/` and `conformance/manifest.yaml` before treating generated output as conforming.
+- Use `@markdown-ai/cli` for authoring, CI checks, deterministic compilation, canonicalization, and agent-side preflight checks.
+- For automation, use explicit targets and JSON output: `mda validate <file> --target source --json`, `mda compile <file> --target SKILL.md AGENTS.md --out-dir out --integrity`.
+- For runtime integration, implement a lightweight loader and verifier hook from the spec, schemas, and trusted runtime profile.
+- Keep generated MDA simple. Add MDA extensions when they encode metadata, dependencies, relationships, capabilities, integrity, or signatures that a human or agent can act on.
+
+Authoritative source order:
+
+1. Normative spec files in `spec/v1.0/`
+2. JSON Schemas in `schemas/`
+3. Conformance manifest and fixtures in `conformance/`
+4. CLI manual and implementation spec in `apps/cli/`
+5. README, value docs, and architecture docs
+6. Examples and translated documentation
+
+## Start Here
+
+- [README.md](README.md): Main project overview, core value proposition, compatibility, CLI boundary, honest status, and links to spec sections.
+- [SPEC.md](SPEC.md): Short canonical index for the MDA Open Spec, including design priorities, authoring modes, governance, artifacts, and versioning.
+- [AI agent core value](docs/v1.0/ai-agent-core-value.md): Explains what MDA gives runtimes, harnesses, validators, dispatchers, and AI agents at load time.
+- [Human curator core value](docs/v1.0/human-curator-user-core-value.md): Explains why human maintainers and documentation curators use MDA instead of hand-maintaining multiple target files.
+- [v1.0 scope and roadmap](docs/v1.0/what-v1.0-does-not-ship.md): Release boundary notes for registry, verifier, resolver, graph indexer, harness routing, and future target coverage.
+
+## Normative Spec
+
+- [Overview](spec/v1.0/00-overview.md): Terminology, conformance keywords, design priority order, authoring modes, wedge narrative, governance, versioning, and document map.
+- [Source and output](spec/v1.0/01-source-and-output.md): `.mda` source, compiled `.md` output, identity compile, compile direction, compiler responsibilities, and author responsibilities.
+- [Frontmatter](spec/v1.0/02-frontmatter.md): Extraction algorithm, open-standard fields, MDA extension fields, source vs output rules, timestamp portability, and version constraints.
+- [Relationships](spec/v1.0/03-relationships.md): Typed footnote relationships, `depends-on`, version-range grammar, digest pinning, and frontmatter mirrors.
+- [Platform namespaces](spec/v1.0/04-platform-namespaces.md): Vendor namespace rules, reserved keys, loader expectations, and registration rationale.
+- [Progressive disclosure](spec/v1.0/05-progressive-disclosure.md): Tiered artifact layout, `scripts/`, `references/`, `assets/`, file reference rules, and authoring discipline.
+- [Conformance](spec/v1.0/07-conformance.md): Validator and compiler conformance levels, suite execution, fixture index, and upstream compatibility expectations.
+- [Integrity](spec/v1.0/08-integrity.md): Integrity field shape, canonicalization, hashing, verification, multi-file artifacts, and examples.
+- [Signatures](spec/v1.0/09-signatures.md): DSSE PAE, Sigstore OIDC flow, `did:web` fallback, multiple signatures, and verification policy.
+- [Capabilities](spec/v1.0/10-capabilities.md): `metadata.mda.requires`, standard keys, consumer behavior, and examples for runtime/tool/network/package/model/cost hints.
+- [Implementer's guide](spec/v1.0/11-implementer-guide.md): Recommended loader algorithm, error categories, project-specific schemas, and reference implementation notes.
+- [Sigstore tooling integration](spec/v1.0/12-sigstore-tooling.md): Informative implementation guidance for Sigstore-related tooling and reference scripts.
+- [Trusted runtime profile](spec/v1.0/13-trusted-runtime.md): Production verification behavior, trust policy shape, error categories, and previous-good runtime behavior.
+
+## Target Formats
+
+- [SKILL.md target schema](spec/v1.0/06-targets/skill-md.md): Target rules for agentskills.io-style skill packages, frontmatter fields, body, progressive disclosure, and validation.
+- [AGENTS.md target schema](spec/v1.0/06-targets/agents-md.md): Target rules for AAIF-aligned `AGENTS.md` files, allowed fields, body behavior, relationships, and validation.
+- [MCP-SERVER.md target schema](spec/v1.0/06-targets/mcp-server-md.md): Target rules for MCP server docs, sidecar requirements, cross-file consistency, and validation.
+- [CLAUDE.md target schema](spec/v1.0/06-targets/claude-md.md): Target planning notes for `CLAUDE.md` coverage.
+
+## Schemas And Conformance
+
+- [Schemas directory](schemas/): JSON Schema 2020-12 definitions for source frontmatter, target frontmatter, footnote relationships, trust policy, integrity, signatures, dependencies, requirements, and version ranges.
+- [Source frontmatter schema](schemas/frontmatter-source.schema.json): Machine-checkable schema for source-mode `.mda` frontmatter.
+- [SKILL.md frontmatter schema](schemas/frontmatter-skill-md.schema.json): Machine-checkable schema for compiled `SKILL.md` frontmatter.
+- [AGENTS.md frontmatter schema](schemas/frontmatter-agents-md.schema.json): Machine-checkable schema for compiled `AGENTS.md` frontmatter.
+- [MCP-SERVER.md frontmatter schema](schemas/frontmatter-mcp-server-md.schema.json): Machine-checkable schema for compiled `MCP-SERVER.md` frontmatter.
+- [Relationship footnote schema](schemas/relationship-footnote.schema.json): Machine-checkable schema for typed JSON footnote payloads.
+- [Trust policy schema](schemas/mda-trust-policy.schema.json): Machine-checkable schema for trusted runtime policy files.
+- [Conformance README](conformance/README.md): Explains fixture layout, validator expectations, compiler expectations, and fixture contribution rules.
+- [Conformance manifest](conformance/manifest.yaml): Stable binding from fixture to rule id, expected verdict, and expected error category.
+- [Valid fixtures](conformance/valid/): Source artifacts that conforming validators must accept.
+- [Invalid fixtures](conformance/invalid/): Source artifacts that conforming validators must reject for the manifest-listed reason.
+
+## CLI And Tooling
+
+- [CLI README](apps/cli/README.md): Minimal entry point for the `@markdown-ai/cli` npm package and installed `mda` binary.
+- [CLI manual](apps/cli/HOW-TO-USE.md): Practical quick start, AI-agent usage, human usage, command reference, global flags, exit codes, and current status.
+- [CLI implementation spec](apps/cli/IMPL-SPEC.md): Scope, CLI surface, module layout, conformance levels, release model, dependencies, compatibility tests, and out-of-scope items.
+- [CLI source](apps/cli/src/): TypeScript source for the reference CLI.
+- [CLI tests](apps/cli/test/): Tests for CLI behavior, compilation, validation, canonicalization, integrity, and conformance behavior.
+- [Create, sign, and verify guide](docs/create-sign-verify-mda.md): Manual path for writing MDA, adding integrity, signing, choosing trust policy, and verifying before loading.
+- [Developer guide](docs/developer-guide.md): Implementation-oriented guide covering validation pipeline, minimal validators, integrity, signature verification, conformance, and namespaces.
+
+## Architecture And Registry
+
+- [Architecture](docs/architecture.md): Explains the three architectural components: YAML frontmatter, typed relationship footnotes, and optional cryptographic identity.
+- [Registry](REGISTRY.md): Namespace registry, standard `requires` keys, reserved Sigstore OIDC issuers, transparency log providers, and DSSE payload types.
+- [Contributing](CONTRIBUTING.md): Contribution workflow and expectations for changes.
+- [Security](SECURITY.md): Security policy and vulnerability reporting path.
+- [Changelog](CHANGELOG.md): Project change history.
+
+## Examples
+
+- [Examples directory](examples/): Worked examples for MDA artifacts.
+- [MDA examples](docs/mda-examples/): Documentation examples that demonstrate MDA source patterns.
+- [Minimal example in README](README.md#minimal-example): Small source artifact showing baseline MDA frontmatter and body structure.
+
+## Optional
+
+- [Documentation site config](docs/docs.json): Site-facing documentation config.
+- [Generated site MDX docs](docs/mdx/): Site-facing documentation material.
+- [Translated READMEs](docs/readme/): Localized README translations; use English canonical docs for normative interpretation.
+- [Images](images/): Diagrams used by README and documentation.
+
+## Last Updated
+
+- 2026-05-09

@@ -3,7 +3,9 @@
 	"version": "1.0.0",
 	"license": "Apache-2.0",
 	"scripts": {
-		"dev2main": "bash scripts/dev2main.sh"
+		"dev2main": "bash scripts/dev2main.sh",
+		"cli:build": "pnpm -C apps/cli build",
+		"cli:test": "pnpm -C apps/cli build && pnpm -C apps/cli test"
 	},
 	"devDependencies": {
 		"@types/jsdom": "^28.0.1",
