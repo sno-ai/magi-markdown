@@ -338,6 +338,14 @@ function runValidator(
   if (runtimePolicyPath) {
     try {
       runtimePolicy = JSON.parse(readFileSync(resolve(REPO, "conformance", runtimePolicyPath), "utf8"));
+      const validatePolicy = getValidator("schemas/mda-trust-policy.schema.json");
+      if (!validatePolicy(runtimePolicy)) {
+        allOk = false;
+        const errs = (validatePolicy.errors || []).slice(0, 3).map(e =>
+          `trust-policy-violation: runtime-policy ${e.instancePath || "(root)"} ${e.message}`
+        );
+        firstErrors.push(...errs);
+      }
     } catch (e) {
       allOk = false;
       firstErrors.push(`trust-policy-violation: ${runtimePolicyPath} could not be loaded (${e.message})`);
