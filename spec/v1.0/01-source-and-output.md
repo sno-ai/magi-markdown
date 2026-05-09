@@ -90,6 +90,6 @@ Authors are not required to produce conforming outputs by hand — that is the c
 
 See `examples/source-only/` for a `.mda` source that exercises common MDA-extended features, and `examples/skill-md/` for the same content compiled to a SKILL.md package.
 
-Hand-author and agent-author recipes are in `docs/manual-workflow.md`.
+Human and agent-author recipes are in `docs/create-sign-verify-mda.md`.
 
 Conformance fixtures that exercise the compile direction live under `conformance/compile/`, indexed by `conformance/manifest.yaml`.

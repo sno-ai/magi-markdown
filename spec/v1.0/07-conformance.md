@@ -55,12 +55,19 @@ The authoritative index is `conformance/manifest.yaml`. The shape of each entry:
                        invalid-encoding |
                        frontmatter-yaml-parse-error
   semantic-checks: [signature-digest-equality]  # optional; cross-field rules JSON Schema cannot express
+  runtime-policy: valid/<policy>.json           # optional; for trusted-runtime-policy checks
+  verified-identities:                          # optional; post-crypto identities for semantic checks
+    - signature-index: 0
+      type: sigstore-oidc
+      issuer: https://issuer.example
+      subject: repo:owner/repo:ref:refs/tags/v1.0.0
+  expected-error: <machine-error-code>           # optional; checked for reject fixtures
   verdict: accept | reject | equal
   rules: [§<section>-<clause>, ...]
   description: <one or two sentences>
 ```
 
-`verdict: accept` and `verdict: reject` apply to validator-level fixtures (`valid/`, `invalid/`). `verdict: equal` applies to compiler-level fixtures (`compile/`) and asserts byte-equivalence to the `expected/` tree. `extraction-expected` opts a fixture into the §02-1.1 extraction-time verdict check (BOM, CRLF, body-with-`---`-horizontal-rule, empty body, body-only files, unterminated frontmatter, invalid UTF-8); when set, the runner asserts the extractor returns the named outcome before applying any schema. `semantic-checks` opts a fixture into cross-field semantic rules (currently only `signature-digest-equality`, §09-2).
+`verdict: accept` and `verdict: reject` apply to validator-level fixtures (`valid/`, `invalid/`). `verdict: equal` applies to compiler-level fixtures (`compile/`) and asserts byte-equivalence to the `expected/` tree. `extraction-expected` opts a fixture into the §02-1.1 extraction-time verdict check (BOM, CRLF, body-with-`---`-horizontal-rule, empty body, body-only files, unterminated frontmatter, invalid UTF-8); when set, the runner asserts the extractor returns the named outcome before applying any schema. `semantic-checks` opts a fixture into cross-field semantic rules: `signature-digest-equality` (§09-2) and `trusted-runtime-policy` (§13). The `trusted-runtime-policy` check exercises required integrity/signature gating, policy matching, and `minSignatures` threshold behavior; it does not perform live network or cryptographic verification. For Sigstore fixtures, `verified-identities` supplies the issuer and subject that a real verifier would derive from Rekor/Fulcio before applying the trust policy. When `expected-error` is present on a reject fixture, the reference runner checks that machine-readable category.
 
 ## §07-5 Adding fixtures
 

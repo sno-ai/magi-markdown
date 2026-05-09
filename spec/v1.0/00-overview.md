@@ -1,8 +1,8 @@
 # MDA Open Spec — Overview
 
 > **Version:** v1.0
-> **Status:** Draft (frozen at v1.0.0-rc.1; final on v1.0.0)
-> **Date:** 2026-05-07
+> **Status:** Draft (current release candidate: v1.0.0-rc.2; final on v1.0.0)
+> **Date:** 2026-05-09
 > **Canonical URL:** [https://mda.sno.dev/spec/v1.0/](https://mda.sno.dev/spec/v1.0/)
 > **License:** This specification (`spec/`) is licensed under [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/). Reference schemas (`schemas/`) and tooling are licensed under [Apache-2.0](../../LICENSE).
 
@@ -20,7 +20,7 @@ This specification is the public, normative artifact.
 ## §0.2 What this document is not
 
 - **Not a runtime.** MDA does not specify how an agent loads or executes the compiled `.md` files. That is each consumer's responsibility (Claude Code, OpenCode, OpenAI Codex, Hermes Agent, OpenClaw, skills.sh, Cursor, Windsurf, and others).
-- **Not a tutorial.** Tutorials, migration guides, and best practices live under `docs/`. The hand-author / agent-author path is documented in `docs/manual-workflow.md`.
+- **Not a tutorial.** Tutorials, migration guides, and best practices live under `docs/`. The human / agent-author path is documented in `docs/create-sign-verify-mda.md`.
 - **Not a marketing page.** That is `README.md`.
 - **Not a distribution standard.** MDA artifacts ship via existing channels (OCI, npm, GitHub Releases, S3, plain HTTPS). MDA does not bind itself to any one distribution protocol. See `docs/distribution-patterns.md` (informative).
 
@@ -63,7 +63,7 @@ The following priority order governs all MDA design decisions:
 | Level  | Concern                | Definition                                                                                                                                  |
 | ------ | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | **P0** | AI-agent authorability | An LLM with only this specification in context, no MDA tooling, and no examples from prior turns MUST be able to produce conforming output. |
-| **P1** | Human authorability    | A human with a text editor and standard CLIs (`sha256sum`, `cosign`) MUST be able to produce conforming output.                             |
+| **P1** | Human authorability    | A human with a text editor, standard hashing tools, and a DSSE-capable signing path MUST be able to produce conforming output.              |
 | **P2** | Tooling convenience    | Reference implementations (compilers, linters, signing tools) are convenience, not requirement.                                             |
 
 
@@ -85,7 +85,7 @@ MDA defines three equivalent authoring modes:
 
 All three modes MUST produce artifacts that are byte-equivalent to consumers and that pass the same target-schema validation. Conforming spec sections SHOULD include at least one self-contained, copy-pasteable example targeted at agent mode.
 
-The hand- and agent-author paths are documented in `docs/manual-workflow.md`. The compiled-mode reference implementation is at `packages/mda/`.
+The human and agent-author paths are documented in `docs/create-sign-verify-mda.md`. The compiled-mode reference implementation is at `packages/mda/`.
 
 ## §0.7 Wedge narrative (informative)
 
@@ -114,7 +114,7 @@ Other targets (SKILL.md, CLAUDE.md) are equally supported but are not AAIF-gover
 MDA v1.0 is the only major+minor planned. Future development follows SemVer:
 
 - **Patch releases** (`v1.0.1`, `v1.0.2`, …) deliver editorial fixes, schema bug fixes, and reference-implementation improvements that do not change the conformance contract. They are recorded in `CHANGES.md` when published.
-- **Pre-release cycle within v1.0**: the spec freezes at `v1.0.0-rc.1`. Subsequent `v1.0.0-rc.N` tags ship reference-implementation maturity, not spec changes. The final `v1.0.0` release lands when the reference implementation passes 100% conformance.
+- **Pre-release cycle within v1.0**: the current release candidate is `v1.0.0-rc.2`. The final `v1.0.0` release lands when the reference implementation passes 100% conformance.
 - **Minor releases** (`v1.1.0`) ship new fields or new normative behavior that does not break existing v1.0 artifacts. The MDA project intentionally does not pre-plan v1.1 features; they emerge from observed adoption.
 - **Major releases** (`v2.0.0`) ship breaking changes. They land in a new directory (`spec/v2.0/`), and previous versions remain immutable at their canonical URLs.
 
@@ -150,10 +150,11 @@ The specification is split into the following normative sections. They are desig
 | `09-signatures.md`             | `signatures[]` field — DSSE PAE envelope, Sigstore OIDC default, `mda-keys.json` air-gap alt                 | Stable          |
 | `10-capabilities.md`           | `metadata.mda.requires` — open key-value capability declarations, standard keys via REGISTRY                 | Stable          |
 | `11-implementer-guide.md`      | Recommended canonical loader algorithm + error category vocabulary (informative)                             | Informative     |
-| `12-sigstore-tooling.md`       | `cosign` / `sigstore-python` / `sigstore-go` bundle ↔ MDA `signatures[]` mapping (informative)               | Informative     |
+| `12-sigstore-tooling.md`       | Sigstore SDK bundle ↔ MDA `signatures[]` mapping, with `cosign` compatibility limits (informative)           | Informative     |
+| `13-trusted-runtime.md`        | Production verification profile, trust policy file, and fail-closed runtime behavior                         | Stable          |
 
 
-The companion `REGISTRY.md` (at the repository root) governs vendor namespace assignment, standard `requires` keys, reserved Sigstore OIDC issuers, reserved transparency log providers, and reserved DSSE `payload-type` values. It is referenced normatively by §04, §08, §09, and §10.
+The companion `REGISTRY.md` (at the repository root) governs vendor namespace assignment, standard `requires` keys, reserved Sigstore OIDC issuers, reserved transparency log providers, and reserved DSSE `payload-type` values. It is referenced normatively by §04, §08, §09, §10, and §13.
 
 ## §0.11 Citation
 
@@ -161,4 +162,3 @@ When citing this specification, use the canonical URL with the section anchor, e
 
 > MDA Open Spec v1.0, §06-targets/skill-md §06-3.3 — Forbidden top-level fields.  
 > [https://mda.sno.dev/spec/v1.0/06-targets/skill-md.html#forbidden-top-level-fields](https://mda.sno.dev/spec/v1.0/06-targets/skill-md.html#forbidden-top-level-fields)
-
