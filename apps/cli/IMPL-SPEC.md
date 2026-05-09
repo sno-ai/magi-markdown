@@ -17,8 +17,8 @@ What `@markdown-ai/cli` MUST do at v1.0.0:
 - **Validate** any `.md` output against the relevant target schema (`SKILL.md`, `AGENTS.md`, `MCP-SERVER.md`).
 - **Compile** a `.mda` source into one or more conformant `.md` outputs per the target schemas, with field relocation per [`spec/v1.0/01-source-and-output.md §01-4`](../../spec/v1.0/01-source-and-output.md).
 - **Canonicalize** any artifact for integrity computation (JCS-based per [`spec/v1.0/08-integrity.md`](../../spec/v1.0/08-integrity.md)).
-- **Sign** an artifact via Sigstore OIDC (default) or did:web (air-gap), per [`spec/v1.0/09-signatures.md`](../../spec/v1.0/09-signatures.md).
-- **Verify** signatures and integrity against operator-supplied policy.
+- **Verify** signatures and integrity against an explicit operator-supplied policy.
+- **Sign** an artifact only through methods whose emitted metadata round-trips through the verifier. `did:web` can ship when fixtures pass; Sigstore signing remains unavailable or experimental until the JS implementation proves MDA-compatible DSSE/Rekor metadata.
 - **Run** the conformance suite at `conformance/` and report pass/fail per fixture.
 
 What `@markdown-ai/cli` MUST NOT do at v1.0.0:
@@ -26,28 +26,45 @@ What `@markdown-ai/cli` MUST NOT do at v1.0.0:
 - Edit body prose for size budgets (the compiler is structural, not editorial).
 - Project vendor namespaces into sibling files (cut from v1.0).
 - Interpret unknown vendor namespaces beyond preserving them verbatim.
-- Manage long-lived signing keys (Sigstore OIDC is the default).
+- Trust package-default signing identities or verification policy.
+- Sign as part of `mda compile`; signing is a separate explicit operation.
 
 ---
 
 ## 2. CLI surface (planned)
 
 ```
-mda init <name>                         # scaffold a .mda source
-mda validate <file>                     # source or output; auto-detects by extension
-mda compile <file.mda> [--target T...]  # emit one or more .md outputs
-mda canonicalize <file>                 # print canonical bytes to stdout
-mda integrity compute <file>            # print {algorithm, digest} JSON
-mda integrity verify <file>             # exit 0 iff integrity matches
-mda sign <file> [--method sigstore|did-web] [--key-id ...]
-mda verify <file> [--policy <path>]     # signatures + integrity, against policy
-mda conformance [--suite <path>] [--level V|C]
+mda                                                       # print full help
+mda --help                                                # print full help
+mda init <name> [--out <file>] [--json]                   # scaffold a .mda source
+mda validate <file> [--target T|auto] [--json]            # source or output
+mda compile <file.mda> --target T... [--out-dir <dir>] [--integrity] [--json]
+mda canonicalize <file> [--target T|auto] [--sidecar <path>] [--json]
+mda integrity compute <file> [--target T|auto] [--sidecar <path>] [--algorithm A] [--json]
+mda integrity verify <file> [--target T|auto] [--sidecar <path>] [--json]
+mda sign <file> --method did-web --key <path> --identity <domain> (--out <file>|--in-place) [--json]
+mda verify <file> --policy <path> [--target T|auto] [--sidecar <path>] [--json]
+mda conformance [--suite <path>] [--level V|C] [--json]
 ```
+
+`T` is one of `source`, `SKILL.md`, `AGENTS.md`, or `MCP-SERVER.md`. Auto-detection is exact: `.mda` means `source`; known target basenames mean their target; any other `.md` path is a usage error unless `--target` is explicit.
+
+`MCP-SERVER.md` is a multi-file artifact. Commands that canonicalize, compute integrity, verify integrity, or verify trust for that target require `--sidecar <path>`; the CLI must not guess the sidecar path. `validate MCP-SERVER.md` validates only the Markdown artifact and does not require or guess a sidecar.
 
 Every subcommand:
 - Returns exit 0 on success, non-zero on failure.
 - Emits machine-readable output (JSON) under `--json`.
 - Honors `--quiet` and `--verbose`.
+
+Running `mda` with no arguments is not an error. It prints the same full help as `mda --help`, including every command, every global flag, every command-specific option, required markers, short workflow examples, and exit-code meanings. It must not perform validation, compilation, signing, verification, network access, or file writes.
+
+`mda init <name>` prints a minimal valid `.mda` scaffold to stdout. `--out <file>` writes that scaffold atomically and refuses to overwrite an existing file. With `--json`, stdout is only JSON and includes `name`, `scaffold`, `out`, and `written`.
+
+`mda compile` writes to `--out-dir` when provided and to the current working directory when omitted. It refuses to overwrite existing output files and reports every planned and written output path in JSON mode.
+
+With `--json`, stdout contains only JSON. All JSON results include `ok`, `command`, `exitCode`, and `diagnostics`; artifact-reading commands also include the resolved `target`. `canonicalize --json` returns `canonicalBytesBase64`, `byteLength`, `target`, and `files`; raw canonical bytes are written to stdout only when `--json` is absent.
+
+`mda verify` requires `--policy <path>`. The MVP CLI has no stable offline verification flag; policy-only matching must never count as cryptographic signature verification.
 
 ---
 
@@ -74,7 +91,7 @@ apps/cli/
 
 ## 4. Conformance levels
 
-The reference implementation declares **level C** ([`spec/v1.0/07-conformance.md §07-2.2`](../../spec/v1.0/07-conformance.md)). It MUST pass every fixture in `conformance/manifest.yaml`.
+The reference implementation declares only the conformance level it currently passes. It may claim **level C** ([`spec/v1.0/07-conformance.md §07-2.2`](../../spec/v1.0/07-conformance.md)) only after `mda conformance --suite conformance --level C` exits `0` against every required fixture in `conformance/manifest.yaml`.
 
 Level-V-only implementations (validators that do not compile) are conformant if they pass every `valid/` and `invalid/` fixture.
 
@@ -99,7 +116,7 @@ The implementation MAY ship before `v1.0.0` final under the rc tag; users opt in
 | YAML parse / dump | `yaml` (`eemeli/yaml`) | YAML 1.2; preserves quoting; round-trip-safe. |
 | JSON Schema validator | `ajv` 8 + `ajv-formats` | Already in use by `scripts/validate-conformance.mjs`. |
 | JCS canonicalization | `@truestamp/canonify` | RFC 8785. |
-| Sigstore client | `sigstore-js` | Fulcio + Rekor. |
+| Sigstore client | TBD | Add only after proving DSSE/Rekor metadata compatibility. |
 | did:web fetcher | `node:fetch` + `node:crypto` | No third-party dep. |
 | CLI framework | `commander` | Stable subcommand API; sufficient for v1.0. |
 

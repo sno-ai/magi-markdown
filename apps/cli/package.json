@@ -1,0 +1,22 @@
+{
+  "name": "@markdown-ai/cli",
+  "version": "0.1.0",
+  "description": "Reference CLI for Markdown AI / MDA artifacts.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "mda": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "HOW-TO-USE.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node dist/cli.js --help >/dev/null && node dist/cli.js conformance --suite ../../conformance --level V --json >/dev/null && node test/e2e.mjs"
+  }
+}
