@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "trustedSigners": [
+    {
+      "type": "sigstore-oidc",
+      "issuer": "https://token.actions.githubusercontent.com"
+    }
+  ],
+  "rekor": {
+    "url": "https://rekor.sigstore.dev"
+  }
+}

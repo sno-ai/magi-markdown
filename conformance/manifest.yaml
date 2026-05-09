@@ -112,6 +112,48 @@ fixtures:
     rules: [§02-1.1 step 7, §08-3.3]
     description: Frontmatter-only source with an empty body string after the closing fence; the empty body is conformant and §08-3.3 emits no terminating newline.
 
+  - id: "27-trust-policy-github-actions"
+    path: valid/27-trust-policy-github-actions.json
+    against: [schemas/mda-trust-policy.schema.json]
+    verdict: accept
+    rules: [§13-4]
+    description: Trusted runtime policy that pins both GitHub Actions issuer and repository/tag subject and configures Rekor by URL.
+
+  - id: "35-trust-policy-did-web"
+    path: valid/35-trust-policy-did-web.json
+    against: [schemas/mda-trust-policy.schema.json]
+    verdict: accept
+    rules: [§13-4]
+    description: Minimal did:web trust policy; no Rekor block is needed for non-Sigstore signers.
+
+  - id: "36-trust-policy-did-web-two-signatures"
+    path: valid/36-trust-policy-did-web-two-signatures.json
+    against: [schemas/mda-trust-policy.schema.json]
+    verdict: accept
+    rules: [§13-4]
+    description: did:web trust policy requiring two distinct trusted signer identities.
+
+  - id: "42-trust-policy-human-sigstore"
+    path: valid/42-trust-policy-human-sigstore.json
+    against: [schemas/mda-trust-policy.schema.json]
+    verdict: accept
+    rules: [§13-4]
+    description: Trusted runtime policy that pins a human Sigstore OIDC issuer and subject and configures Rekor by URL.
+
+  - id: "43-trusted-runtime-sigstore-signed"
+    path: valid/43-trusted-runtime-sigstore-signed.mda
+    against: [schemas/frontmatter-source.schema.json]
+    semantic-checks: [signature-digest-equality, trusted-runtime-policy]
+    runtime-policy: valid/42-trust-policy-human-sigstore.json
+    verified-identities:
+      - signature-index: 0
+        type: sigstore-oidc
+        issuer: "https://accounts.google.com"
+        subject: "maintainer@example.com"
+    verdict: accept
+    rules: [§13-2, §13-4]
+    description: A Sigstore signature whose verified OIDC identity matches the trust policy MUST satisfy trusted-runtime policy matching.
+
   # ─── invalid (§02-1.1 frontmatter extraction algorithm) ───────────────────
   - id: "24-unterminated-frontmatter"
     path: invalid/24-unterminated-frontmatter.mda
@@ -185,6 +227,118 @@ fixtures:
     verdict: reject
     rules: [§09-2]
     description: integrity.digest and signatures[0].payload-digest are both well-formed but unequal; the cross-field rule MUST reject.
+
+  - id: "28-trust-policy-issuer-only"
+    path: invalid/28-trust-policy-issuer-only.json
+    against: [schemas/mda-trust-policy.schema.json]
+    verdict: reject
+    rules: [§13-4]
+    description: Sigstore trust policy gives an issuer without a subject; issuer-only trust is too broad and MUST reject.
+
+  - id: "32-trust-policy-sigstore-without-rekor"
+    path: invalid/32-trust-policy-sigstore-without-rekor.json
+    against: [schemas/mda-trust-policy.schema.json]
+    verdict: reject
+    rules: [§13-4]
+    description: Sigstore trust policy MUST configure Rekor verification.
+
+  - id: "33-trust-policy-sigstore-empty-rekor"
+    path: invalid/33-trust-policy-sigstore-empty-rekor.json
+    against: [schemas/mda-trust-policy.schema.json]
+    verdict: reject
+    rules: [§13-4]
+    description: Sigstore trust policy Rekor configuration MUST include a log URL.
+
+  - id: "34-trust-policy-sigstore-rekor-disabled"
+    path: invalid/34-trust-policy-sigstore-rekor-disabled.json
+    against: [schemas/mda-trust-policy.schema.json]
+    verdict: reject
+    rules: [§13-4]
+    description: Sigstore trust policy has no Rekor disable flag; unknown `rekor.required` MUST reject.
+
+  - id: "41-trust-policy-did-web-with-rekor"
+    path: invalid/41-trust-policy-did-web-with-rekor.json
+    against: [schemas/mda-trust-policy.schema.json]
+    verdict: reject
+    rules: [§13-4]
+    description: did:web-only trust policies MUST NOT include a Rekor block because Rekor applies only to Sigstore signers.
+
+  - id: "29-sigstore-signature-without-rekor"
+    path: invalid/29-sigstore-signature-without-rekor.mda
+    against: [schemas/frontmatter-source.schema.json]
+    verdict: reject
+    rules: [§09-2, §09-4]
+    description: Sigstore OIDC signatures MUST include Rekor log coordinates.
+
+  - id: "30-did-web-signature-with-rekor"
+    path: invalid/30-did-web-signature-with-rekor.mda
+    against: [schemas/frontmatter-source.schema.json]
+    verdict: reject
+    rules: [§09-2, §09-5]
+    description: did:web signatures MUST NOT include Sigstore-only Rekor log coordinates.
+
+  - id: "31-payload-type-jcs-suffix"
+    path: invalid/31-payload-type-jcs-suffix.mda
+    against: [schemas/frontmatter-source.schema.json]
+    verdict: reject
+    rules: [§09-3.1]
+    description: Vendor DSSE payload types use +json; +jcs+json is not an accepted structured suffix.
+
+  # ─── invalid (trusted-runtime semantic rejection) ────────────────────────
+  - id: "37-trusted-runtime-missing-integrity"
+    path: invalid/37-trusted-runtime-missing-integrity.mda
+    against: [schemas/frontmatter-source.schema.json]
+    semantic-checks: [trusted-runtime-policy]
+    runtime-policy: valid/35-trust-policy-did-web.json
+    expected-error: missing-required-integrity
+    verdict: reject
+    rules: [§13-2]
+    description: Schema-valid source without integrity MUST reject under trusted-runtime.
+
+  - id: "38-trusted-runtime-missing-signature"
+    path: invalid/38-trusted-runtime-missing-signature.mda
+    against: [schemas/frontmatter-source.schema.json]
+    semantic-checks: [trusted-runtime-policy]
+    runtime-policy: valid/35-trust-policy-did-web.json
+    expected-error: missing-required-signature
+    verdict: reject
+    rules: [§13-2]
+    description: Integrity-only source MUST reject under trusted-runtime because no signature is present.
+
+  - id: "39-trusted-runtime-duplicate-did-web-signature"
+    path: invalid/39-trusted-runtime-duplicate-did-web-signature.mda
+    against: [schemas/frontmatter-source.schema.json]
+    semantic-checks: [signature-digest-equality, trusted-runtime-policy]
+    runtime-policy: valid/36-trust-policy-did-web-two-signatures.json
+    expected-error: insufficient-trusted-signatures
+    verdict: reject
+    rules: [§13-2, §13-4]
+    description: Two signature entries from the same did:web identity count as one trusted signer identity.
+
+  - id: "40-trusted-runtime-untrusted-did-web-signer"
+    path: invalid/40-trusted-runtime-untrusted-did-web-signer.mda
+    against: [schemas/frontmatter-source.schema.json]
+    semantic-checks: [signature-digest-equality, trusted-runtime-policy]
+    runtime-policy: valid/35-trust-policy-did-web.json
+    expected-error: no-trusted-signature
+    verdict: reject
+    rules: [§13-2, §13-4]
+    description: A signed artifact whose signer is outside the trust policy MUST reject.
+
+  - id: "44-trusted-runtime-untrusted-sigstore-subject"
+    path: invalid/44-trusted-runtime-untrusted-sigstore-subject.mda
+    against: [schemas/frontmatter-source.schema.json]
+    semantic-checks: [signature-digest-equality, trusted-runtime-policy]
+    runtime-policy: valid/42-trust-policy-human-sigstore.json
+    verified-identities:
+      - signature-index: 0
+        type: sigstore-oidc
+        issuer: "https://accounts.google.com"
+        subject: "attacker@example.com"
+    expected-error: no-trusted-signature
+    verdict: reject
+    rules: [§13-2, §13-4]
+    description: A Sigstore signature with a trusted issuer but untrusted verified subject MUST reject.
 
   # ─── invalid (output-side rejection — compiled .md against target schema) ─
   - id: "13-skill-output-mda-extended-toplevel"
