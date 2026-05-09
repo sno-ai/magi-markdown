@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "trustedSigners": [
+    {
+      "type": "sigstore-oidc",
+      "issuer": "https://accounts.google.com",
+      "subject": "maintainer@example.com"
+    }
+  ],
+  "rekor": {
+    "url": "https://rekor.sigstore.dev"
+  }
+}

@@ -129,7 +129,7 @@ sig_b64 = base64.standard_b64encode(signature).decode("ascii")
 #              "public-key": "<base64-or-PEM>" }] }
 ```
 
-The `mda-keys.json` schema is `schemas/_defs/mda-keys.schema.json` (§09-5.1). The `pae_bytes` are the DSSE PAE envelope per §09-3.1; a custom payload-type vendor SHOULD use its registered `application/vnd.<vendor>.<doc-type>+jcs+json` value in the PAE `payload-type` slot and copy it into `signatures[i].payload-type`.
+The `mda-keys.json` schema is `schemas/_defs/mda-keys.schema.json` (§09-5.1). The `pae_bytes` are the DSSE PAE envelope per §09-3.1; a custom payload-type vendor SHOULD use its registered `application/vnd.<vendor>.<doc-type>+json` value in the PAE `payload-type` slot and copy it into `signatures[i].payload-type`.
 
 **Verification side:**
 
@@ -137,6 +137,7 @@ The `mda-keys.json` schema is `schemas/_defs/mda-keys.schema.json` (§09-5.1). T
 import nacl.signing, base64, requests
 
 domain = signer_field.split(":")[1]  # "did-web:tools.example.com" → "tools.example.com"
+# First require `domain` to match the operator trust policy (§09-5.2).
 keys = requests.get(f"https://{domain}/.well-known/mda-keys.json").json()
 key_entry = next(k for k in keys["keys"] if k["key-id"] == signature["key-id"])
 public_key = nacl.signing.VerifyKey(base64.standard_b64decode(key_entry["public-key"]))

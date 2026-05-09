@@ -1,0 +1,15 @@
+---
+name: sigstore-without-rekor
+description: Invalid Sigstore signature fixture with missing Rekor coordinates.
+integrity:
+  algorithm: sha256
+  digest: "sha256:a4f9c0d2e8b3a16e9c01b8f3d2a5c7b14e9f8a3d6c2b1e7f0a8d4c3b9e2f1a05"
+signatures:
+  - signer: "sigstore-oidc:https://token.actions.githubusercontent.com"
+    key-id: "fulcio:abc123"
+    payload-digest: "sha256:a4f9c0d2e8b3a16e9c01b8f3d2a5c7b14e9f8a3d6c2b1e7f0a8d4c3b9e2f1a05"
+    algorithm: ecdsa-p256
+    signature: "MEUCIQDkX"
+---
+
+# Invalid Sigstore Signature

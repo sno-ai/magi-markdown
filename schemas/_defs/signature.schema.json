@@ -54,6 +54,19 @@
       "then": {
         "required": ["rekor-log-id", "rekor-log-index"]
       }
+    },
+    {
+      "if": {
+        "properties": { "signer": { "pattern": "^did-web:" } }
+      },
+      "then": {
+        "not": {
+          "anyOf": [
+            { "required": ["rekor-log-id"] },
+            { "required": ["rekor-log-index"] }
+          ]
+        }
+      }
     }
   ]
 }

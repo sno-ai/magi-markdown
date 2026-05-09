@@ -1,0 +1,18 @@
+---
+name: payload-type-jcs-suffix
+description: Invalid signature fixture using a non-IANA +jcs+json structured suffix.
+integrity:
+  algorithm: sha256
+  digest: "sha256:a4f9c0d2e8b3a16e9c01b8f3d2a5c7b14e9f8a3d6c2b1e7f0a8d4c3b9e2f1a05"
+signatures:
+  - signer: "sigstore-oidc:https://token.actions.githubusercontent.com"
+    key-id: "fulcio:abc123"
+    payload-digest: "sha256:a4f9c0d2e8b3a16e9c01b8f3d2a5c7b14e9f8a3d6c2b1e7f0a8d4c3b9e2f1a05"
+    algorithm: ecdsa-p256
+    signature: "MEUCIQDkX"
+    rekor-log-id: "c0d23b6c4f2"
+    rekor-log-index: 123
+    payload-type: "application/vnd.example.llm-config+jcs+json"
+---
+
+# Invalid Payload Type

@@ -15,7 +15,7 @@ The wedge: **cross-runtime portability + machine-readable dependency graph + ope
 Every MDA design decision follows P0 > P1 > P2:
 
 - **P0 — AI-agent authorability.** An LLM with only this Open Spec in context MUST be able to produce conforming output.
-- **P1 — Human authorability.** A human with a text editor and `sha256sum` + `cosign` MUST be able to produce conforming output.
+- **P1 — Human authorability.** A human with a text editor and standard hashing and DSSE-capable signing tools MUST be able to produce conforming output.
 - **P2 — Tooling convenience.** Reference implementations are convenience, not requirement.
 
 See [`spec/v1.0/00-overview.md §0.5`](spec/v1.0/00-overview.md) for the normative statement.
@@ -28,7 +28,7 @@ MDA artifacts MAY be produced in any of three equivalent ways:
 2. **Human mode** — a human writes the `.md` directly with standard tooling
 3. **Compiled mode** — an author writes a `.mda` source; the MDA compiler emits one or more `.md` outputs
 
-See [`spec/v1.0/00-overview.md §0.6`](spec/v1.0/00-overview.md) and [`docs/manual-workflow.md`](docs/manual-workflow.md) for the hand- and agent-author paths.
+See [`spec/v1.0/00-overview.md §0.6`](spec/v1.0/00-overview.md) and [`docs/create-sign-verify-mda.md`](docs/create-sign-verify-mda.md) for the human and agent-author paths.
 
 ## Quick links
 
@@ -49,6 +49,7 @@ See [`spec/v1.0/00-overview.md §0.6`](spec/v1.0/00-overview.md) and [`docs/manu
 - [§10 — Capabilities (`metadata.mda.requires`)](spec/v1.0/10-capabilities.md)
 - [§11 — Implementer's Guide](spec/v1.0/11-implementer-guide.md) (informative)
 - [§12 — Sigstore tooling integration](spec/v1.0/12-sigstore-tooling.md) (informative)
+- [§13 — Trusted Runtime Profile](spec/v1.0/13-trusted-runtime.md)
 
 ## Governance
 
@@ -56,11 +57,11 @@ MDA is an independent project. It actively serves AAIF (Linux Foundation Agentic
 
 ## Companion artifacts
 
-- **JSON Schemas:** [`schemas/`](schemas/) — `frontmatter-source`, `frontmatter-skill-md`, `frontmatter-agents-md`, `frontmatter-mcp-server-md`, `relationship-footnote`, plus `_defs/` for `integrity`, `signature`, `requires`, `depends-on`, `version-range`
+- **JSON Schemas:** [`schemas/`](schemas/) — `frontmatter-source`, `frontmatter-skill-md`, `frontmatter-agents-md`, `frontmatter-mcp-server-md`, `relationship-footnote`, `mda-trust-policy`, plus `_defs/` for `integrity`, `signature`, `requires`, `depends-on`, `version-range`
 - **Conformance suite:** [`conformance/`](conformance/) — fixtures + `manifest.yaml`
 - **Examples:** [`examples/`](examples/) — `source-only/`, `skill-md/` (additional target examples land alongside reference-implementation maturity)
 - **Vendor namespace registry:** [`REGISTRY.md`](REGISTRY.md) — also lists standard `requires` keys, reserved Sigstore OIDC issuers, reserved transparency log providers, and reserved DSSE `payload-type` values
-- **Manual-workflow recipes:** [`docs/manual-workflow.md`](docs/manual-workflow.md) — hand-author and sign without the MDA CLI
+- **Create-sign-verify recipes:** [`docs/create-sign-verify-mda.md`](docs/create-sign-verify-mda.md) — hand-author and sign without the MDA CLI
 - **Reference implementation:** [`packages/mda/`](packages/mda/) — TypeScript, npm: `@mda/cli`. Architecture spec: [`packages/mda/IMPL-SPEC.md`](packages/mda/IMPL-SPEC.md)
 
 ## Versioning
@@ -68,7 +69,7 @@ MDA is an independent project. It actively serves AAIF (Linux Foundation Agentic
 MDA v1.0 is the only major+minor planned. Future development:
 
 - **Patch releases** (`v1.0.1`, `v1.0.2`, …) deliver editorial fixes and reference-implementation maturity. They do not change the conformance contract.
-- **Pre-release cycle**: the spec freezes at `v1.0.0-rc.1`. Subsequent `v1.0.0-rc.N` tags ship reference-implementation maturity. The final `v1.0.0` lands when the reference implementation passes 100% conformance.
+- **Pre-release cycle**: the current release candidate is `v1.0.0-rc.2`. The final `v1.0.0` lands when the reference implementation passes 100% conformance.
 - **Minor releases** (`v1.1.0`) are not pre-planned. They emerge from observed adoption.
 - **Major releases** (`v2.0.0`) ship breaking changes in a new directory; previous versions remain immutable at their canonical URLs.
 

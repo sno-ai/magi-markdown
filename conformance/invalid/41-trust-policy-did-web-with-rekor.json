@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "trustedSigners": [
+    {
+      "type": "did-web",
+      "domain": "tools.example.com"
+    }
+  ],
+  "rekor": {
+    "url": "https://rekor.sigstore.dev"
+  }
+}

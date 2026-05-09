@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mda.sno.dev/spec/v1.0/schemas/mda-trust-policy.schema.json",
+  "title": "MDA trust policy",
+  "description": "Trust policy for the MDA trusted-runtime verification profile.",
+  "type": "object",
+  "required": ["version", "trustedSigners"],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
+    "minSignatures": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "trustedSigners": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": ["type", "issuer", "subject"],
+            "properties": {
+              "type": { "const": "sigstore-oidc" },
+              "issuer": {
+                "type": "string",
+                "format": "uri",
+                "minLength": 1
+              },
+              "subject": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": ["type", "domain"],
+            "properties": {
+              "type": { "const": "did-web" },
+              "domain": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?$"
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "rekor": {
+      "type": "object",
+      "required": ["url"],
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "trustedSigners": {
+            "contains": {
+              "type": "object",
+              "properties": {
+                "type": { "const": "sigstore-oidc" }
+              },
+              "required": ["type"]
+            }
+          }
+        },
+        "required": ["trustedSigners"]
+      },
+      "then": {
+        "required": ["rekor"],
+        "properties": {
+          "rekor": { "required": ["url"] }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "trustedSigners": {
+            "not": {
+              "contains": {
+                "type": "object",
+                "properties": {
+                  "type": { "const": "sigstore-oidc" }
+                },
+                "required": ["type"]
+              }
+            }
+          }
+        },
+        "required": ["trustedSigners"]
+      },
+      "then": {
+        "not": { "required": ["rekor"] }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

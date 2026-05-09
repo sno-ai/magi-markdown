@@ -64,12 +64,12 @@ MDA кладёт всё это во frontmatter и сноски в формах,
 Артефакты MDA можно получить тремя способами. С точки зрения валидации они равнозначны.
 
 1. **Режим агента** — ИИ-агент пишет `.md` напрямую. Основной сценарий ближайшего будущего.
-2. **Ручной режим** — человек пишет `.md` напрямую, с `sha256sum` и `cosign`.
+2. **Ручной режим** — человек пишет `.md` напрямую, добавляет integrity и подписывает через путь подписи с поддержкой DSSE/Rekor.
 3. **Режим компиляции** — автор пишет источник `.mda`; компилятор MDA выпускает один или несколько `.md`-файлов.
 
 Какой бы путь вы ни выбрали, артефакт оценивается одной и той же целевой схемой JSON Schema 2020-12 и одним и тем же набором conformance-тестов. Никакой второй кодовой ветки «это пришло от агента» нет.
 
-См. [`docs/manual-workflow.md`](../../docs/manual-workflow.md) — про ручные пути и пути, написанные агентом, без эталонного CLI, и [`spec/v1.0/00-overview.md §0.5–§0.6`](../../spec/v1.0/00-overview.md) — нормативное изложение приоритетов и режимов.
+См. [`docs/create-sign-verify-mda.md`](../../docs/create-sign-verify-mda.md) — про ручные пути и пути, написанные агентом, без эталонного CLI, и [`spec/v1.0/00-overview.md §0.5–§0.6`](../../spec/v1.0/00-overview.md) — нормативное изложение приоритетов и режимов.
 
 ## Минимальный пример
 
@@ -127,8 +127,9 @@ metadata:
 - [§10 Возможности](../../spec/v1.0/10-capabilities.md) — `metadata.mda.requires`
 - [§11 Руководство для разработчиков реализаций](../../spec/v1.0/11-implementer-guide.md) (информативно)
 - [§12 Интеграция инструментария Sigstore](../../spec/v1.0/12-sigstore-tooling.md) (информативно)
+- [§13 Trusted Runtime Profile](../../spec/v1.0/13-trusted-runtime.md) — production-проверка и trust policy
 
-JSON-схемы лежат в [`schemas/`](../../schemas/) — `frontmatter-source`, `frontmatter-skill-md`, `frontmatter-agents-md`, `frontmatter-mcp-server-md`, `relationship-footnote`, плюс общий `_defs/` для `integrity`, `signature`, `requires`, `depends-on` и `version-range`. Conformance-фикстуры и валидационный раннер лежат в [`conformance/`](../../conformance/) (`node scripts/validate-conformance.mjs`).
+JSON-схемы лежат в [`schemas/`](../../schemas/) — `frontmatter-source`, `frontmatter-skill-md`, `frontmatter-agents-md`, `frontmatter-mcp-server-md`, `relationship-footnote`, `mda-trust-policy`, плюс общий `_defs/` для `integrity`, `signature`, `requires`, `depends-on` и `version-range`. Conformance-фикстуры и валидационный раннер лежат в [`conformance/`](../../conformance/) (`node scripts/validate-conformance.mjs`).
 
 ## Эталонная реализация
 
@@ -140,11 +141,11 @@ CLI на TypeScript находится в [`packages/mda/`](../../packages/mda/)
 
 v1.0 публикует **контракт**, а не всю экосистему вокруг него.
 
-**Что работает уже сейчас:** вы можете написать `.mda`, скомпилировать его в один или несколько конформных `.md` и провалидировать их относительно целевых JSON-схем и conformance-набора из 35 фикстур.
+**Что работает уже сейчас:** вы можете написать `.mda`, скомпилировать его в один или несколько конформных `.md` и провалидировать их относительно целевых JSON-схем и conformance-набора.
 
 **Что ещё в разработке:**
 
-- Встроенный верификатор подписей пока не поставляется. Операторы пока сами склеивают `cosign` и JCS-библиотеку.
+- Встроенный верификатор подписей пока не поставляется. Операторы пока комбинируют JCS-библиотеку с Sigstore-инструментами подписи и проверки, поддерживающими DSSE/Rekor.
 - Рабочего резолвера зависимостей и центрального реестра артефактов пока нет.
 - Графовый индексатор, потребляющий `metadata.mda.relationships`, не выпущен.
 - Ни про один мульти-агентный harness 2026 года не известно, что он сегодня маршрутизирует через `metadata.mda.requires`.
