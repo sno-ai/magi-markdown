@@ -2,11 +2,42 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0-rc.2] - 2026-05-09
+
+Security hardening release for signed MDA and production trusted-runtime loading. This release candidate updates the conformance contract because rc.1 left trust-policy and runtime verification behavior too easy to implement unsafely.
+
+### Security / trusted runtime
+
+- Added §13 Trusted Runtime Profile as the production loading profile for signed MDA: production runtimes MUST verify `integrity`, MUST verify the digest before checking signatures, MUST require trusted signatures, MUST apply `mda-trust-policy.json`, and MUST fail closed.
+- Defined refresh behavior for long-running runtimes: keep the previous-good verified config when refresh verification fails; fail closed on startup if no verified config exists.
+- Expanded loader guidance and machine-readable error vocabulary for `missing-required-integrity`, `missing-required-signature`, `integrity-mismatch`, `signature-digest-mismatch`, `signature-verification-failure`, `rekor-inclusion-failure`, `fulcio-chain-failure`, `no-trusted-signature`, `insufficient-trusted-signatures`, and `trust-policy-violation`.
+- Tightened multi-signature threshold semantics: `minSignatures` counts distinct signatures that both verify and match the trust policy; untrusted or duplicate signatures do not satisfy the threshold.
+
+### Trust policy schema
+
+- Added `schemas/mda-trust-policy.schema.json` for `mda-trust-policy.json`.
+- Sigstore OIDC signers MUST pin both `issuer` and `subject`; issuer-only trust policies reject.
+- Sigstore trust policies MUST configure Rekor with `rekor.url`; there is no `rekor.required` flag and no `required: false` opt-out.
+- `did:web` trust policies use only `domain`; Rekor is forbidden for did:web-only policies.
+- `minSignatures` is optional and defaults to `1`; examples omit `minSignatures: 1`.
+
+### Signatures / tooling
+
+- Tightened signature schema: Sigstore signatures require `rekor-log-id` and `rekor-log-index`, Sigstore Rekor entries must be `dsse-v0.0.1`, and `did:web` signatures MUST NOT include Rekor fields.
+- Clarified that DSSE vendor payload types use `application/vnd.<vendor>.<doc-type>+json`; `+jcs+json` rejects.
+- Rewrote Sigstore tooling guidance around DSSE-capable `sigstore-python` / `sigstore-go` paths; documented `cosign sign-blob` and `cosign attest-blob` as incompatible with MDA's required Rekor `dsse-v0.0.1` entry type.
+
+### Conformance / docs
+
+- Extended `scripts/validate-conformance.mjs` to validate raw JSON fixtures, enforce trusted-runtime semantic checks, match expected machine-readable errors, and test Sigstore policy matching using post-crypto `verified-identities`.
+- Added fixtures for issuer-only policy rejection, Sigstore without Rekor, did:web with Rekor, invalid payload-type suffix, trusted-runtime missing integrity/signature, duplicate signer threshold failure, untrusted `did:web` signer, trusted Sigstore signer, untrusted Sigstore subject, and did:web-only policy with Rekor.
+- Replaced the old manual workflow guide with `docs/create-sign-verify-mda.md`, focused on human create/sign/verify steps, local-dev vs production boundaries, trust-policy examples, and runtime verification.
+
 ## [1.0.0-rc.1] - 2026-05-07
 
-First release-candidate freeze of the MDA v1.0 specification. The conformance contract is locked at this tag; subsequent `1.0.0-rc.N` tags ship reference-implementation maturity only. The final `1.0.0` lands when `@mda/cli` passes 100 % of the conformance suite.
+First release-candidate baseline of the MDA v1.0 specification. `1.0.0-rc.2` supersedes this baseline for signed-MDA trusted-runtime behavior. The final `1.0.0` lands when `@mda/cli` passes 100 % of the conformance suite.
 
-### Specification (locked)
+### Specification baseline
 
 - §00 Overview, terms, P0 > P1 > P2 priority, three authoring modes, governance, versioning.
 - §01 Source (`.mda`) ↔ Output (`.md`) compile direction. Identity-compile clarified.
@@ -22,11 +53,8 @@ First release-candidate freeze of the MDA v1.0 specification. The conformance co
 - §11 Implementer's Guide (informative): canonical loader algorithm pseudocode + error category vocabulary, so independent third-party implementations converge on identical observable behavior.
 - §12 Sigstore tooling integration (informative): explicit field-by-field mapping from `cosign` / `sigstore-python` / `sigstore-go` bundles into MDA `signatures[]` entries.
 - §02-1.1 normative frontmatter extraction algorithm: UTF-8 BOM stripping, CRLF→LF normalization, opening / closing fence rules, body-with-`---`-horizontal-rule disambiguation, and empty-body handling. §08-3 references this as the canonical extraction step.
-- §09-4 Rekor entry type pinned: Sigstore signatures MUST use Rekor entry type `dsse-v0.0.1`; verifiers MUST refuse other entry types (`hashedrekord-v0.0.1`, `intoto-v0.0.2`, etc.).
-- §09-3.1 vendor-defined DSSE payload types: convention `application/vnd.<vendor>.<doc-type>+json` per RFC 6838 §3.2 vendor tree (the structured suffix is `+json`; `+jcs` is not IANA-registered and is not used). Reserved set listed in `REGISTRY.md`. The optional `signatures[i].payload-type` field is added to `schemas/_defs/signature.schema.json` (§09-2) so vendors can carry the declared payload type alongside the signature; when absent, MDA validators MUST treat the value as the default `application/vnd.mda.integrity+json`.
 - §02-1.1 YAML 1.2 normative parser guidance: implementations MUST NOT apply YAML 1.1 "Norway problem" boolean coercion (`yes`, `no`, `on`, `off`, `Y`, `N` round-trip as strings).
 - §11 expanded canonical loader: explicit handling of frontmatter-free body-only AGENTS.md, source-mode vs output-mode `requires` lookup, explicit reference to §08-3.1 strip step inside `canonicalizeArtifact`, broadened error vocabulary (`missing-required-frontmatter`, `rekor-inclusion-failure`, `fulcio-chain-failure`, `signature-verification-failure`, `unknown-signer-method`), and an explicit `integrity`-without-`signatures[]` verification path (§11-5).
-- §12 rewritten to lead with `sigstore-python` and `sigstore-go` `sign_dsse(payload, payload_type)`, the only Sigstore client APIs that emit a Rekor `dsse-v0.0.1` entry today; `cosign sign-blob` and `cosign attest-blob` are documented as **incompatible** with §09 because they emit `hashedrekord-v0.0.1` and `intoto-v0.0.2` respectively. `sigstore-rs` covered as a verifier-side option.
 
 ### Companion artifacts
 
