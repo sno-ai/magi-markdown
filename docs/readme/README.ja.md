@@ -133,7 +133,7 @@ JSON Schema は [`schemas/`](../../schemas/) にあります — `frontmatter-so
 
 ## リファレンス実装
 
-TypeScript 製の CLI は [`packages/mda/`](../../packages/mda/) にあります (npm パッケージ: `@mda/cli`)。アーキテクチャ仕様は [`packages/mda/IMPL-SPEC.md`](../../packages/mda/IMPL-SPEC.md) です。CLI は `v1.0.0-rc.N` タグを通じて成熟していきます。最終的な `1.0.0` は、CLI が適合性スイートの 100% を通過した時点で着地します。
+TypeScript 製の CLI は [`apps/cli/`](../../apps/cli/) にあります (npm パッケージ: `@markdown-ai/cli`)。アーキテクチャ仕様は [`apps/cli/IMPL-SPEC.md`](../../apps/cli/IMPL-SPEC.md) です。CLI は `v1.0.0-rc.N` タグを通じて成熟していきます。最終的な `1.0.0` は、CLI が適合性スイートの 100% を通過した時点で着地します。
 
 ![v1.0 はコントラクト — スキーマ、適合性、コンパイラ — を出荷し、検証器、リゾルバ、レジストリ、グラフインデクサ、ランタイムルーティングは将来のエコシステム作業として残る](../../images/status-contract-and-ecosystem.png)
 

@@ -133,7 +133,7 @@ Les JSON Schemas sont dans [`schemas/`](../../schemas/) — `frontmatter-source`
 
 ## Implémentation de référence
 
-La CLI TypeScript se trouve dans [`packages/mda/`](../../packages/mda/) (paquet npm : `@mda/cli`). La spec d'architecture est dans [`packages/mda/IMPL-SPEC.md`](../../packages/mda/IMPL-SPEC.md). La CLI mûrit au fil des tags `v1.0.0-rc.N`. La `1.0.0` finale arrivera quand la CLI passera 100 % de la suite de conformance.
+La CLI TypeScript se trouve dans [`apps/cli/`](../../apps/cli/) (paquet npm : `@markdown-ai/cli`). La spec d'architecture est dans [`apps/cli/IMPL-SPEC.md`](../../apps/cli/IMPL-SPEC.md). La CLI mûrit au fil des tags `v1.0.0-rc.N`. La `1.0.0` finale arrivera quand la CLI passera 100 % de la suite de conformance.
 
 ![v1.0 livre le contrat — schemas, conformance et compilateur — avec verifier, resolver, registry, indexeur de graphe et routage runtime comme chantiers à venir pour l'écosystème](../../images/status-contract-and-ecosystem.png)
 

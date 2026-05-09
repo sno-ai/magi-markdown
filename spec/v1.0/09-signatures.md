@@ -133,7 +133,7 @@ This spec defines what a signature *is*, not *which signatures must be trusted*.
 - Minimum number of distinct trusted signer identities.
 - Maximum age of Rekor entries.
 
-The reference CLI in `packages/mda/` ships a default-deny policy with explicit allow-list flags; see `packages/mda/IMPL-SPEC.md`.
+The reference CLI in `apps/cli/` ships a default-deny policy with explicit allow-list flags; see `apps/cli/IMPL-SPEC.md`.
 
 ## §09-8 Examples
 

@@ -16,7 +16,7 @@ This guide is for developers building MDA-aware tools — validators, loaders, h
 - [§11 Implementer's Guide](https://github.com/sno-ai/mda/blob/main/spec/v1.0/11-implementer-guide.md) — informative loader pseudocode and error-vocabulary.
 - [§12 Sigstore tooling](https://github.com/sno-ai/mda/blob/main/spec/v1.0/12-sigstore-tooling.md) — informative mapping from `sigstore-python` / `sigstore-go` to MDA `signatures[]`.
 
-The reference implementation lives in [`packages/mda/`](https://github.com/sno-ai/mda/tree/main/packages/mda) (TypeScript, npm `@mda/cli`). Architecture and module layout are documented in [`packages/mda/IMPL-SPEC.md`](https://github.com/sno-ai/mda/blob/main/packages/mda/IMPL-SPEC.md).
+The reference implementation lives in [`apps/cli/`](https://github.com/sno-ai/mda/tree/main/apps/cli) (TypeScript, npm `@markdown-ai/cli`). Architecture and module layout are documented in [`apps/cli/IMPL-SPEC.md`](https://github.com/sno-ai/mda/blob/main/apps/cli/IMPL-SPEC.md).
 
 ## Pipeline at a glance
 
@@ -163,7 +163,7 @@ For each entry in `signatures[]` where `signer` starts with `sigstore-oidc:` (§
 4. Verify the DSSE PAE envelope signature with the leaf certificate public key.
 5. Apply the operator trust policy to the issuer and subject.
 
-`@mda/cli` and the verifier helpers in `packages/mda/` glue a JCS helper and DSSE-capable signing/verification helpers. For the create-sign-verify guide with standard hashing and DSSE-capable signing tools, see [`docs/create-sign-verify-mda.md`](https://github.com/sno-ai/mda/blob/main/docs/create-sign-verify-mda.md).
+`@markdown-ai/cli` and the verifier helpers in `apps/cli/` glue a JCS helper and DSSE-capable signing/verification helpers. For the create-sign-verify guide with standard hashing and DSSE-capable signing tools, see [`docs/create-sign-verify-mda.md`](https://github.com/sno-ai/mda/blob/main/docs/create-sign-verify-mda.md).
 
 ## Conformance suite
 
@@ -187,5 +187,5 @@ The contract is locked. The consumer-side ecosystem that enforces or routes thro
 
 - [Specification](/mdx/specification) — entry point with every §.
 - [Create, sign, and verify MDA](https://github.com/sno-ai/mda/blob/main/docs/create-sign-verify-mda.md) — hand-author and sign without the reference CLI.
-- [Reference implementation](https://github.com/sno-ai/mda/tree/main/packages/mda) — TypeScript CLI source.
-- [IMPL-SPEC](https://github.com/sno-ai/mda/blob/main/packages/mda/IMPL-SPEC.md) — reference-implementation architecture.
+- [Reference implementation](https://github.com/sno-ai/mda/tree/main/apps/cli) — TypeScript CLI source.
+- [IMPL-SPEC](https://github.com/sno-ai/mda/blob/main/apps/cli/IMPL-SPEC.md) — reference-implementation architecture.

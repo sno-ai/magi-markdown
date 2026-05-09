@@ -4,7 +4,7 @@
 
 ## §11-1 Why this section exists
 
-MDA v1.0 is a contract, not a reference implementation. The reference TypeScript CLI under `packages/mda/` is one of many valid implementations; third-party validators, verifiers, and runtime consumers are equally welcome. Independent implementations naturally diverge on:
+MDA v1.0 is a contract, not a reference implementation. The reference TypeScript CLI under `apps/cli/` is one of many valid implementations; third-party validators, verifiers, and runtime consumers are equally welcome. Independent implementations naturally diverge on:
 
 - The order of validation steps (schema first, integrity first, signatures first?)
 - Where to fail fast vs accumulate errors
@@ -258,6 +258,6 @@ A consumer that wants tamper detection without identity attestation MAY perform 
 
 The following implementations follow this guide:
 
-- `packages/mda/` — TypeScript reference CLI (npm `@mda/cli`). Architecture spec at `packages/mda/IMPL-SPEC.md`.
+- `apps/cli/` — TypeScript reference CLI (npm `@markdown-ai/cli`). Architecture spec at `apps/cli/IMPL-SPEC.md`.
 
 Third-party implementations are encouraged. Implementations that pass the conformance suite (§07) and follow the algorithm above SHOULD be listed in `REGISTRY.md` under "Reference implementations" once a follow-up registry section is added.

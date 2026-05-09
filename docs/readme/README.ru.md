@@ -133,7 +133,7 @@ JSON-схемы лежат в [`schemas/`](../../schemas/) — `frontmatter-sour
 
 ## Эталонная реализация
 
-CLI на TypeScript находится в [`packages/mda/`](../../packages/mda/) (npm-пакет: `@mda/cli`). Архитектурная спецификация — [`packages/mda/IMPL-SPEC.md`](../../packages/mda/IMPL-SPEC.md). CLI зреет через теги `v1.0.0-rc.N`. Финальный `1.0.0` выйдет, когда CLI пройдёт 100% conformance-набора.
+CLI на TypeScript находится в [`apps/cli/`](../../apps/cli/) (npm-пакет: `@markdown-ai/cli`). Архитектурная спецификация — [`apps/cli/IMPL-SPEC.md`](../../apps/cli/IMPL-SPEC.md). CLI зреет через теги `v1.0.0-rc.N`. Финальный `1.0.0` выйдет, когда CLI пройдёт 100% conformance-набора.
 
 ![v1.0 публикует контракт — схемы, conformance и компилятор — оставляя верификатор, резолвер, реестр, графовый индексатор и runtime-маршрутизацию как будущую работу экосистемы](../../images/status-contract-and-ecosystem.png)
 
