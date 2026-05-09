@@ -64,12 +64,12 @@ For the long version, two documents go deeper. Both trace every claim back to a 
 MDA artifacts may be produced three ways. They're equivalent under validation.
 
 1. **Agent mode** — an AI agent writes the `.md` directly. The primary near-term use case.
-2. **Human mode** — a human writes the `.md` directly, with `sha256sum` and `cosign`.
+2. **Human mode** — a human writes the `.md` directly, with standard hashing and DSSE-capable signing tools.
 3. **Compiled mode** — an author writes a `.mda` source; the MDA compiler emits one or more `.md` outputs.
 
 Whichever path you take, the artifact is judged against the same JSON Schema 2020-12 target schema and the same conformance suite. There's no second code path for "this came from an agent."
 
-See [`docs/manual-workflow.md`](docs/manual-workflow.md) for the manual and agent-authored paths without the reference CLI, and [`spec/v1.0/00-overview.md §0.5–§0.6`](spec/v1.0/00-overview.md) for the normative statement of priority and modes.
+See [`docs/create-sign-verify-mda.md`](docs/create-sign-verify-mda.md) for the human and agent-authored paths without the reference CLI, and [`spec/v1.0/00-overview.md §0.5–§0.6`](spec/v1.0/00-overview.md) for the normative statement of priority and modes.
 
 ## Minimal example
 
@@ -127,8 +127,9 @@ The normative MDA Open Spec lives at [**SPEC.md**](SPEC.md) → [`spec/v1.0/`](s
 - [§10 Capabilities](spec/v1.0/10-capabilities.md) — `metadata.mda.requires`
 - [§11 Implementer's Guide](spec/v1.0/11-implementer-guide.md) (informative)
 - [§12 Sigstore tooling integration](spec/v1.0/12-sigstore-tooling.md) (informative)
+- [§13 Trusted Runtime Profile](spec/v1.0/13-trusted-runtime.md) — production verification profile and trust policy
 
-JSON Schemas live in [`schemas/`](schemas/) — `frontmatter-source`, `frontmatter-skill-md`, `frontmatter-agents-md`, `frontmatter-mcp-server-md`, `relationship-footnote`, plus shared `_defs/` for `integrity`, `signature`, `requires`, `depends-on`, and `version-range`. Conformance fixtures and the validation runner live in [`conformance/`](conformance/) (`node scripts/validate-conformance.mjs`).
+JSON Schemas live in [`schemas/`](schemas/) — `frontmatter-source`, `frontmatter-skill-md`, `frontmatter-agents-md`, `frontmatter-mcp-server-md`, `relationship-footnote`, `mda-trust-policy`, plus shared `_defs/` for `integrity`, `signature`, `requires`, `depends-on`, and `version-range`. Conformance fixtures and the validation runner live in [`conformance/`](conformance/) (`node scripts/validate-conformance.mjs`).
 
 ## Reference implementation
 
@@ -140,11 +141,11 @@ The TypeScript CLI lives in [`packages/mda/`](packages/mda/) (npm package: `@mda
 
 v1.0 ships the **contract**, not the entire ecosystem around it.
 
-**What works today:** you can author a `.mda`, compile it to one or more conforming `.md` outputs, and validate them against the target JSON Schemas and the 35-fixture conformance suite.
+**What works today:** you can author a `.mda`, compile it to one or more conforming `.md` outputs, and validate them against the target JSON Schemas and the conformance suite.
 
 **What's still being built:**
 
-- A bundled verifier for signatures isn't shipped yet. Operators currently glue `cosign` and a JCS library together themselves.
+- A bundled verifier for signatures isn't shipped yet. Operators currently combine a JCS library with DSSE-capable Sigstore signing and verification helpers.
 - A working dependency resolver and a central artifact registry don't exist yet.
 - A graph indexer that consumes `metadata.mda.relationships` isn't shipped.
 - No 2026 multi-agent harness is known to route through `metadata.mda.requires` today.
