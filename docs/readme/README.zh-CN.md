@@ -133,7 +133,7 @@ JSON Schema 位于 [`schemas/`](../../schemas/) —— `frontmatter-source`、`f
 
 ## 参考实现
 
-TypeScript CLI 位于 [`packages/mda/`](../../packages/mda/)（npm 包：`@mda/cli`）。架构规范见 [`packages/mda/IMPL-SPEC.md`](../../packages/mda/IMPL-SPEC.md)。CLI 通过一系列 `v1.0.0-rc.N` 标签逐步成熟。当 CLI 100% 通过一致性测试集时，`1.0.0` 正式发布。
+TypeScript CLI 位于 [`apps/cli/`](../../apps/cli/)（npm 包：`@markdown-ai/cli`）。架构规范见 [`apps/cli/IMPL-SPEC.md`](../../apps/cli/IMPL-SPEC.md)。CLI 通过一系列 `v1.0.0-rc.N` 标签逐步成熟。当 CLI 100% 通过一致性测试集时，`1.0.0` 正式发布。
 
 ![v1.0 交付契约 —— schema、一致性测试和编译器；验签器、解析器、注册表、图索引器以及运行时路由属于后续生态工作](../../images/status-contract-and-ecosystem.png)
 

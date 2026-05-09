@@ -37,7 +37,7 @@ Remove the top-level `integrity` field and the entire top-level `signatures` arr
 
 Convert the (stripped) frontmatter to JSON and serialize it via JCS (RFC 8785, JSON Canonicalization Scheme). JCS sorts object keys lexicographically, normalizes numbers, and uses minimal whitespace. The result is a deterministic UTF-8 byte sequence.
 
-Implementation note: every mainstream language has a JCS library. The reference implementation in `packages/mda/` uses `@truestamp/canonify`.
+Implementation note: every mainstream language has a JCS library. The reference implementation in `apps/cli/` uses `@truestamp/canonify`.
 
 ### §08-3.3 Step 3 — Concatenate body bytes
 

@@ -66,7 +66,7 @@ See [`spec/v1.0/00-overview.md §0.6`](https://github.com/sno-ai/mda/blob/main/s
 - **Examples** — [`examples/`](https://github.com/sno-ai/mda/tree/main/examples) — `source-only/`, `skill-md/` (additional target examples land alongside reference-implementation maturity).
 - **Vendor namespace registry** — [`REGISTRY.md`](https://github.com/sno-ai/mda/blob/main/REGISTRY.md) — vendor namespaces, standard `requires` keys, reserved Sigstore OIDC issuers, reserved Rekor instances, reserved DSSE `payload-type` values.
 - **Create, sign, and verify guide** — [`docs/create-sign-verify-mda.md`](https://github.com/sno-ai/mda/blob/main/docs/create-sign-verify-mda.md) — practical human and agent-author flow without the MDA CLI.
-- **Reference implementation** — [`packages/mda/`](https://github.com/sno-ai/mda/tree/main/packages/mda) — TypeScript, npm: `@mda/cli`. Architecture spec: [`packages/mda/IMPL-SPEC.md`](https://github.com/sno-ai/mda/blob/main/packages/mda/IMPL-SPEC.md).
+- **Reference implementation** — [`apps/cli/`](https://github.com/sno-ai/mda/tree/main/apps/cli) — TypeScript, npm: `@markdown-ai/cli`. Architecture spec: [`apps/cli/IMPL-SPEC.md`](https://github.com/sno-ai/mda/blob/main/apps/cli/IMPL-SPEC.md).
 
 ## Governance
 

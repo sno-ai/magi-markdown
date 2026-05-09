@@ -8,7 +8,7 @@ In five minutes you'll write a `.mda` source, compile it to a `SKILL.md` that lo
 ## What you need
 
 1. A text editor.
-2. The `@mda/cli` reference implementation, or — if you'd rather not install anything — the [create-sign-verify guide](https://github.com/sno-ai/mda/blob/main/docs/create-sign-verify-mda.md), which uses only standard hashing and DSSE-capable signing tools.
+2. The `@markdown-ai/cli` reference implementation, or — if you'd rather not install anything — the [create-sign-verify guide](https://github.com/sno-ai/mda/blob/main/docs/create-sign-verify-mda.md), which uses only standard hashing and DSSE-capable signing tools.
 3. A basic grasp of Markdown.
 
 ## A minimal `.mda` source
@@ -47,7 +47,7 @@ What's happening:
 ## Compile
 
 ```bash
-npx @mda/cli compile pdf-tools.mda --target SKILL.md
+npx @markdown-ai/cli compile pdf-tools.mda --target SKILL.md
 ```
 
 Output: `pdf-tools/SKILL.md`. Because the source already sits in the strict target shape — every MDA-extended field is nested under `metadata.mda.*` — the compile is essentially a rename.
@@ -94,7 +94,7 @@ metadata:
 Compile with the `--sign` flag and Sigstore OIDC keyless signing kicks in:
 
 ```bash
-npx @mda/cli compile pdf-tools.mda --target SKILL.md --sign
+npx @markdown-ai/cli compile pdf-tools.mda --target SKILL.md --sign
 ```
 
 The output `SKILL.md` gets top-level `integrity.digest` (a JCS-canonicalized hash of the canonical bytes) and top-level `signatures[]` (DSSE-enveloped signature with Rekor inclusion proof and Fulcio certificate metadata). A verifier rederives the digest, looks up Rekor, verifies the cert chain and signature, then applies the operator trust policy.

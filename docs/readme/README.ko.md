@@ -133,7 +133,7 @@ JSON Schema는 [`schemas/`](../../schemas/)에 있습니다 — `frontmatter-sou
 
 ## 참조 구현
 
-TypeScript CLI는 [`packages/mda/`](../../packages/mda/)에 있습니다 (npm 패키지: `@mda/cli`). 아키텍처 스펙은 [`packages/mda/IMPL-SPEC.md`](../../packages/mda/IMPL-SPEC.md)입니다. CLI는 `v1.0.0-rc.N` 태그를 거치며 성숙해집니다. 최종 `1.0.0`은 CLI가 적합성 스위트를 100% 통과하는 시점에 릴리스됩니다.
+TypeScript CLI는 [`apps/cli/`](../../apps/cli/)에 있습니다 (npm 패키지: `@markdown-ai/cli`). 아키텍처 스펙은 [`apps/cli/IMPL-SPEC.md`](../../apps/cli/IMPL-SPEC.md)입니다. CLI는 `v1.0.0-rc.N` 태그를 거치며 성숙해집니다. 최종 `1.0.0`은 CLI가 적합성 스위트를 100% 통과하는 시점에 릴리스됩니다.
 
 ![v1.0은 계약 — 스키마, 적합성, 컴파일러 — 을 출시하며 검증기, 리졸버, 레지스트리, 그래프 인덱서, 런타임 라우팅은 향후 생태계 작업으로 남겨 둡니다](../../images/status-contract-and-ecosystem.png)
 

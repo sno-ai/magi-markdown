@@ -133,7 +133,7 @@ JSON Schemas [`schemas/`](../../schemas/) में रहते हैं — `
 
 ## रेफ़रेंस इम्प्लीमेंटेशन
 
-TypeScript CLI [`packages/mda/`](../../packages/mda/) में रहता है (npm पैकेज: `@mda/cli`)। आर्किटेक्चर स्पेक है [`packages/mda/IMPL-SPEC.md`](../../packages/mda/IMPL-SPEC.md)। CLI `v1.0.0-rc.N` टैगों में परिपक्व होता जाता है। अंतिम `1.0.0` तब आता है जब CLI कन्फ़ॉर्मेंस स्यूट का 100% पास कर ले।
+TypeScript CLI [`apps/cli/`](../../apps/cli/) में रहता है (npm पैकेज: `@markdown-ai/cli`)। आर्किटेक्चर स्पेक है [`apps/cli/IMPL-SPEC.md`](../../apps/cli/IMPL-SPEC.md)। CLI `v1.0.0-rc.N` टैगों में परिपक्व होता जाता है। अंतिम `1.0.0` तब आता है जब CLI कन्फ़ॉर्मेंस स्यूट का 100% पास कर ले।
 
 ![v1.0 कॉन्ट्रैक्ट शिप करता है — schemas, conformance, और कंपाइलर — verifier, resolver, registry, ग्राफ़ इंडेक्सर और रनटाइम राउटिंग को भविष्य के इकोसिस्टम-कार्य के रूप में](../../images/status-contract-and-ecosystem.png)
 

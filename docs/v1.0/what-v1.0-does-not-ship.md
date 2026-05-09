@@ -32,7 +32,7 @@ The nine gaps cluster into three categories. Each one has its own resolution pat
 
 *Items 2 (verifier), 3 (resolver), 4 (graph indexer).*
 
-These exist as spec contracts but have no shipped implementation in v1.0. The reference TypeScript CLI at `packages/mda/` (npm `@mda/cli`) ships incrementally across `v1.0.0-rc.N` tags. The final `1.0.0` releases when `@mda/cli` passes 100% of the conformance suite. Third-party implementations are equally welcome. The contract doesn't privilege the reference.
+These exist as spec contracts but have no shipped implementation in v1.0. The reference TypeScript CLI at `apps/cli/` (npm `@markdown-ai/cli`) ships incrementally across `v1.0.0-rc.N` tags. The final `1.0.0` releases when `@markdown-ai/cli` passes 100% of the conformance suite. Third-party implementations are equally welcome. The contract doesn't privilege the reference.
 
 ### B. Ecosystem adoption is the gating signal
 
@@ -53,7 +53,7 @@ Items 1 and 8 won't graduate. They describe the architectural boundary of what M
 For categories A and B (items 2 through 7), explicit graduation criteria:
 
 - **Item 2 (verifier).** A bundled verifier ships when the reference CLI passes the full §07 conformance suite including Sigstore and `did:web` verification fixtures.
-- **Item 3 (resolver).** A working resolver ships when `@mda/cli` implements the §03-3.3 normative refusal behavior plus the §03-3.2 version-range grammar end-to-end.
+- **Item 3 (resolver).** A working resolver ships when `@markdown-ai/cli` implements the §03-3.3 normative refusal behavior plus the §03-3.2 version-range grammar end-to-end.
 - **Item 4 (graph indexer or relationship-indexer consumer).** Moves off when ≥1 independent indexer or knowledge-graph tool consumes `metadata.mda.relationships` in production.
 - **Item 5 (`requires` routing).** Moves off when ≥1 multi-agent harness ships activation or dispatch routing keyed on standard `requires` fields.
 - **Item 6 (`CLAUDE.md`).** Moves off when cross-runtime adoption of `CLAUDE.md` is observed and a non-stub target schema is justified by use cases.

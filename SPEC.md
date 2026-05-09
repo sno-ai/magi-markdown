@@ -62,7 +62,7 @@ MDA is an independent project. It actively serves AAIF (Linux Foundation Agentic
 - **Examples:** [`examples/`](examples/) — `source-only/`, `skill-md/` (additional target examples land alongside reference-implementation maturity)
 - **Vendor namespace registry:** [`REGISTRY.md`](REGISTRY.md) — also lists standard `requires` keys, reserved Sigstore OIDC issuers, reserved transparency log providers, and reserved DSSE `payload-type` values
 - **Create-sign-verify recipes:** [`docs/create-sign-verify-mda.md`](docs/create-sign-verify-mda.md) — hand-author and sign without the MDA CLI
-- **Reference implementation:** [`packages/mda/`](packages/mda/) — TypeScript, npm: `@mda/cli`. Architecture spec: [`packages/mda/IMPL-SPEC.md`](packages/mda/IMPL-SPEC.md)
+- **Reference implementation:** [`apps/cli/`](apps/cli/) — TypeScript, npm: `@markdown-ai/cli`. Architecture spec: [`apps/cli/IMPL-SPEC.md`](apps/cli/IMPL-SPEC.md)
 
 ## Versioning
 

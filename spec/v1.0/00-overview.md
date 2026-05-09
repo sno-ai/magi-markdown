@@ -85,7 +85,7 @@ MDA defines three equivalent authoring modes:
 
 All three modes MUST produce artifacts that are byte-equivalent to consumers and that pass the same target-schema validation. Conforming spec sections SHOULD include at least one self-contained, copy-pasteable example targeted at agent mode.
 
-The human and agent-author paths are documented in `docs/create-sign-verify-mda.md`. The compiled-mode reference implementation is at `packages/mda/`.
+The human and agent-author paths are documented in `docs/create-sign-verify-mda.md`. The compiled-mode reference implementation is at `apps/cli/`.
 
 ## §0.7 Wedge narrative (informative)
 
