@@ -1,8 +1,17 @@
 {
   "name": "@markdown-ai/cli",
-  "version": "0.1.0",
+  "version": "1.0.0-rc.2",
   "description": "Reference CLI for Markdown AI / MDA artifacts.",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sno-ai/mda.git",
+    "directory": "apps/cli"
+  },
+  "homepage": "https://github.com/sno-ai/mda/tree/main/apps/cli",
+  "bugs": {
+    "url": "https://github.com/sno-ai/mda/issues"
+  },
   "type": "module",
   "bin": {
     "mda": "dist/cli.js"
@@ -11,6 +20,17 @@
     "dist",
     "README.md",
     "HOW-TO-USE.md"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "keywords": [
+    "mda",
+    "markdown-ai",
+    "agent",
+    "cli",
+    "conformance"
   ],
   "engines": {
     "node": ">=20"

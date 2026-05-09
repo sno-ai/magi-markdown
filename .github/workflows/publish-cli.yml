@@ -1,0 +1,48 @@
+name: Publish CLI
+
+on:
+  push:
+    tags:
+      - "v1.0.0-rc.*"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  npm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Verify tag commit is on main
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+
+      - name: Verify tag matches CLI package version
+        run: |
+          version="$(node -p "require('./apps/cli/package.json').version")"
+          test "v${version}" = "${GITHUB_REF_NAME}"
+
+      - run: pnpm cli:test
+
+      - run: npm pack --dry-run --json
+        working-directory: apps/cli
+
+      - run: npm publish --provenance --access public --tag rc
+        working-directory: apps/cli
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
