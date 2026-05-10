@@ -2,7 +2,7 @@
 
 > एजेंट-केंद्रित दस्तावेज़ों के लिए एक Markdown सुपरसेट। **एक स्रोत, अनेक लक्ष्य** — उन `.md` फ़ाइलों में कंपाइल करें जिन्हें हर प्रमुख एजेंट रनटाइम पहले से लोड करता है। **लोड के समय छेड़छाड़ का प्रमाण** — हर आर्टिफ़ैक्ट एक पुनरुत्पादनीय कंटेंट डाइजेस्ट लेकर चलता है, और साइन किए गए आर्टिफ़ैक्ट Sigstore-आधारित सिग्नेचर लेकर चलते हैं, ताकि न तो दस्तावेज़ लोड करने वाले एजेंट को और न ही समीक्षा करने वाले मनुष्य को किसी अनसाइन ब्लॉब पर भरोसा करना पड़े।
 
-[![Latest release](https://img.shields.io/github/v/release/sno-ai/mda?include_prereleases&label=release&color=blue)](https://github.com/sno-ai/mda/releases/latest)
+[![Latest release](https://img.shields.io/badge/release-v1.0.0--rc.3-blue)](https://github.com/sno-ai/mda/releases/tag/v1.0.0-rc.3)
 [![License](https://img.shields.io/github/license/sno-ai/mda)](https://github.com/sno-ai/mda/blob/main/LICENSE)
 [![Docs](https://img.shields.io/badge/docs-mda.sno.dev-3b82f6)](https://mda.sno.dev)
 [![GitHub stars](https://img.shields.io/github/stars/sno-ai/mda?style=flat&color=yellow)](https://github.com/sno-ai/mda/stargazers)

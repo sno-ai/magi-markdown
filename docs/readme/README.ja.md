@@ -2,7 +2,7 @@
 
 > エージェント向けドキュメントのための Markdown スーパーセット。**ひとつのソース、複数のターゲット** — 主要なエージェントランタイムがすでに読み込んでいる `.md` ファイル群へとコンパイルできます。**ロード時に改ざん検出可能** — すべての成果物は再現可能なコンテンツダイジェストを保持し、署名済みの成果物は Sigstore に裏付けられた署名を保持します。これにより、ドキュメントを読み込むエージェントもレビューする人間も、署名のない blob を信用する必要がなくなります。
 
-[![Latest release](https://img.shields.io/github/v/release/sno-ai/mda?include_prereleases&label=release&color=blue)](https://github.com/sno-ai/mda/releases/latest)
+[![Latest release](https://img.shields.io/badge/release-v1.0.0--rc.3-blue)](https://github.com/sno-ai/mda/releases/tag/v1.0.0-rc.3)
 [![License](https://img.shields.io/github/license/sno-ai/mda)](https://github.com/sno-ai/mda/blob/main/LICENSE)
 [![Docs](https://img.shields.io/badge/docs-mda.sno.dev-3b82f6)](https://mda.sno.dev)
 [![GitHub stars](https://img.shields.io/github/stars/sno-ai/mda?style=flat&color=yellow)](https://github.com/sno-ai/mda/stargazers)

@@ -2,7 +2,7 @@
 
 > 에이전트 대상 문서를 위한 Markdown 슈퍼셋입니다. **하나의 소스, 다수의 대상** — 주요 에이전트 런타임이 이미 로드하고 있는 `.md` 파일들로 컴파일합니다. **로드 시점에 위변조를 탐지** — 모든 산출물은 재현 가능한 콘텐츠 다이제스트를 가지며, 서명된 산출물은 Sigstore에 고정된 서명을 함께 운반하므로, 문서를 로드하는 에이전트도 검토하는 사람도 서명되지 않은 블롭을 신뢰할 필요가 없습니다.
 
-[![Latest release](https://img.shields.io/github/v/release/sno-ai/mda?include_prereleases&label=release&color=blue)](https://github.com/sno-ai/mda/releases/latest)
+[![Latest release](https://img.shields.io/badge/release-v1.0.0--rc.3-blue)](https://github.com/sno-ai/mda/releases/tag/v1.0.0-rc.3)
 [![License](https://img.shields.io/github/license/sno-ai/mda)](https://github.com/sno-ai/mda/blob/main/LICENSE)
 [![Docs](https://img.shields.io/badge/docs-mda.sno.dev-3b82f6)](https://mda.sno.dev)
 [![GitHub stars](https://img.shields.io/github/stars/sno-ai/mda?style=flat&color=yellow)](https://github.com/sno-ai/mda/stargazers)

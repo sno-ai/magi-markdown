@@ -2,7 +2,7 @@
 
 > A Markdown superset for agent-facing documents. **One source, many targets** — compile into the `.md` files every major agent runtime already loads. **Tamper-evident at load** — every artifact carries a reproducible content digest, and signed artifacts carry Sigstore-anchored signatures, so neither the agent loading the doc nor the human reviewing it has to trust an unsigned blob.
 
-[![Latest release](https://img.shields.io/github/v/release/sno-ai/mda?include_prereleases&label=release&color=blue)](https://github.com/sno-ai/mda/releases/latest)
+[![Latest release](https://img.shields.io/badge/release-v1.0.0--rc.3-blue)](https://github.com/sno-ai/mda/releases/tag/v1.0.0-rc.3)
 [![License](https://img.shields.io/github/license/sno-ai/mda)](https://github.com/sno-ai/mda/blob/main/LICENSE)
 [![Docs](https://img.shields.io/badge/docs-mda.sno.dev-3b82f6)](https://mda.sno.dev)
 [![GitHub stars](https://img.shields.io/github/stars/sno-ai/mda?style=flat&color=yellow)](https://github.com/sno-ai/mda/stargazers)

@@ -2,7 +2,7 @@
 
 > 面向 Agent 文档的 Markdown 超集。**一份源码，多端产物** —— 编译生成各主流 Agent 运行时已经在加载的 `.md` 文件。**加载即可验真** —— 每个产物都带有可复现的内容摘要，签名产物还附带锚定到 Sigstore 的签名，加载文档的 Agent 和审阅文档的人都不必再去信任一个未签名的二进制块。
 
-[![Latest release](https://img.shields.io/github/v/release/sno-ai/mda?include_prereleases&label=release&color=blue)](https://github.com/sno-ai/mda/releases/latest)
+[![Latest release](https://img.shields.io/badge/release-v1.0.0--rc.3-blue)](https://github.com/sno-ai/mda/releases/tag/v1.0.0-rc.3)
 [![License](https://img.shields.io/github/license/sno-ai/mda)](https://github.com/sno-ai/mda/blob/main/LICENSE)
 [![Docs](https://img.shields.io/badge/docs-mda.sno.dev-3b82f6)](https://mda.sno.dev)
 [![GitHub stars](https://img.shields.io/github/stars/sno-ai/mda?style=flat&color=yellow)](https://github.com/sno-ai/mda/stargazers)

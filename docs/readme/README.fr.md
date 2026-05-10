@@ -2,7 +2,7 @@
 
 > Un sur-ensemble de Markdown pour les documents destinés aux agents. **Une seule source, plusieurs cibles** — compile vers les fichiers `.md` que tous les principaux runtimes d'agents savent déjà charger. **Inviolabilité vérifiable au chargement** — chaque artefact embarque une empreinte de contenu reproductible, et les artefacts signés portent des signatures ancrées dans Sigstore, de sorte que ni l'agent qui charge le document ni l'humain qui le relit n'a à faire confiance à un blob non signé.
 
-[![Latest release](https://img.shields.io/github/v/release/sno-ai/mda?include_prereleases&label=release&color=blue)](https://github.com/sno-ai/mda/releases/latest)
+[![Latest release](https://img.shields.io/badge/release-v1.0.0--rc.3-blue)](https://github.com/sno-ai/mda/releases/tag/v1.0.0-rc.3)
 [![License](https://img.shields.io/github/license/sno-ai/mda)](https://github.com/sno-ai/mda/blob/main/LICENSE)
 [![Docs](https://img.shields.io/badge/docs-mda.sno.dev-3b82f6)](https://mda.sno.dev)
 [![GitHub stars](https://img.shields.io/github/stars/sno-ai/mda?style=flat&color=yellow)](https://github.com/sno-ai/mda/stargazers)
