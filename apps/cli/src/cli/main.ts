@@ -2,7 +2,7 @@ import { EXIT, commandResult, diag, usage, type CommandResult, type Globals } fr
 import { HELP } from './help.js';
 import { runCanonicalize, runCompile, runInit, runIntegrity, runValidate } from './core-commands.js';
 import { runConformance } from './conformance-command.js';
-import { runDoctor, runLlmix } from './llmix-commands.js';
+import { runDoctor, runLlmix, runRelease } from './llmix-commands.js';
 import { runSign, runVerify } from './security-commands.js';
 import { splitGlobals, writeResult } from './shared.js';
 
@@ -36,6 +36,7 @@ async function runCommand(command: string, args: string[], globals: Globals): Pr
 	if (command === 'integrity') return runIntegrity(args);
 	if (command === 'verify') return runVerify(args);
 	if (command === 'sign') return runSign(args);
+	if (command === 'release') return runRelease(args);
 	if (command === 'llmix') return runLlmix(args);
 	if (command === 'doctor') return runDoctor(args);
 	if (command === 'conformance') return runConformance(args);

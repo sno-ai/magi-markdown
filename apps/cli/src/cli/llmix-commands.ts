@@ -55,26 +55,41 @@ type TrustManifestEvidence = {
 	};
 };
 
+const LLMIX_REGISTRY_TARGET = 'llmix-registry';
+
 export function runLlmix(args: string[]) {
-	if (args[0] === 'trust' && args[1] === 'policy') return runLlmixTrustPolicy(args.slice(2));
-	if (args[0] === 'trust' && args[1] === 'manifest') return runLlmixTrustManifest(args.slice(2));
-	if (args[0] === 'trust' && args[1] === 'snippets') return runLlmixTrustSnippets(args.slice(2));
-	if (args[0] === 'release' && args[1] === 'plan') return runLlmixReleasePlan(args.slice(2));
-	return usage('llmix', 'Expected subcommand: llmix trust policy | llmix trust manifest | llmix trust snippets | llmix release plan');
+	return migratedCommand('llmix', llmixMigrationReplacement(args));
 }
 
-function runLlmixTrustPolicy(args: string[]) {
+export function runRelease(args: string[]) {
+	if (args[0] === 'trust' && args[1] === 'policy') return runLlmixTrustPolicy(args.slice(2), 'release trust policy');
+	if (args[0] === 'prepare') return runLlmixReleasePlan(args.slice(1), 'release prepare');
+	if (args[0] === 'finalize') {
+		if (args.includes('--manifest') || args.includes('--snippet-format') || args.includes('--snippet-out')) {
+			return runLlmixTrustSnippets(args.slice(1), 'release finalize');
+		}
+		return runLlmixTrustManifest(args.slice(1), 'release finalize');
+	}
+	return usage(
+		'release',
+		'Expected subcommand: release trust policy --target llmix-registry | release prepare --target llmix-registry | release finalize --target llmix-registry',
+	);
+}
+
+function runLlmixTrustPolicy(args: string[], command = 'release trust policy') {
 	const parsed = parseOptions(args);
-	const err = unknownOptions(parsed, ['--profile', '--domain', '--min-signatures', '--out', '--repo', '--workflow', '--ref']);
-	if (err) return usage('llmix trust policy', err);
-	if (parsed.positional.length !== 0) return usage('llmix trust policy', 'llmix trust policy takes no positional arguments');
+	const err = unknownOptions(parsed, ['--target', '--profile', '--domain', '--min-signatures', '--out', '--repo', '--workflow', '--ref']);
+	if (err) return usage(command, err);
+	const targetErr = releaseTargetError(command, parsed);
+	if (targetErr) return targetErr;
+	if (parsed.positional.length !== 0) return usage(command, `${command} takes no positional arguments`);
 	const profile = oneOption(parsed.options, '--profile');
-	if (!profile) return usage('llmix trust policy', '--profile <profile> is required');
-	if (profile === 'did-web') return runDidWebTrustPolicy(parsed.options);
-	if (profile === 'github-actions') return runGithubActionsTrustPolicy(parsed.options);
+	if (!profile) return usage(command, '--profile <profile> is required');
+	if (profile === 'did-web') return runDidWebTrustPolicy(parsed.options, command);
+	if (profile === 'github-actions') return runGithubActionsTrustPolicy(parsed.options, command);
 	return commandResult(
 		false,
-		'llmix trust policy',
+		command,
 		EXIT.failure,
 		[diag('trust_policy.unsupported_profile', `Unsupported trust policy profile: ${profile}`)],
 		{
@@ -83,40 +98,50 @@ function runLlmixTrustPolicy(args: string[]) {
 				nextAction(
 					'use-did-web-policy-profile',
 					'Use did:web for local deterministic signing',
-					'mda llmix trust policy --profile did-web --domain example.com --out release-trust-policy.json',
+					'mda release trust policy --target llmix-registry --profile did-web --domain example.com --out release-trust-policy.json',
 				),
 				nextAction(
 					'use-github-actions-policy-profile',
 					'Use GitHub Actions Sigstore/Rekor for CI release signing',
-					'mda llmix trust policy --profile github-actions --repo owner/repo --workflow release.yml --ref refs/heads/main --out release-trust-policy.json',
+					'mda release trust policy --target llmix-registry --profile github-actions --repo owner/repo --workflow release.yml --ref refs/heads/main --out release-trust-policy.json',
 				),
 			],
 		},
 	);
 }
 
-function runLlmixReleasePlan(args: string[]) {
+function runLlmixReleasePlan(args: string[], command = 'release prepare') {
 	const parsed = parseOptions(args);
-	const err = unknownOptions(parsed, ['--source', '--registry-dir', '--policy', '--out', '--did-document', '--offline-sigstore-fixture']);
-	if (err) return usage('llmix release plan', err);
-	if (parsed.positional.length !== 0) return usage('llmix release plan', 'llmix release plan takes no positional arguments');
+	const err = unknownOptions(parsed, [
+		'--target',
+		'--source',
+		'--registry-dir',
+		'--policy',
+		'--out',
+		'--did-document',
+		'--offline-sigstore-fixture',
+	]);
+	if (err) return usage(command, err);
+	const targetErr = releaseTargetError(command, parsed);
+	if (targetErr) return targetErr;
+	if (parsed.positional.length !== 0) return usage(command, `${command} takes no positional arguments`);
 
 	const sourceDir = oneOption(parsed.options, '--source');
 	const registryDir = oneOption(parsed.options, '--registry-dir');
 	const policyPath = oneOption(parsed.options, '--policy');
 	const out = oneOption(parsed.options, '--out');
-	if (!sourceDir) return usage('llmix release plan', '--source <dir> is required');
-	if (!registryDir) return usage('llmix release plan', '--registry-dir <dir> is required');
-	if (!policyPath) return usage('llmix release plan', '--policy <path> is required');
-	if (!out) return usage('llmix release plan', '--out <file> is required');
+	if (!sourceDir) return usage(command, '--source <dir> is required');
+	if (!registryDir) return usage(command, '--registry-dir <dir> is required');
+	if (!policyPath) return usage(command, '--policy <path> is required');
+	if (!out) return usage(command, '--out <file> is required');
 	if (existsSync(out))
-		return ioError('llmix release plan', `Refusing to overwrite existing file: ${out}`, { sourceDir, registryDir, policy: policyPath });
+		return ioError(command, `Refusing to overwrite existing file: ${out}`, { sourceDir, registryDir, policy: policyPath });
 
 	const policy = readJson(policyPath);
-	if (!policy.ok) return ioError('llmix release plan', policy.message, { sourceDir, registryDir, policy: policyPath });
+	if (!policy.ok) return ioError(command, policy.message, { sourceDir, registryDir, policy: policyPath });
 	const policyValidation = validateJsonAgainst(policy.value, 'trustPolicy');
 	if (!policyValidation.ok)
-		return commandResult(false, 'llmix release plan', EXIT.failure, policyValidation.diagnostics, {
+		return commandResult(false, command, EXIT.failure, policyValidation.diagnostics, {
 			sourceDir,
 			registryDir,
 			policy: policyPath,
@@ -124,15 +149,15 @@ function runLlmixReleasePlan(args: string[]) {
 
 	const sourceRoot = resolve(sourceDir);
 	const scanned = scanMdaSources(sourceRoot);
-	if (!scanned.ok) return ioError('llmix release plan', scanned.message, { sourceDir, registryDir, policy: policyPath });
+	if (!scanned.ok) return ioError(command, scanned.message, { sourceDir, registryDir, policy: policyPath });
 	if (scanned.files.length === 0) {
-		return commandResult(false, 'llmix release plan', EXIT.failure, [diag('llmix.no_sources', 'No .mda sources found under --source')], {
-			summary: 'LLMix release plan blocked',
+		return commandResult(false, command, EXIT.failure, [diag('llmix.no_sources', 'No .mda sources found under --source')], {
+			summary: 'Release prepare blocked',
 			nextActions: [
 				nextAction(
 					'add-llmix-source',
 					'Add signed LLMix .mda preset sources and retry',
-					`mda llmix release plan --source ${sourceDir} --registry-dir ${registryDir} --policy ${policyPath} --out ${out}`,
+					`mda release prepare --target llmix-registry --source ${sourceDir} --registry-dir ${registryDir} --policy ${policyPath} --out ${out}`,
 				),
 			],
 			sourceDir,
@@ -217,8 +242,8 @@ function runLlmixReleasePlan(args: string[]) {
 	}
 
 	if (diagnostics.length > 0) {
-		return commandResult(false, 'llmix release plan', EXIT.failure, diagnostics, {
-			summary: 'LLMix release plan blocked',
+		return commandResult(false, command, EXIT.failure, diagnostics, {
+			summary: 'Release prepare blocked',
 			nextActions: [
 				nextAction(
 					'fix-source-validation',
@@ -274,7 +299,7 @@ function runLlmixReleasePlan(args: string[]) {
 	try {
 		atomicWrite(out, `${JSON.stringify(releasePlan, null, 2)}\n`);
 	} catch (error) {
-		return ioError('llmix release plan', error instanceof Error ? error.message : String(error), {
+		return ioError(command, error instanceof Error ? error.message : String(error), {
 			sourceDir,
 			registryDir,
 			policy: policyPath,
@@ -283,8 +308,8 @@ function runLlmixReleasePlan(args: string[]) {
 		});
 	}
 
-	return commandResult(true, 'llmix release plan', EXIT.ok, [], {
-		summary: `Wrote LLMix release plan for ${sources.length} source(s)`,
+	return commandResult(true, command, EXIT.ok, [], {
+		summary: `Prepared LLMix registry release plan for ${sources.length} source(s)`,
 		artifacts: [artifact('llmix-release-plan', out, undefined, sourceSetDigest)],
 		nextActions: [
 			externalNextAction(
@@ -311,9 +336,10 @@ function runLlmixReleasePlan(args: string[]) {
 	});
 }
 
-function runLlmixTrustManifest(args: string[]) {
+function runLlmixTrustManifest(args: string[], command = 'release finalize') {
 	const parsed = parseOptions(args);
 	const err = unknownOptions(parsed, [
+		'--target',
 		'--registry-dir',
 		'--registry-root',
 		'--release-plan',
@@ -327,8 +353,10 @@ function runLlmixTrustManifest(args: string[]) {
 		'--did-document',
 		'--offline-sigstore-fixture',
 	]);
-	if (err) return usage('llmix trust manifest', err);
-	if (parsed.positional.length !== 0) return usage('llmix trust manifest', 'llmix trust manifest takes no positional arguments');
+	if (err) return usage(command, err);
+	const targetErr = releaseTargetError(command, parsed);
+	if (targetErr) return targetErr;
+	if (parsed.positional.length !== 0) return usage(command, `${command} takes no positional arguments`);
 
 	const registryDir = oneOption(parsed.options, '--registry-dir');
 	const registryRootPath = oneOption(parsed.options, '--registry-root');
@@ -337,17 +365,17 @@ function runLlmixTrustManifest(args: string[]) {
 	const out = oneOption(parsed.options, '--out');
 	const expectedRootDigestOption = oneOption(parsed.options, '--expected-root-digest');
 	const deriveRootDigest = parsed.flags.has('--derive-root-digest');
-	if (!registryDir) return usage('llmix trust manifest', '--registry-dir <dir> is required');
-	if (!registryRootPath) return usage('llmix trust manifest', '--registry-root <file> is required');
-	if (!releasePlanPath) return usage('llmix trust manifest', '--release-plan <file> is required');
-	if (!policyPath) return usage('llmix trust manifest', '--policy <path> is required');
-	if (!out) return usage('llmix trust manifest', '--out <file> is required');
+	if (!registryDir) return usage(command, '--registry-dir <dir> is required');
+	if (!registryRootPath) return usage(command, '--registry-root <file> is required');
+	if (!releasePlanPath) return usage(command, '--release-plan <file> is required');
+	if (!policyPath) return usage(command, '--policy <path> is required');
+	if (!out) return usage(command, '--out <file> is required');
 	if (Boolean(expectedRootDigestOption) === deriveRootDigest)
-		return usage('llmix trust manifest', 'Choose exactly one: --expected-root-digest <digest> or --derive-root-digest');
+		return usage(command, 'Choose exactly one: --expected-root-digest <digest> or --derive-root-digest');
 	if (expectedRootDigestOption && !DIGEST_PATTERN.test(expectedRootDigestOption))
-		return usage('llmix trust manifest', '--expected-root-digest must be a sha256/sha384/sha512 digest');
+		return usage(command, '--expected-root-digest must be a sha256/sha384/sha512 digest');
 	if (existsSync(out))
-		return ioError('llmix trust manifest', `Refusing to overwrite existing file: ${out}`, {
+		return ioError(command, `Refusing to overwrite existing file: ${out}`, {
 			registryDir,
 			registryRoot: registryRootPath,
 			out,
@@ -355,16 +383,16 @@ function runLlmixTrustManifest(args: string[]) {
 	if (pathResolvesInsideDir(out, registryDir)) {
 		return commandResult(
 			false,
-			'llmix trust manifest',
+			command,
 			EXIT.failure,
-			[diag('llmix.manifest_inside_registry', '--out must resolve outside --registry-dir')],
+			[diag('release.trust_artifact_inside_registry', '--out must resolve outside --registry-dir')],
 			{
-				summary: 'LLMix trust manifest output must be outside the registry directory',
+				summary: 'Release trust artifact output must be outside the registry directory',
 				nextActions: [
 					nextAction(
 						'write-external-manifest',
 						'Write the deployment trust manifest outside config/llm or the selected registry directory',
-						`mda llmix trust manifest --registry-dir ${registryDir} --registry-root ${registryRootPath} --release-plan ${releasePlanPath} --policy ${policyPath} --derive-root-digest --out release/llmix-trust.json`,
+						`mda release finalize --target llmix-registry --registry-dir ${registryDir} --registry-root ${registryRootPath} --release-plan ${releasePlanPath} --policy ${policyPath} --derive-root-digest --out release/llmix-trust.json`,
 					),
 				],
 				registryDir,
@@ -373,22 +401,43 @@ function runLlmixTrustManifest(args: string[]) {
 			},
 		);
 	}
+	if (!pathResolvesInsideDir(registryRootPath, registryDir)) {
+		return commandResult(
+			false,
+			command,
+			EXIT.failure,
+			[diag('release.registry_root_outside_registry', '--registry-root must resolve inside --registry-dir')],
+			{
+				summary: 'Registry-root evidence must belong to the selected registry directory',
+				nextActions: [
+					nextAction(
+						'use-registry-root-from-registry',
+						'Pass the signed registry-root evidence from the selected registry directory',
+						`mda release finalize --target llmix-registry --registry-dir ${registryDir} --registry-root ${registryDir}/snapshots/current/registry-root.json --release-plan ${releasePlanPath} --policy ${policyPath} --derive-root-digest --out ${out}`,
+					),
+				],
+				registryDir,
+				registryRoot: registryRootPath,
+				out,
+				written: false,
+			},
+		);
+	}
 
 	const policy = readJson(policyPath);
-	if (!policy.ok)
-		return ioError('llmix trust manifest', policy.message, { registryDir, registryRoot: registryRootPath, policy: policyPath });
+	if (!policy.ok) return ioError(command, policy.message, { registryDir, registryRoot: registryRootPath, policy: policyPath });
 	const policyValidation = validateJsonAgainst(policy.value, 'trustPolicy');
 	if (!policyValidation.ok)
-		return commandResult(false, 'llmix trust manifest', EXIT.failure, policyValidation.diagnostics, {
+		return commandResult(false, command, EXIT.failure, policyValidation.diagnostics, {
 			registryDir,
 			registryRoot: registryRootPath,
 			policy: policyPath,
 			written: false,
 		});
 	const releasePlan = readJson(releasePlanPath);
-	if (!releasePlan.ok) return ioError('llmix trust manifest', releasePlan.message, { releasePlan: releasePlanPath, written: false });
+	if (!releasePlan.ok) return ioError(command, releasePlan.message, { releasePlan: releasePlanPath, written: false });
 	const registryRoot = readJson(registryRootPath);
-	if (!registryRoot.ok) return ioError('llmix trust manifest', registryRoot.message, { registryRoot: registryRootPath, written: false });
+	if (!registryRoot.ok) return ioError(command, registryRoot.message, { registryRoot: registryRootPath, written: false });
 
 	const diagnostics: ReturnType<typeof diag>[] = [];
 	const rootEvidence = validateRegistryRootEvidence(registryRoot.value);
@@ -459,10 +508,10 @@ function runLlmixTrustManifest(args: string[]) {
 			try {
 				atomicWrite(out, `${JSON.stringify(manifest, null, 2)}\n`);
 			} catch (error) {
-				return ioError('llmix trust manifest', error instanceof Error ? error.message : String(error), { out, written: false });
+				return ioError(command, error instanceof Error ? error.message : String(error), { out, written: false });
 			}
-			return commandResult(true, 'llmix trust manifest', EXIT.ok, [], {
-				summary: 'Wrote external LLMix deployment trust manifest',
+			return commandResult(true, command, EXIT.ok, [], {
+				summary: 'Finalized external LLMix deployment trust manifest',
 				artifacts: [artifact('llmix-trust-manifest', out, undefined, expectedRootDigest)],
 				nextActions: [
 					externalNextAction(
@@ -490,13 +539,13 @@ function runLlmixTrustManifest(args: string[]) {
 		}
 	}
 
-	return commandResult(false, 'llmix trust manifest', EXIT.failure, diagnostics, {
-		summary: 'LLMix trust manifest blocked',
+	return commandResult(false, command, EXIT.failure, diagnostics, {
+		summary: 'Release finalize blocked',
 		nextActions: [
 			nextAction(
 				'fix-registry-root',
 				'Fix registry-root evidence, signature, freshness, or source-set mismatches before writing deployment anchors',
-				`mda llmix trust manifest --registry-dir ${registryDir} --registry-root ${registryRootPath} --release-plan ${releasePlanPath} --policy ${policyPath} --derive-root-digest --out ${out}`,
+				`mda release finalize --target llmix-registry --registry-dir ${registryDir} --registry-root ${registryRootPath} --release-plan ${releasePlanPath} --policy ${policyPath} --derive-root-digest --out ${out}`,
 			),
 		],
 		registryDir,
@@ -507,40 +556,88 @@ function runLlmixTrustManifest(args: string[]) {
 	});
 }
 
-function runLlmixTrustSnippets(args: string[]) {
+function runLlmixTrustSnippets(args: string[], command = 'release finalize') {
 	const parsed = parseOptions(args);
-	const err = unknownOptions(parsed, ['--manifest', '--format', '--out']);
-	if (err) return usage('llmix trust snippets', err);
-	if (parsed.positional.length !== 0) return usage('llmix trust snippets', 'llmix trust snippets takes no positional arguments');
+	const err = unknownOptions(parsed, ['--target', '--registry-dir', '--manifest', '--snippet-format', '--snippet-out']);
+	if (err) return usage(command, err);
+	const targetErr = releaseTargetError(command, parsed);
+	if (targetErr) return targetErr;
+	if (parsed.positional.length !== 0) return usage(command, `${command} takes no positional arguments`);
 
+	const registryDir = oneOption(parsed.options, '--registry-dir');
 	const manifestPath = oneOption(parsed.options, '--manifest');
-	const format = oneOption(parsed.options, '--format');
-	const out = oneOption(parsed.options, '--out');
-	if (!manifestPath) return usage('llmix trust snippets', '--manifest <path> is required');
-	if (!format) return usage('llmix trust snippets', '--format <format> is required');
+	const format = oneOption(parsed.options, '--snippet-format');
+	const out = oneOption(parsed.options, '--snippet-out');
+	if (!registryDir) {
+		return commandResult(
+			false,
+			command,
+			EXIT.failure,
+			[diag('release.registry_dir_required', '--registry-dir <dir> is required for snippet output')],
+			{
+				summary: 'Release snippet generation blocked',
+				nextActions: [
+					nextAction(
+						'add-registry-dir',
+						'Pass the registry directory so MDA can prove trust artifacts remain outside it',
+						`mda release finalize --target llmix-registry --registry-dir <registry-dir> --manifest ${manifestPath ?? '<manifest>'} --snippet-format ${format ?? 'env'} --snippet-out ${out ?? 'release/trust.env'}`,
+					),
+				],
+				manifest: manifestPath,
+				format,
+				out,
+				written: false,
+			},
+		);
+	}
+	if (!manifestPath) return usage(command, '--manifest <path> is required');
+	if (!format) return usage(command, '--snippet-format <format> is required');
 	if (!LLMIX_SNIPPET_FORMATS.has(format))
-		return usage('llmix trust snippets', '--format must be json, env, kubernetes, github-actions, terraform, typescript, python, or rust');
-	if (!out) return usage('llmix trust snippets', '--out <file> is required');
+		return usage(command, '--snippet-format must be json, env, kubernetes, github-actions, terraform, typescript, python, or rust');
+	if (!out) return usage(command, '--snippet-out <file> is required');
 	if (existsSync(out)) {
-		return ioError('llmix trust snippets', `Refusing to overwrite existing file: ${out}`, {
+		return ioError(command, `Refusing to overwrite existing file: ${out}`, {
 			manifest: manifestPath,
 			format,
 			out,
 			written: false,
 		});
 	}
+	if (pathResolvesInsideDir(manifestPath, registryDir) || pathResolvesInsideDir(out, registryDir)) {
+		return commandResult(
+			false,
+			command,
+			EXIT.failure,
+			[diag('release.trust_artifact_inside_registry', '--manifest and --snippet-out must resolve outside --registry-dir')],
+			{
+				summary: 'Release trust artifacts must be outside the registry directory',
+				nextActions: [
+					nextAction(
+						'write-external-snippet',
+						'Write deployment snippets outside config/llm or the selected registry directory',
+						`mda release finalize --target llmix-registry --registry-dir ${registryDir} --manifest release/llmix-trust.json --snippet-format ${format} --snippet-out release/trust.${format}`,
+					),
+				],
+				registryDir,
+				manifest: manifestPath,
+				format,
+				out,
+				written: false,
+			},
+		);
+	}
 
 	const manifestRead = readJson(manifestPath);
-	if (!manifestRead.ok) return ioError('llmix trust snippets', manifestRead.message, { manifest: manifestPath, out, written: false });
+	if (!manifestRead.ok) return ioError(command, manifestRead.message, { manifest: manifestPath, out, written: false });
 	const manifest = validateTrustManifestEvidence(manifestRead.value);
 	if (!manifest.ok) {
-		return commandResult(false, 'llmix trust snippets', EXIT.failure, manifest.diagnostics, {
-			summary: 'LLMix trust snippet generation blocked',
+		return commandResult(false, command, EXIT.failure, manifest.diagnostics, {
+			summary: 'Release snippet generation blocked',
 			nextActions: [
 				nextAction(
 					'regenerate-trust-manifest',
 					'Regenerate a valid external trust manifest before producing deployment snippets',
-					'mda llmix trust manifest --registry-dir <registry> --registry-root <registry-root.json> --release-plan <release-plan.json> --policy <policy.json> --derive-root-digest --out release/llmix-trust.json',
+					'mda release finalize --target llmix-registry --registry-dir <registry> --registry-root <registry-root.json> --release-plan <release-plan.json> --policy <policy.json> --derive-root-digest --out release/llmix-trust.json',
 				),
 			],
 			manifest: manifestPath,
@@ -554,7 +651,7 @@ function runLlmixTrustSnippets(args: string[]) {
 	try {
 		atomicWrite(out, content);
 	} catch (error) {
-		return ioError('llmix trust snippets', error instanceof Error ? error.message : String(error), {
+		return ioError(command, error instanceof Error ? error.message : String(error), {
 			manifest: manifestPath,
 			format,
 			out,
@@ -562,7 +659,7 @@ function runLlmixTrustSnippets(args: string[]) {
 		});
 	}
 
-	return commandResult(true, 'llmix trust snippets', EXIT.ok, [], {
+	return commandResult(true, command, EXIT.ok, [], {
 		summary: `Wrote ${format} LLMix deployment trust snippet`,
 		artifacts: [artifact('llmix-trust-snippet', out)],
 		nextActions: [
@@ -573,9 +670,9 @@ function runLlmixTrustSnippets(args: string[]) {
 				false,
 			),
 			nextAction(
-				'run-llmix-doctor',
+				'run-release-doctor',
 				'Check the source, registry, and manifest before deployment',
-				`mda doctor llmix --source <source-dir> --registry-dir <registry-dir> --manifest ${manifestPath}`,
+				`mda doctor release --target llmix-registry --source <source-dir> --registry-dir <registry-dir> --release-plan ${manifest.manifest.releasePlan.path} --manifest ${manifestPath}`,
 				false,
 			),
 		],
@@ -588,32 +685,69 @@ function runLlmixTrustSnippets(args: string[]) {
 }
 
 export function runDoctor(args: string[]) {
-	if (args[0] !== 'llmix') return usage('doctor', 'Expected subcommand: doctor llmix');
-	const parsed = parseOptions(args.slice(1));
-	const err = unknownOptions(parsed, ['--source', '--registry-dir', '--manifest', '--did-document', '--offline-sigstore-fixture']);
-	if (err) return usage('doctor llmix', err);
-	if (parsed.positional.length !== 0) return usage('doctor llmix', 'doctor llmix takes no positional arguments');
+	if (args[0] === 'llmix') return migratedCommand('doctor llmix', 'mda doctor release --target llmix-registry');
+	if (args[0] !== 'release') return usage('doctor', 'Expected subcommand: doctor release --target llmix-registry');
+	return runDoctorRelease(args.slice(1));
+}
+
+function runDoctorRelease(args: string[]) {
+	const command = 'doctor release';
+	const parsed = parseOptions(args);
+	const err = unknownOptions(parsed, [
+		'--target',
+		'--source',
+		'--registry-dir',
+		'--release-plan',
+		'--manifest',
+		'--did-document',
+		'--offline-sigstore-fixture',
+	]);
+	if (err) return usage(command, err);
+	const targetErr = releaseTargetError(command, parsed);
+	if (targetErr) return targetErr;
+	if (parsed.positional.length !== 0) return usage(command, `${command} takes no positional arguments`);
 
 	const sourceDir = oneOption(parsed.options, '--source');
 	const registryDir = oneOption(parsed.options, '--registry-dir');
+	const releasePlanPath = oneOption(parsed.options, '--release-plan');
 	const manifestPath = oneOption(parsed.options, '--manifest');
 	const didDocumentPath = oneOption(parsed.options, '--did-document');
 	const sigstoreFixturePath = oneOption(parsed.options, '--offline-sigstore-fixture');
-	if (!sourceDir) return usage('doctor llmix', '--source <dir> is required');
-	if (!registryDir) return usage('doctor llmix', '--registry-dir <dir> is required');
-	if (!manifestPath) return usage('doctor llmix', '--manifest <path> is required');
-	if (!existsSync(manifestPath)) {
-		return commandResult(false, 'doctor llmix', EXIT.failure, [diag('llmix.manifest_missing', 'Trust manifest is missing')], {
-			summary: 'LLMix doctor found release readiness issues',
+	if (!sourceDir) return usage(command, '--source <dir> is required');
+	if (!registryDir) return usage(command, '--registry-dir <dir> is required');
+	if (!releasePlanPath) return usage(command, '--release-plan <path> is required');
+	if (!manifestPath) return usage(command, '--manifest <path> is required');
+	if (!existsSync(releasePlanPath)) {
+		return commandResult(false, command, EXIT.failure, [diag('llmix.release_plan_missing', 'Release plan is missing')], {
+			summary: 'Release doctor found readiness issues',
 			nextActions: [
 				nextAction(
-					'create-trust-manifest',
-					'Generate the external deployment trust manifest before release',
-					`mda llmix trust manifest --registry-dir ${registryDir} --registry-root <registry-root.json> --release-plan <release-plan.json> --policy <policy.json> --derive-root-digest --out ${manifestPath}`,
+					'create-release-plan',
+					'Prepare the verified release plan before final deployment checks',
+					`mda release prepare --target llmix-registry --source ${sourceDir} --registry-dir ${registryDir} --policy <policy.json> --out ${releasePlanPath}`,
 				),
 			],
 			sourceDir,
 			registryDir,
+			releasePlan: releasePlanPath,
+			manifest: manifestPath,
+			readOnly: true,
+			written: false,
+		});
+	}
+	if (!existsSync(manifestPath)) {
+		return commandResult(false, command, EXIT.failure, [diag('llmix.manifest_missing', 'Trust manifest is missing')], {
+			summary: 'Release doctor found readiness issues',
+			nextActions: [
+				nextAction(
+					'create-trust-manifest',
+					'Generate the external deployment trust manifest before release',
+					`mda release finalize --target llmix-registry --registry-dir ${registryDir} --registry-root <registry-root.json> --release-plan ${releasePlanPath} --policy <policy.json> --derive-root-digest --out ${manifestPath}`,
+				),
+			],
+			sourceDir,
+			registryDir,
+			releasePlan: releasePlanPath,
 			manifest: manifestPath,
 			readOnly: true,
 			written: false,
@@ -622,9 +756,10 @@ export function runDoctor(args: string[]) {
 
 	const manifestRead = readJson(manifestPath);
 	if (!manifestRead.ok)
-		return ioError('doctor llmix', manifestRead.message, {
+		return ioError(command, manifestRead.message, {
 			sourceDir,
 			registryDir,
+			releasePlan: releasePlanPath,
 			manifest: manifestPath,
 			readOnly: true,
 			written: false,
@@ -633,23 +768,38 @@ export function runDoctor(args: string[]) {
 	const diagnostics: ReturnType<typeof diag>[] = [];
 	const checks: { id: string; ok: boolean }[] = [];
 	if (pathResolvesInsideDir(manifestPath, registryDir)) {
-		diagnostics.push(diag('llmix.manifest_inside_registry', '--manifest must resolve outside --registry-dir'));
+		diagnostics.push(diag('release.trust_artifact_inside_registry', '--manifest must resolve outside --registry-dir'));
 		checks.push({ id: 'manifest-placement', ok: false });
 	} else {
 		checks.push({ id: 'manifest-placement', ok: true });
 	}
 
+	const requestedReleasePlanRead = readJson(releasePlanPath);
+	if (!requestedReleasePlanRead.ok) diagnostics.push(diag('filesystem.io', requestedReleasePlanRead.message, { path: releasePlanPath }));
+	const requestedReleasePlanEvidence = requestedReleasePlanRead.ok ? validateReleasePlanEvidence(requestedReleasePlanRead.value) : null;
+	if (requestedReleasePlanEvidence) diagnostics.push(...requestedReleasePlanEvidence.diagnostics);
+	checks.push({ id: 'release-plan-input', ok: Boolean(requestedReleasePlanEvidence?.ok) });
+
 	const manifest = validateTrustManifestEvidence(manifestRead.value);
 	diagnostics.push(...manifest.diagnostics);
 	checks.push({ id: 'trust-manifest-shape', ok: manifest.ok });
 	if (manifest.ok) {
-		const registryRootRead = readJson(manifest.manifest.registryRoot.path);
-		if (!registryRootRead.ok)
+		const registryRootInsideRegistry = pathResolvesInsideDir(manifest.manifest.registryRoot.path, registryDir);
+		if (!registryRootInsideRegistry) {
+			diagnostics.push(
+				diag('release.registry_root_outside_registry', 'Trust manifest registryRoot.path must resolve inside --registry-dir'),
+			);
+		}
+		checks.push({ id: 'registry-root-placement', ok: registryRootInsideRegistry });
+		const registryRootRead = registryRootInsideRegistry ? readJson(manifest.manifest.registryRoot.path) : null;
+		if (registryRootRead && !registryRootRead.ok)
 			diagnostics.push(diag('filesystem.io', registryRootRead.message, { path: manifest.manifest.registryRoot.path }));
-		const releasePlanRead = readJson(manifest.manifest.releasePlan.path);
+		if (manifest.manifest.releasePlan.path !== releasePlanPath)
+			diagnostics.push(diag('llmix.release_plan_digest_mismatch', 'Trust manifest releasePlan.path does not match --release-plan'));
+		const releasePlanRead = readJson(releasePlanPath);
 		if (!releasePlanRead.ok) diagnostics.push(diag('filesystem.io', releasePlanRead.message, { path: manifest.manifest.releasePlan.path }));
 
-		const rootEvidence = registryRootRead.ok ? validateRegistryRootEvidence(registryRootRead.value) : null;
+		const rootEvidence = registryRootRead?.ok ? validateRegistryRootEvidence(registryRootRead.value) : null;
 		const releasePlanEvidence = releasePlanRead.ok ? validateReleasePlanEvidence(releasePlanRead.value) : null;
 		if (rootEvidence) diagnostics.push(...rootEvidence.diagnostics);
 		if (releasePlanEvidence) diagnostics.push(...releasePlanEvidence.diagnostics);
@@ -699,17 +849,18 @@ export function runDoctor(args: string[]) {
 	checks.push({ id: 'source-readiness', ok: sourceReadiness.ok });
 
 	if (diagnostics.length > 0) {
-		return commandResult(false, 'doctor llmix', EXIT.failure, diagnostics, {
-			summary: 'LLMix doctor found release readiness issues',
+		return commandResult(false, command, EXIT.failure, diagnostics, {
+			summary: 'Release doctor found readiness issues',
 			nextActions: [
 				nextAction(
-					'fix-llmix-release-state',
+					'fix-release-state',
 					'Fix the reported source, registry, manifest, freshness, or placement issue and run doctor again',
-					`mda doctor llmix --source ${sourceDir} --registry-dir ${registryDir} --manifest ${manifestPath}`,
+					`mda doctor release --target llmix-registry --source ${sourceDir} --registry-dir ${registryDir} --release-plan ${releasePlanPath} --manifest ${manifestPath}`,
 				),
 			],
 			sourceDir,
 			registryDir,
+			releasePlan: releasePlanPath,
 			manifest: manifestPath,
 			checks,
 			readOnly: true,
@@ -717,8 +868,8 @@ export function runDoctor(args: string[]) {
 		});
 	}
 
-	return commandResult(true, 'doctor llmix', EXIT.ok, [], {
-		summary: 'LLMix release state is ready for secure deployment',
+	return commandResult(true, command, EXIT.ok, [], {
+		summary: 'Release state is ready for secure LLMix deployment',
 		nextActions: [
 			externalNextAction(
 				'deploy-secure-llmix',
@@ -729,6 +880,7 @@ export function runDoctor(args: string[]) {
 		],
 		sourceDir,
 		registryDir,
+		releasePlan: releasePlanPath,
 		manifest: manifestPath,
 		checks,
 		sourceCount: sourceReadiness.sourceCount,
@@ -1093,9 +1245,18 @@ function registryEntryIdentity(source: Record<string, unknown>) {
 
 function pathResolvesInsideDir(candidate: string, rootDir: string) {
 	const root = realPathIfPossible(rootDir);
-	const parent = realPathIfPossible(dirname(resolve(candidate)));
-	const resolvedCandidate = join(parent, basename(candidate));
+	const resolvedCandidate = realPathCandidate(candidate);
 	return resolvedCandidate === root || resolvedCandidate.startsWith(`${root}${sep}`);
+}
+
+function realPathCandidate(candidate: string) {
+	const resolved = resolve(candidate);
+	try {
+		return realpathSync(resolved);
+	} catch {
+		const parent = realPathIfPossible(dirname(resolved));
+		return join(parent, basename(resolved));
+	}
 }
 
 function realPathIfPossible(path: string) {
@@ -1155,23 +1316,56 @@ function firstTrustedSignerIdentity(value: unknown): TrustedSignerIdentity | nul
 	return null;
 }
 
-function runDidWebTrustPolicy(options: Map<string, string[]>) {
+function releaseTargetError(command: string, parsed: ReturnType<typeof parseOptions>) {
+	if ('error' in parsed && parsed.error) return usage(command, parsed.error);
+	const target = oneOption(parsed.options, '--target');
+	if (!target) return usage(command, '--target llmix-registry is required');
+	if (target === LLMIX_REGISTRY_TARGET) return null;
+	return commandResult(false, command, EXIT.failure, [diag('release.unsupported_target', `Unsupported release target: ${target}`)], {
+		summary: 'Release target is not supported',
+		nextActions: [
+			nextAction(
+				'use-llmix-registry-target',
+				'Use the supported LLMix registry release target',
+				`mda ${command} --target ${LLMIX_REGISTRY_TARGET}`,
+			),
+		],
+		target,
+		supportedTargets: [LLMIX_REGISTRY_TARGET],
+	});
+}
+
+function migratedCommand(command: string, replacement: string) {
+	return commandResult(false, command, EXIT.failure, [diag('release.command_migrated', `Use ${replacement} instead of mda ${command}`)], {
+		summary: 'Command moved to the generic release workflow',
+		nextActions: [nextAction('use-release-command', 'Use the generic release command surface', replacement)],
+	});
+}
+
+function llmixMigrationReplacement(args: string[]) {
+	if (args[0] === 'release' && args[1] === 'plan') return 'mda release prepare --target llmix-registry';
+	if (args[0] === 'trust' && args[1] === 'policy') return 'mda release trust policy --target llmix-registry';
+	if (args[0] === 'trust' && args[1] === 'manifest') return 'mda release finalize --target llmix-registry';
+	if (args[0] === 'trust' && args[1] === 'snippets') {
+		return 'mda release finalize --target llmix-registry --registry-dir <registry-dir> --manifest <manifest> --snippet-format <format> --snippet-out <path>';
+	}
+	return 'mda release --help';
+}
+
+function runDidWebTrustPolicy(options: Map<string, string[]>, command: string) {
 	const profile = 'did-web';
 	const domain = oneOption(options, '--domain');
-	if (!domain || didWebDomainFromDid(`did:web:${domain}`) !== domain)
-		return usage('llmix trust policy', '--domain must be a valid did:web domain');
+	if (!domain || didWebDomainFromDid(`did:web:${domain}`) !== domain) return usage(command, '--domain must be a valid did:web domain');
 	const minRaw = oneOption(options, '--min-signatures') ?? '1';
 	const minSignatures = Number(minRaw);
-	if (!Number.isInteger(minSignatures) || minSignatures < 1)
-		return usage('llmix trust policy', '--min-signatures must be a positive integer');
+	if (!Number.isInteger(minSignatures) || minSignatures < 1) return usage(command, '--min-signatures must be a positive integer');
 	const policy = { version: 1, minSignatures, trustedSigners: [{ type: 'did-web', domain }] };
 	const validation = validateJsonAgainst(policy, 'trustPolicy');
-	if (!validation.ok)
-		return commandResult(false, 'llmix trust policy', EXIT.failure, validation.diagnostics, { profile, domain, minSignatures });
+	if (!validation.ok) return commandResult(false, command, EXIT.failure, validation.diagnostics, { profile, domain, minSignatures });
 	const out = oneOption(options, '--out');
-	const write = writeTrustPolicy(out, policy, { profile, domain, minSignatures });
+	const write = writeTrustPolicy(command, out, policy, { profile, domain, minSignatures });
 	if (!write.ok) return write;
-	return commandResult(true, 'llmix trust policy', EXIT.ok, [], {
+	return commandResult(true, command, EXIT.ok, [], {
 		summary: out ? `Wrote did:web trust policy to ${out}` : 'Generated did:web trust policy',
 		artifacts: out ? [artifact('trust-policy', out)] : [],
 		nextActions: out
@@ -1193,16 +1387,15 @@ function runDidWebTrustPolicy(options: Map<string, string[]>) {
 	});
 }
 
-function runGithubActionsTrustPolicy(options: Map<string, string[]>) {
+function runGithubActionsTrustPolicy(options: Map<string, string[]>, command: string) {
 	const profile = 'github-actions';
 	const repo = oneOption(options, '--repo');
 	const workflow = oneOption(options, '--workflow');
 	const ref = oneOption(options, '--ref');
-	if (!repo || !GITHUB_REPOSITORY.test(repo)) return usage('llmix trust policy', '--repo must be a GitHub repository in owner/repo form');
+	if (!repo || !GITHUB_REPOSITORY.test(repo)) return usage(command, '--repo must be a GitHub repository in owner/repo form');
 	if (!workflow || workflow.trim() !== workflow || workflow.length === 0)
-		return usage('llmix trust policy', '--workflow must be a non-empty workflow file or identity');
-	if (!ref || !GITHUB_REF.test(ref))
-		return usage('llmix trust policy', '--ref must be an exact Git ref such as refs/heads/main or refs/tags/v1.1.0');
+		return usage(command, '--workflow must be a non-empty workflow file or identity');
+	if (!ref || !GITHUB_REF.test(ref)) return usage(command, '--ref must be an exact Git ref such as refs/heads/main or refs/tags/v1.1.0');
 
 	const subject = `repo:${repo}:ref:${ref}`;
 	const policy = {
@@ -1220,12 +1413,11 @@ function runGithubActionsTrustPolicy(options: Map<string, string[]>) {
 		rekor: { url: SIGSTORE_REKOR_URL },
 	};
 	const validation = validateJsonAgainst(policy, 'trustPolicy');
-	if (!validation.ok)
-		return commandResult(false, 'llmix trust policy', EXIT.failure, validation.diagnostics, { profile, repo, workflow, ref });
+	if (!validation.ok) return commandResult(false, command, EXIT.failure, validation.diagnostics, { profile, repo, workflow, ref });
 	const out = oneOption(options, '--out');
-	const write = writeTrustPolicy(out, policy, { profile, repo, workflow, ref });
+	const write = writeTrustPolicy(command, out, policy, { profile, repo, workflow, ref });
 	if (!write.ok) return write;
-	return commandResult(true, 'llmix trust policy', EXIT.ok, [], {
+	return commandResult(true, command, EXIT.ok, [], {
 		summary: out ? `Wrote GitHub Actions trust policy to ${out}` : 'Generated GitHub Actions trust policy',
 		artifacts: out ? [artifact('trust-policy', out)] : [],
 		nextActions: out
@@ -1253,12 +1445,17 @@ function runGithubActionsTrustPolicy(options: Map<string, string[]>) {
 	});
 }
 
-function writeTrustPolicy(out: string | null | undefined, policy: unknown, context: Record<string, unknown>): CommandResult {
+function writeTrustPolicy(
+	command: string,
+	out: string | null | undefined,
+	policy: unknown,
+	context: Record<string, unknown>,
+): CommandResult {
 	if (!out) {
-		return commandResult(true, 'llmix trust policy', EXIT.ok, [], { written: false });
+		return commandResult(true, command, EXIT.ok, [], { written: false });
 	}
 	if (existsSync(out))
-		return commandResult(false, 'llmix trust policy', EXIT.io, [diag('filesystem.io', `Refusing to overwrite existing file: ${out}`)], {
+		return commandResult(false, command, EXIT.io, [diag('filesystem.io', `Refusing to overwrite existing file: ${out}`)], {
 			...context,
 			out,
 			written: false,
@@ -1266,11 +1463,11 @@ function writeTrustPolicy(out: string | null | undefined, policy: unknown, conte
 	try {
 		atomicWrite(out, `${JSON.stringify(policy, null, 2)}\n`);
 	} catch (error) {
-		return ioError('llmix trust policy', error instanceof Error ? error.message : String(error), {
+		return ioError(command, error instanceof Error ? error.message : String(error), {
 			...context,
 			out,
 			written: false,
 		});
 	}
-	return commandResult(true, 'llmix trust policy', EXIT.ok, [], { ...context, out, written: true });
+	return commandResult(true, command, EXIT.ok, [], { ...context, out, written: true });
 }

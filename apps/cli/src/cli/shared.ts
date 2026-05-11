@@ -140,6 +140,8 @@ export function parseOptions(args: string[]) {
 				'--release-plan',
 				'--manifest',
 				'--format',
+				'--snippet-format',
+				'--snippet-out',
 				'--expected-root-digest',
 				'--minimum-revision',
 				'--minimum-published-at',
