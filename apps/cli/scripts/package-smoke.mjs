@@ -140,7 +140,22 @@ writeJson(didDocument, {
 
 const didPolicy = join(project, 'release', 'did-web-policy.json');
 mkdirSync(dirname(didPolicy), { recursive: true });
-assert.equal(json(bin, ['llmix', 'trust', 'policy', '--profile', 'did-web', '--domain', 'tools.example.com', '--out', didPolicy]).ok, true);
+assert.equal(
+	json(bin, [
+		'release',
+		'trust',
+		'policy',
+		'--target',
+		'llmix-registry',
+		'--profile',
+		'did-web',
+		'--domain',
+		'tools.example.com',
+		'--out',
+		didPolicy,
+	]).ok,
+	true,
+);
 
 const didSigned = join(project, 'release-source-set', 'search_summary', 'openai_fast.mda');
 mkdirSync(dirname(didSigned), { recursive: true });
@@ -154,9 +169,11 @@ const { privateKey: githubPrivateKey, publicKey: githubPublicKey } = generateKey
 const githubPolicy = join(project, 'release', 'github-actions-policy.json');
 assert.equal(
 	json(bin, [
-		'llmix',
+		'release',
 		'trust',
 		'policy',
+		'--target',
+		'llmix-registry',
 		'--profile',
 		'github-actions',
 		'--repo',
@@ -253,9 +270,10 @@ const registryDir = join(project, 'registry');
 mkdirSync(registryDir, { recursive: true });
 const releasePlanOut = join(project, 'release', 'plan.json');
 const releasePlanResult = json(bin, [
-	'llmix',
 	'release',
-	'plan',
+	'prepare',
+	'--target',
+	'llmix-registry',
 	'--source',
 	join(project, 'release-source-set'),
 	'--registry-dir',
@@ -306,9 +324,10 @@ writeJson(registryRootPath, {
 const trustManifestOut = join(project, 'release', 'llmix-trust.json');
 assert.equal(
 	json(bin, [
-		'llmix',
-		'trust',
-		'manifest',
+		'release',
+		'finalize',
+		'--target',
+		'llmix-registry',
 		'--registry-dir',
 		registryDir,
 		'--registry-root',
@@ -334,7 +353,20 @@ assert.equal(
 
 for (const format of ['json', 'env', 'kubernetes', 'github-actions', 'terraform', 'typescript', 'python', 'rust']) {
 	const out = snippetOutputPath(format);
-	const result = json(bin, ['llmix', 'trust', 'snippets', '--manifest', trustManifestOut, '--format', format, '--out', out]);
+	const result = json(bin, [
+		'release',
+		'finalize',
+		'--target',
+		'llmix-registry',
+		'--registry-dir',
+		registryDir,
+		'--manifest',
+		trustManifestOut,
+		'--snippet-format',
+		format,
+		'--snippet-out',
+		out,
+	]);
 	assert.equal(result.ok, true);
 	assert.match(readFileSync(out, 'utf8'), /LLMIX_TRUST_MANIFEST/);
 }
@@ -342,11 +374,15 @@ for (const format of ['json', 'env', 'kubernetes', 'github-actions', 'terraform'
 assert.equal(
 	json(bin, [
 		'doctor',
-		'llmix',
+		'release',
+		'--target',
+		'llmix-registry',
 		'--source',
 		join(project, 'release-source-set'),
 		'--registry-dir',
 		registryDir,
+		'--release-plan',
+		releasePlanOut,
 		'--manifest',
 		trustManifestOut,
 		'--did-document',

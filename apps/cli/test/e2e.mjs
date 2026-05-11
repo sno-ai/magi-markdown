@@ -84,6 +84,10 @@ function digestJson(value) {
 	return `sha256:${createHash('sha256').update(stableJson(value)).digest('hex')}`;
 }
 
+function fileDigests(paths) {
+	return Object.fromEntries(paths.map((path) => [path, createHash('sha256').update(readFileSync(path)).digest('hex')]));
+}
+
 function rewriteSignaturePayloadType(sourcePath, destinationPath, privateKey, digest) {
 	const payloadType = 'application/vnd.example.other+json';
 	writeFileSync(
@@ -364,9 +368,11 @@ writeFileSync(
 
 const didPolicy = join(tmp, 'did-web-policy.json');
 const didPolicyGenerated = json([
-	'llmix',
+	'release',
 	'trust',
 	'policy',
+	'--target',
+	'llmix-registry',
 	'--profile',
 	'did-web',
 	'--domain',
@@ -384,18 +390,41 @@ assert.deepEqual(didPolicyGenerated.policy, {
 });
 assert.equal(JSON.parse(readFileSync(didPolicy, 'utf8')).trustedSigners[0].domain, 'tools.example.com');
 const existingDidPolicy = json(
-	['llmix', 'trust', 'policy', '--profile', 'did-web', '--domain', 'tools.example.com', '--out', didPolicy],
+	['release', 'trust', 'policy', '--target', 'llmix-registry', '--profile', 'did-web', '--domain', 'tools.example.com', '--out', didPolicy],
 	3,
 );
 assert.equal(existingDidPolicy.diagnostics[0].code, 'filesystem.io');
-const unsupportedPolicyProfile = json(['llmix', 'trust', 'policy', '--profile', 'kms', '--domain', 'tools.example.com'], 1);
+const unsupportedPolicyProfile = json(
+	['release', 'trust', 'policy', '--target', 'llmix-registry', '--profile', 'kms', '--domain', 'tools.example.com'],
+	1,
+);
 assert.equal(unsupportedPolicyProfile.diagnostics[0].code, 'trust_policy.unsupported_profile');
+const unsupportedReleaseTarget = json(['release', 'prepare', '--target', 'unknown-target'], 1);
+assert.equal(unsupportedReleaseTarget.diagnostics[0].code, 'release.unsupported_target');
+assert.deepEqual(unsupportedReleaseTarget.supportedTargets, ['llmix-registry']);
+const migratedLlmixRelease = json(['llmix', 'release', 'plan'], 1);
+assert.equal(migratedLlmixRelease.diagnostics[0].code, 'release.command_migrated');
+assert.match(migratedLlmixRelease.nextActions[0].command, /mda release prepare --target llmix-registry/);
+const migratedLlmixTrustPolicy = json(['llmix', 'trust', 'policy'], 1);
+assert.equal(migratedLlmixTrustPolicy.diagnostics[0].code, 'release.command_migrated');
+assert.match(migratedLlmixTrustPolicy.nextActions[0].command, /mda release trust policy --target llmix-registry/);
+const migratedLlmixTrustManifest = json(['llmix', 'trust', 'manifest'], 1);
+assert.equal(migratedLlmixTrustManifest.diagnostics[0].code, 'release.command_migrated');
+assert.match(migratedLlmixTrustManifest.nextActions[0].command, /mda release finalize --target llmix-registry/);
+const migratedLlmixTrustSnippets = json(['llmix', 'trust', 'snippets'], 1);
+assert.equal(migratedLlmixTrustSnippets.diagnostics[0].code, 'release.command_migrated');
+assert.match(migratedLlmixTrustSnippets.nextActions[0].command, /--snippet-format <format>/);
+const migratedDoctorLlmix = json(['doctor', 'llmix'], 1);
+assert.equal(migratedDoctorLlmix.diagnostics[0].code, 'release.command_migrated');
+assert.match(migratedDoctorLlmix.nextActions[0].command, /mda doctor release --target llmix-registry/);
 
 const githubActionsPolicy = join(tmp, 'github-actions-policy.json');
 const githubActionsPolicyGenerated = json([
-	'llmix',
+	'release',
 	'trust',
 	'policy',
+	'--target',
+	'llmix-registry',
 	'--profile',
 	'github-actions',
 	'--repo',
@@ -429,9 +458,11 @@ assert.deepEqual(githubActionsPolicyGenerated.policy, {
 assert.deepEqual(JSON.parse(readFileSync(githubActionsPolicy, 'utf8')), githubActionsPolicyGenerated.policy);
 const existingGithubActionsPolicy = json(
 	[
-		'llmix',
+		'release',
 		'trust',
 		'policy',
+		'--target',
+		'llmix-registry',
 		'--profile',
 		'github-actions',
 		'--repo',
@@ -447,12 +478,38 @@ const existingGithubActionsPolicy = json(
 );
 assert.equal(existingGithubActionsPolicy.diagnostics[0].code, 'filesystem.io');
 const missingGithubActionsWorkflow = json(
-	['llmix', 'trust', 'policy', '--profile', 'github-actions', '--repo', 'sno-ai/llmix', '--ref', 'refs/tags/v2.0.0'],
+	[
+		'release',
+		'trust',
+		'policy',
+		'--target',
+		'llmix-registry',
+		'--profile',
+		'github-actions',
+		'--repo',
+		'sno-ai/llmix',
+		'--ref',
+		'refs/tags/v2.0.0',
+	],
 	2,
 );
 assert.equal(missingGithubActionsWorkflow.diagnostics[0].code, 'input.usage');
 const invalidGithubActionsRepo = json(
-	['llmix', 'trust', 'policy', '--profile', 'github-actions', '--repo', 'sno-ai', '--workflow', 'release.yml', '--ref', 'refs/tags/v2.0.0'],
+	[
+		'release',
+		'trust',
+		'policy',
+		'--target',
+		'llmix-registry',
+		'--profile',
+		'github-actions',
+		'--repo',
+		'sno-ai',
+		'--workflow',
+		'release.yml',
+		'--ref',
+		'refs/tags/v2.0.0',
+	],
 	2,
 );
 assert.equal(invalidGithubActionsRepo.diagnostics[0].code, 'input.usage');
@@ -898,9 +955,10 @@ const registrySentinel = join(registryDir, 'sentinel.txt');
 writeFileSync(registrySentinel, 'registry stays untouched\n');
 const releasePlanOut = join(tmp, 'release', 'plan.json');
 const releasePlanResult = json([
-	'llmix',
 	'release',
-	'plan',
+	'prepare',
+	'--target',
+	'llmix-registry',
 	'--source',
 	releaseSourceDir,
 	'--registry-dir',
@@ -932,9 +990,10 @@ assert.equal(releasePlan.checklist.find((item) => item.id === 'registry-publish'
 
 const releasePlanOut2 = join(tmp, 'release', 'plan-repeat.json');
 const releasePlanRepeat = json([
-	'llmix',
 	'release',
-	'plan',
+	'prepare',
+	'--target',
+	'llmix-registry',
 	'--source',
 	releaseSourceDir,
 	'--registry-dir',
@@ -957,9 +1016,10 @@ writeFileSync(join(duplicateReleaseDir, 'second', 'openai_fast.mda'), readFileSy
 const duplicateReleaseOut = join(tmp, 'release', 'duplicate-plan.json');
 const duplicateReleasePlan = json(
 	[
-		'llmix',
 		'release',
-		'plan',
+		'prepare',
+		'--target',
+		'llmix-registry',
 		'--source',
 		duplicateReleaseDir,
 		'--registry-dir',
@@ -1009,12 +1069,18 @@ const registryRoot = {
 	],
 };
 writeFileSync(registryRootPath, JSON.stringify(registryRoot, null, 2));
+const otherRegistryDir = join(tmp, 'other-registry');
+const otherRegistryRootDir = join(otherRegistryDir, 'snapshots', '2026-05-09T120000Z');
+mkdirSync(otherRegistryRootDir, { recursive: true });
+const otherRegistryRootPath = join(otherRegistryRootDir, 'registry-root.json');
+writeFileSync(otherRegistryRootPath, JSON.stringify(registryRoot, null, 2));
 
 const trustManifestOut = join(tmp, 'release', 'llmix-trust.json');
 const trustManifestResult = json([
-	'llmix',
-	'trust',
-	'manifest',
+	'release',
+	'finalize',
+	'--target',
+	'llmix-registry',
 	'--registry-dir',
 	registryDir,
 	'--registry-root',
@@ -1053,9 +1119,10 @@ const releaseTemp = join(tmp, 'release', '.mda-tmp');
 writeFileSync(releaseTemp, 'user-owned-release-temp\n');
 const failedTrustManifestExistingOut = json(
 	[
-		'llmix',
-		'trust',
-		'manifest',
+		'release',
+		'finalize',
+		'--target',
+		'llmix-registry',
 		'--registry-dir',
 		registryDir,
 		'--registry-root',
@@ -1113,11 +1180,24 @@ const expectedSnippets = {
 const snippetFormats = ['json', 'env', 'kubernetes', 'github-actions', 'terraform', 'typescript', 'python', 'rust'];
 for (const format of snippetFormats) {
 	const snippetOut = snippetOutputPath(format);
-	const snippet = json(['llmix', 'trust', 'snippets', '--manifest', trustManifestOut, '--format', format, '--out', snippetOut]);
+	const snippet = json([
+		'release',
+		'finalize',
+		'--target',
+		'llmix-registry',
+		'--registry-dir',
+		registryDir,
+		'--manifest',
+		trustManifestOut,
+		'--snippet-format',
+		format,
+		'--snippet-out',
+		snippetOut,
+	]);
 	assert.equal(snippet.ok, true);
 	assert.equal(snippet.format, format);
 	assert.equal(snippet.nextActions[0].id, 'install-deployment-snippet');
-	assert.equal(snippet.nextActions[1].id, 'run-llmix-doctor');
+	assert.equal(snippet.nextActions[1].id, 'run-release-doctor');
 	const snippetContent = readFileSync(snippetOut, 'utf8');
 	assert.equal(snippetContent, expectedSnippets[format]);
 	assert.equal(
@@ -1178,14 +1258,17 @@ for (const format of snippetFormats) {
 }
 const existingSnippet = json(
 	[
-		'llmix',
-		'trust',
-		'snippets',
+		'release',
+		'finalize',
+		'--target',
+		'llmix-registry',
+		'--registry-dir',
+		registryDir,
 		'--manifest',
 		trustManifestOut,
-		'--format',
+		'--snippet-format',
 		'json',
-		'--out',
+		'--snippet-out',
 		join(tmp, 'release', 'llmix-trust-snippet.json'),
 	],
 	3,
@@ -1193,21 +1276,171 @@ const existingSnippet = json(
 assert.equal(existingSnippet.diagnostics[0].code, 'filesystem.io');
 assert.equal(readFileSync(releaseTemp, 'utf8'), 'user-owned-release-temp\n');
 
+const snippetMissingRegistryDirOut = join(tmp, 'release', 'snippet-missing-registry.json');
+const snippetMissingRegistryDir = json(
+	[
+		'release',
+		'finalize',
+		'--target',
+		'llmix-registry',
+		'--manifest',
+		trustManifestOut,
+		'--snippet-format',
+		'json',
+		'--snippet-out',
+		snippetMissingRegistryDirOut,
+	],
+	1,
+);
+assert.equal(snippetMissingRegistryDir.diagnostics[0].code, 'release.registry_dir_required');
+assert.equal(existsSync(snippetMissingRegistryDirOut), false);
+
+const insideRegistrySnippetManifest = join(registryDir, 'inside-snippet-trust.json');
+writeFileSync(insideRegistrySnippetManifest, readFileSync(trustManifestOut, 'utf8'));
+const unsafeSnippetManifestOut = join(tmp, 'release', 'unsafe-snippet-manifest.json');
+const unsafeSnippetManifest = json(
+	[
+		'release',
+		'finalize',
+		'--target',
+		'llmix-registry',
+		'--registry-dir',
+		registryDir,
+		'--manifest',
+		insideRegistrySnippetManifest,
+		'--snippet-format',
+		'json',
+		'--snippet-out',
+		unsafeSnippetManifestOut,
+	],
+	1,
+);
+assert.equal(unsafeSnippetManifest.diagnostics[0].code, 'release.trust_artifact_inside_registry');
+assert.equal(existsSync(unsafeSnippetManifestOut), false);
+
+const symlinkInsideSnippetManifest = join(tmp, 'release', 'inside-snippet-trust-link.json');
+symlinkSync(insideRegistrySnippetManifest, symlinkInsideSnippetManifest);
+const symlinkInsideSnippetManifestOut = join(tmp, 'release', 'symlink-inside-snippet-manifest.json');
+const symlinkInsideSnippetManifestResult = json(
+	[
+		'release',
+		'finalize',
+		'--target',
+		'llmix-registry',
+		'--registry-dir',
+		registryDir,
+		'--manifest',
+		symlinkInsideSnippetManifest,
+		'--snippet-format',
+		'json',
+		'--snippet-out',
+		symlinkInsideSnippetManifestOut,
+	],
+	1,
+);
+assert.equal(symlinkInsideSnippetManifestResult.diagnostics[0].code, 'release.trust_artifact_inside_registry');
+assert.equal(existsSync(symlinkInsideSnippetManifestOut), false);
+
+const unsafeSnippetOut = join(registryDir, 'unsafe-snippet.json');
+const unsafeSnippet = json(
+	[
+		'release',
+		'finalize',
+		'--target',
+		'llmix-registry',
+		'--registry-dir',
+		registryDir,
+		'--manifest',
+		trustManifestOut,
+		'--snippet-format',
+		'json',
+		'--snippet-out',
+		unsafeSnippetOut,
+	],
+	1,
+);
+assert.equal(unsafeSnippet.diagnostics[0].code, 'release.trust_artifact_inside_registry');
+assert.equal(existsSync(unsafeSnippetOut), false);
+
+const snippetRegistrySymlink = join(tmp, 'registry-snippet-link');
+symlinkSync(registryDir, snippetRegistrySymlink, 'dir');
+const symlinkSnippetOut = join(snippetRegistrySymlink, 'unsafe-snippet.json');
+const symlinkSnippet = json(
+	[
+		'release',
+		'finalize',
+		'--target',
+		'llmix-registry',
+		'--registry-dir',
+		registryDir,
+		'--manifest',
+		trustManifestOut,
+		'--snippet-format',
+		'json',
+		'--snippet-out',
+		symlinkSnippetOut,
+	],
+	1,
+);
+assert.equal(symlinkSnippet.diagnostics[0].code, 'release.trust_artifact_inside_registry');
+assert.equal(existsSync(symlinkSnippetOut), false);
+
+const traversalSnippetOut = join(registryDir, '..', 'registry', 'traversal-snippet.json');
+const traversalSnippet = json(
+	[
+		'release',
+		'finalize',
+		'--target',
+		'llmix-registry',
+		'--registry-dir',
+		registryDir,
+		'--manifest',
+		trustManifestOut,
+		'--snippet-format',
+		'json',
+		'--snippet-out',
+		traversalSnippetOut,
+	],
+	1,
+);
+assert.equal(traversalSnippet.diagnostics[0].code, 'release.trust_artifact_inside_registry');
+assert.equal(existsSync(traversalSnippetOut), false);
+
+const doctorReadOnlyFiles = [releaseSourceFile, registrySentinel, registryRootPath, releasePlanOut, trustManifestOut, releaseTemp];
+const doctorReadOnlyBefore = fileDigests(doctorReadOnlyFiles);
+
 const doctorMissingDidDocument = json(
-	['doctor', 'llmix', '--source', releaseSourceDir, '--registry-dir', registryDir, '--manifest', trustManifestOut],
+	[
+		'doctor',
+		'release',
+		'--target',
+		'llmix-registry',
+		'--source',
+		releaseSourceDir,
+		'--registry-dir',
+		registryDir,
+		'--release-plan',
+		releasePlanOut,
+		'--manifest',
+		trustManifestOut,
+	],
 	1,
 );
 assert.ok(doctorMissingDidDocument.diagnostics.some((diagnostic) => diagnostic.code === 'did_web.document_unavailable'));
-assert.equal(doctorMissingDidDocument.nextActions[0].id, 'fix-llmix-release-state');
+assert.equal(doctorMissingDidDocument.nextActions[0].id, 'fix-release-state');
 assert.equal(readFileSync(releaseTemp, 'utf8'), 'user-owned-release-temp\n');
 
 const doctor = json([
 	'doctor',
-	'llmix',
+	'release',
+	'--target',
+	'llmix-registry',
 	'--source',
 	releaseSourceDir,
 	'--registry-dir',
 	registryDir,
+	'--release-plan',
+	releasePlanOut,
 	'--manifest',
 	trustManifestOut,
 	'--did-document',
@@ -1221,6 +1454,7 @@ assert.deepEqual(
 	doctor.checks.map((check) => check.ok),
 	doctor.checks.map(() => true),
 );
+assert.deepEqual(fileDigests(doctorReadOnlyFiles), doctorReadOnlyBefore);
 
 const tamperedSignatureRegistryRoot = join(registryRootDir, 'registry-root-tampered-signature.json');
 writeFileSync(
@@ -1247,11 +1481,15 @@ writeFileSync(
 const tamperedSignatureDoctor = json(
 	[
 		'doctor',
-		'llmix',
+		'release',
+		'--target',
+		'llmix-registry',
 		'--source',
 		releaseSourceDir,
 		'--registry-dir',
 		registryDir,
+		'--release-plan',
+		releasePlanOut,
 		'--manifest',
 		tamperedSignatureDoctorManifest,
 		'--did-document',
@@ -1262,14 +1500,39 @@ const tamperedSignatureDoctor = json(
 assert.ok(tamperedSignatureDoctor.diagnostics.some((diagnostic) => diagnostic.code === 'signature.verification_failed'));
 assert.equal(tamperedSignatureDoctor.readOnly, true);
 
-const missingManifestDoctor = json(
+const missingReleasePlanDoctor = json(
 	[
 		'doctor',
-		'llmix',
+		'release',
+		'--target',
+		'llmix-registry',
 		'--source',
 		releaseSourceDir,
 		'--registry-dir',
 		registryDir,
+		'--release-plan',
+		join(tmp, 'release', 'missing-plan.json'),
+		'--manifest',
+		trustManifestOut,
+	],
+	1,
+);
+assert.equal(missingReleasePlanDoctor.diagnostics[0].code, 'llmix.release_plan_missing');
+assert.equal(missingReleasePlanDoctor.nextActions[0].id, 'create-release-plan');
+assert.equal(missingReleasePlanDoctor.readOnly, true);
+
+const missingManifestDoctor = json(
+	[
+		'doctor',
+		'release',
+		'--target',
+		'llmix-registry',
+		'--source',
+		releaseSourceDir,
+		'--registry-dir',
+		registryDir,
+		'--release-plan',
+		releasePlanOut,
 		'--manifest',
 		join(tmp, 'release', 'missing-trust.json'),
 	],
@@ -1283,11 +1546,15 @@ writeFileSync(insideRegistryManifest, readFileSync(trustManifestOut, 'utf8'));
 const insideRegistryDoctor = json(
 	[
 		'doctor',
-		'llmix',
+		'release',
+		'--target',
+		'llmix-registry',
 		'--source',
 		releaseSourceDir,
 		'--registry-dir',
 		registryDir,
+		'--release-plan',
+		releasePlanOut,
 		'--manifest',
 		insideRegistryManifest,
 		'--did-document',
@@ -1295,19 +1562,76 @@ const insideRegistryDoctor = json(
 	],
 	1,
 );
-assert.ok(insideRegistryDoctor.diagnostics.some((diagnostic) => diagnostic.code === 'llmix.manifest_inside_registry'));
+assert.ok(insideRegistryDoctor.diagnostics.some((diagnostic) => diagnostic.code === 'release.trust_artifact_inside_registry'));
 assert.equal(insideRegistryDoctor.readOnly, true);
+
+const symlinkInsideDoctorManifest = join(tmp, 'release', 'inside-doctor-trust-link.json');
+symlinkSync(insideRegistryManifest, symlinkInsideDoctorManifest);
+const symlinkInsideDoctor = json(
+	[
+		'doctor',
+		'release',
+		'--target',
+		'llmix-registry',
+		'--source',
+		releaseSourceDir,
+		'--registry-dir',
+		registryDir,
+		'--release-plan',
+		releasePlanOut,
+		'--manifest',
+		symlinkInsideDoctorManifest,
+		'--did-document',
+		didDocument,
+	],
+	1,
+);
+assert.ok(symlinkInsideDoctor.diagnostics.some((diagnostic) => diagnostic.code === 'release.trust_artifact_inside_registry'));
+assert.ok(symlinkInsideDoctor.checks.some((check) => check.id === 'manifest-placement' && check.ok === false));
+assert.equal(symlinkInsideDoctor.readOnly, true);
+
+const crossRegistryDoctorManifest = join(tmp, 'release', 'cross-registry-doctor-trust.json');
+writeFileSync(
+	crossRegistryDoctorManifest,
+	JSON.stringify({ ...trustManifest, registryRoot: { ...trustManifest.registryRoot, path: otherRegistryRootPath } }, null, 2),
+);
+const crossRegistryDoctor = json(
+	[
+		'doctor',
+		'release',
+		'--target',
+		'llmix-registry',
+		'--source',
+		releaseSourceDir,
+		'--registry-dir',
+		registryDir,
+		'--release-plan',
+		releasePlanOut,
+		'--manifest',
+		crossRegistryDoctorManifest,
+		'--did-document',
+		didDocument,
+	],
+	1,
+);
+assert.ok(crossRegistryDoctor.diagnostics.some((diagnostic) => diagnostic.code === 'release.registry_root_outside_registry'));
+assert.ok(crossRegistryDoctor.checks.some((check) => check.id === 'registry-root-placement' && check.ok === false));
+assert.equal(crossRegistryDoctor.readOnly, true);
 
 const rollbackDoctorManifest = join(tmp, 'release', 'rollback-doctor-trust.json');
 writeFileSync(rollbackDoctorManifest, JSON.stringify({ ...trustManifest, highWatermark: '2026-05-10T120000Z' }, null, 2));
 const rollbackDoctor = json(
 	[
 		'doctor',
-		'llmix',
+		'release',
+		'--target',
+		'llmix-registry',
 		'--source',
 		releaseSourceDir,
 		'--registry-dir',
 		registryDir,
+		'--release-plan',
+		releasePlanOut,
 		'--manifest',
 		rollbackDoctorManifest,
 		'--did-document',
@@ -1316,7 +1640,7 @@ const rollbackDoctor = json(
 	1,
 );
 assert.ok(rollbackDoctor.diagnostics.some((diagnostic) => diagnostic.code === 'llmix.high_watermark_rollback'));
-assert.equal(rollbackDoctor.nextActions[0].id, 'fix-llmix-release-state');
+assert.equal(rollbackDoctor.nextActions[0].id, 'fix-release-state');
 
 const registryRootSigstoreFixture = writeGithubActionsFixture('registry-root-github-actions-fixture.json', {
 	expectedPayloadDigest: registryRootDigest,
@@ -1352,9 +1676,10 @@ writeFileSync(
 );
 const sigstoreTrustManifestOut = join(tmp, 'release', 'llmix-trust-sigstore.json');
 const sigstoreTrustManifest = json([
-	'llmix',
-	'trust',
-	'manifest',
+	'release',
+	'finalize',
+	'--target',
+	'llmix-registry',
 	'--registry-dir',
 	registryDir,
 	'--registry-root',
@@ -1377,9 +1702,10 @@ assert.equal(sigstoreTrustManifestFile.rekorPolicy.url, 'https://rekor.sigstore.
 const expectedDigestManifestOut = join(tmp, 'release', 'llmix-trust-expected-digest.json');
 assert.equal(
 	json([
-		'llmix',
-		'trust',
-		'manifest',
+		'release',
+		'finalize',
+		'--target',
+		'llmix-registry',
 		'--registry-dir',
 		registryDir,
 		'--registry-root',
@@ -1400,9 +1726,10 @@ assert.equal(
 
 const unsafeManifest = json(
 	[
-		'llmix',
-		'trust',
-		'manifest',
+		'release',
+		'finalize',
+		'--target',
+		'llmix-registry',
 		'--registry-dir',
 		registryDir,
 		'--registry-root',
@@ -1419,13 +1746,14 @@ const unsafeManifest = json(
 	],
 	1,
 );
-assert.equal(unsafeManifest.diagnostics[0].code, 'llmix.manifest_inside_registry');
+assert.equal(unsafeManifest.diagnostics[0].code, 'release.trust_artifact_inside_registry');
 
 const traversalManifest = json(
 	[
-		'llmix',
-		'trust',
-		'manifest',
+		'release',
+		'finalize',
+		'--target',
+		'llmix-registry',
 		'--registry-dir',
 		registryDir,
 		'--registry-root',
@@ -1442,15 +1770,16 @@ const traversalManifest = json(
 	],
 	1,
 );
-assert.equal(traversalManifest.diagnostics[0].code, 'llmix.manifest_inside_registry');
+assert.equal(traversalManifest.diagnostics[0].code, 'release.trust_artifact_inside_registry');
 
 const registrySymlink = join(tmp, 'registry-link');
 symlinkSync(registryDir, registrySymlink, 'dir');
 const symlinkManifest = json(
 	[
-		'llmix',
-		'trust',
-		'manifest',
+		'release',
+		'finalize',
+		'--target',
+		'llmix-registry',
 		'--registry-dir',
 		registryDir,
 		'--registry-root',
@@ -1467,14 +1796,69 @@ const symlinkManifest = json(
 	],
 	1,
 );
-assert.equal(symlinkManifest.diagnostics[0].code, 'llmix.manifest_inside_registry');
+assert.equal(symlinkManifest.diagnostics[0].code, 'release.trust_artifact_inside_registry');
+
+const crossRegistryRootManifestOut = join(tmp, 'release', 'cross-registry-root-manifest.json');
+const crossRegistryRootManifest = json(
+	[
+		'release',
+		'finalize',
+		'--target',
+		'llmix-registry',
+		'--registry-dir',
+		registryDir,
+		'--registry-root',
+		otherRegistryRootPath,
+		'--release-plan',
+		releasePlanOut,
+		'--policy',
+		didPolicy,
+		'--did-document',
+		didDocument,
+		'--derive-root-digest',
+		'--out',
+		crossRegistryRootManifestOut,
+	],
+	1,
+);
+assert.equal(crossRegistryRootManifest.diagnostics[0].code, 'release.registry_root_outside_registry');
+assert.equal(existsSync(crossRegistryRootManifestOut), false);
+
+const crossRegistryRootSymlink = join(registryRootDir, 'cross-registry-root-link.json');
+symlinkSync(otherRegistryRootPath, crossRegistryRootSymlink);
+const crossRegistryRootSymlinkManifestOut = join(tmp, 'release', 'cross-registry-root-link-manifest.json');
+const crossRegistryRootSymlinkManifest = json(
+	[
+		'release',
+		'finalize',
+		'--target',
+		'llmix-registry',
+		'--registry-dir',
+		registryDir,
+		'--registry-root',
+		crossRegistryRootSymlink,
+		'--release-plan',
+		releasePlanOut,
+		'--policy',
+		didPolicy,
+		'--did-document',
+		didDocument,
+		'--derive-root-digest',
+		'--out',
+		crossRegistryRootSymlinkManifestOut,
+	],
+	1,
+);
+assert.equal(crossRegistryRootSymlinkManifest.diagnostics[0].code, 'release.registry_root_outside_registry');
+assert.equal(existsSync(crossRegistryRootSymlinkManifestOut), false);
 
 const wrongDigestManifestOut = join(tmp, 'release', 'wrong-digest-manifest.json');
 const wrongDigestManifest = json(
 	[
-		'llmix',
-		'trust',
-		'manifest',
+		'release',
+		'finalize',
+		'--target',
+		'llmix-registry',
 		'--registry-dir',
 		registryDir,
 		'--registry-root',
@@ -1516,7 +1900,7 @@ function writeRegistryRootVariant(name, patch) {
 			},
 		],
 	};
-	const path = join(tmp, name);
+	const path = join(registryRootDir, name);
 	writeFileSync(path, JSON.stringify(root, null, 2));
 	return path;
 }
@@ -1525,9 +1909,10 @@ function trustManifestFailure(rootPath, outName, expectedCode, extra = [], relea
 	const outputPath = join(tmp, 'release', outName);
 	const result = json(
 		[
-			'llmix',
-			'trust',
-			'manifest',
+			'release',
+			'finalize',
+			'--target',
+			'llmix-registry',
 			'--registry-dir',
 			registryDir,
 			'--registry-root',
@@ -1553,7 +1938,7 @@ function trustManifestFailure(rootPath, outName, expectedCode, extra = [], relea
 	return result;
 }
 
-const unsignedRegistryRoot = join(tmp, 'unsigned-registry-root.json');
+const unsignedRegistryRoot = join(registryRootDir, 'unsigned-registry-root.json');
 writeFileSync(
 	unsignedRegistryRoot,
 	JSON.stringify(
@@ -1568,7 +1953,7 @@ writeFileSync(
 );
 trustManifestFailure(unsignedRegistryRoot, 'unsigned-root-manifest.json', 'signature.missing_required');
 
-const tamperedRegistryRoot = join(tmp, 'tampered-registry-root.json');
+const tamperedRegistryRoot = join(registryRootDir, 'tampered-registry-root.json');
 writeFileSync(tamperedRegistryRoot, JSON.stringify({ ...registryRoot, revision: '2026-05-10T120000Z' }, null, 2));
 trustManifestFailure(tamperedRegistryRoot, 'tampered-root-manifest.json', 'integrity.mismatch');
 
@@ -1618,9 +2003,10 @@ writeFileSync(
 );
 const wrongSignerManifest = json(
 	[
-		'llmix',
-		'trust',
-		'manifest',
+		'release',
+		'finalize',
+		'--target',
+		'llmix-registry',
 		'--registry-dir',
 		registryDir,
 		'--registry-root',
@@ -1641,9 +2027,10 @@ assert.equal(wrongSignerManifest.diagnostics[0].code, 'trust_policy.no_trusted_s
 
 const didKeyMismatchManifest = json(
 	[
-		'llmix',
-		'trust',
-		'manifest',
+		'release',
+		'finalize',
+		'--target',
+		'llmix-registry',
 		'--registry-dir',
 		registryDir,
 		'--registry-root',
@@ -1662,7 +2049,7 @@ const didKeyMismatchManifest = json(
 );
 assert.equal(didKeyMismatchManifest.diagnostics[0].code, 'signature.verification_failed');
 
-const missingRekorRegistryRoot = join(tmp, 'missing-rekor-registry-root.json');
+const missingRekorRegistryRoot = join(registryRootDir, 'missing-rekor-registry-root.json');
 writeFileSync(
 	missingRekorRegistryRoot,
 	JSON.stringify(
@@ -1686,9 +2073,10 @@ writeFileSync(
 );
 const missingRekorManifest = json(
 	[
-		'llmix',
-		'trust',
-		'manifest',
+		'release',
+		'finalize',
+		'--target',
+		'llmix-registry',
 		'--registry-dir',
 		registryDir,
 		'--registry-root',
@@ -1734,9 +2122,10 @@ mkdirSync(unsignedReleaseDir, { recursive: true });
 writeFileSync(join(unsignedReleaseDir, 'openai_fast.mda'), readFileSync(llmixSource, 'utf8'));
 const unsignedReleasePlan = json(
 	[
-		'llmix',
 		'release',
-		'plan',
+		'prepare',
+		'--target',
+		'llmix-registry',
 		'--source',
 		unsignedReleaseDir,
 		'--registry-dir',
@@ -1757,9 +2146,10 @@ mkdirSync(missingIntegrityReleaseDir, { recursive: true });
 writeFileSync(join(missingIntegrityReleaseDir, 'openai_fast.mda'), llmixInit.scaffold);
 const missingIntegrityReleasePlan = json(
 	[
-		'llmix',
 		'release',
-		'plan',
+		'prepare',
+		'--target',
+		'llmix-registry',
 		'--source',
 		missingIntegrityReleaseDir,
 		'--registry-dir',
@@ -1785,9 +2175,10 @@ writeFileSync(
 );
 const mismatchReleasePlan = json(
 	[
-		'llmix',
 		'release',
-		'plan',
+		'prepare',
+		'--target',
+		'llmix-registry',
 		'--source',
 		mismatchReleaseDir,
 		'--registry-dir',
@@ -1808,9 +2199,10 @@ writeFileSync(wrongSignerPolicy, JSON.stringify({ version: 1, trustedSigners: [{
 const wrongSignerOut = join(tmp, 'release', 'wrong-signer-plan.json');
 const wrongSignerReleasePlan = json(
 	[
-		'llmix',
 		'release',
-		'plan',
+		'prepare',
+		'--target',
+		'llmix-registry',
 		'--source',
 		releaseSourceDir,
 		'--registry-dir',
