@@ -1,13 +1,16 @@
 {
-  "version": 1,
-  "trustedSigners": [
-    {
-      "type": "sigstore-oidc",
-      "issuer": "https://token.actions.githubusercontent.com",
-      "subject": "repo:sno-ai/llmix:ref:refs/tags/v2.0.0"
-    }
-  ],
-  "rekor": {
-    "url": "https://rekor.sigstore.dev"
-  }
+	"version": 1,
+	"trustedSigners": [
+		{
+			"type": "sigstore-oidc",
+			"issuer": "https://token.actions.githubusercontent.com",
+			"subject": "repo:sno-ai/llmix:ref:refs/tags/v2.0.0",
+			"repository": "sno-ai/llmix",
+			"workflow": "release.yml",
+			"ref": "refs/tags/v2.0.0"
+		}
+	],
+	"rekor": {
+		"url": "https://rekor.sigstore.dev"
+	}
 }

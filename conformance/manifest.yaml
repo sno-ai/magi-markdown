@@ -7,14 +7,14 @@ spec: v1.0
 
 fixtures:
   # ─── valid (source-side acceptance) ───────────────────────────────────────
-  - id: "01-frontmatter-minimal"
+  - id: '01-frontmatter-minimal'
     path: valid/01-frontmatter-minimal.mda
     against: [schemas/frontmatter-source.schema.json]
     verdict: accept
     rules: [§02-2.1, §02-2.2]
     description: Minimal valid source — only `name` and `description`.
 
-  - id: "03-relationships-with-mirror"
+  - id: '03-relationships-with-mirror'
     path: valid/03-relationships-with-mirror.mda
     against:
       - schemas/frontmatter-source.schema.json
@@ -23,7 +23,7 @@ fixtures:
     rules: [§03-2, §03-4]
     description: Source with footnote relationships AND a metadata.mda.relationships mirror (mirror is optional in source but encouraged).
 
-  - id: "04-depends-on-and-requires"
+  - id: '04-depends-on-and-requires'
     path: valid/04-depends-on-and-requires.mda
     against:
       - schemas/frontmatter-source.schema.json
@@ -34,7 +34,7 @@ fixtures:
     rules: [§03-3, §03-3.2, §10-2]
     description: Source declaring metadata.mda.depends-on (with caret range and digest pinning) and metadata.mda.requires (with standard keys).
 
-  - id: "05-integrity-sha256"
+  - id: '05-integrity-sha256'
     path: valid/05-integrity-sha256.mda
     against:
       - schemas/frontmatter-source.schema.json
@@ -43,7 +43,7 @@ fixtures:
     rules: [§02-2.7, §08-2]
     description: Source declaring a top-level integrity field with a valid sha256 digest shape.
 
-  - id: "06-sigstore-signed"
+  - id: '06-sigstore-signed'
     path: valid/06-sigstore-signed.mda
     against:
       - schemas/frontmatter-source.schema.json
@@ -54,7 +54,7 @@ fixtures:
     rules: [§02-2.8, §09-2, §09-4]
     description: Source declaring a Sigstore-OIDC signature; payload-digest matches integrity.digest; rekor coordinates present.
 
-  - id: "07-did-web-signed"
+  - id: '07-did-web-signed'
     path: valid/07-did-web-signed.mda
     against:
       - schemas/frontmatter-source.schema.json
@@ -65,14 +65,14 @@ fixtures:
     rules: [§09-2, §09-5]
     description: Source declaring a did:web signature for the air-gap signing path; no rekor coordinates required.
 
-  - id: "08-agents-md-frontmatter-free"
+  - id: '08-agents-md-frontmatter-free'
     path: valid/08-agents-md-frontmatter-free.md
     against: [schemas/frontmatter-agents-md.schema.json]
     verdict: accept
     rules: [§06-targets/agents-md §06-3]
     description: Pure-Markdown AGENTS.md with no frontmatter; conformant per the optional-frontmatter rule.
 
-  - id: "09-agents-md-with-frontmatter"
+  - id: '09-agents-md-with-frontmatter'
     path: valid/09-agents-md-with-frontmatter.md
     against: [schemas/frontmatter-agents-md.schema.json]
     verdict: accept
@@ -80,7 +80,7 @@ fixtures:
     description: AGENTS.md with optional frontmatter; MDA-extended fields nested under metadata.mda.*.
 
   # ─── valid (§02-1.1 frontmatter extraction algorithm) ─────────────────────
-  - id: "20-bom-prefixed"
+  - id: '20-bom-prefixed'
     path: valid/20-bom-prefixed.mda
     against: [schemas/frontmatter-source.schema.json]
     extraction-expected: ok
@@ -88,7 +88,7 @@ fixtures:
     rules: [§02-1.1 step 1]
     description: File begins with UTF-8 BOM (0xEF 0xBB 0xBF); extractor MUST strip the BOM in step 1 and parse normally.
 
-  - id: "21-crlf-line-endings"
+  - id: '21-crlf-line-endings'
     path: valid/21-crlf-line-endings.mda
     against: [schemas/frontmatter-source.schema.json]
     extraction-expected: ok
@@ -96,7 +96,7 @@ fixtures:
     rules: [§02-1.1 step 3]
     description: File uses CRLF line terminators throughout; extractor MUST normalize CRLF to LF in step 3 before scanning for the closing fence.
 
-  - id: "22-body-with-horizontal-rule"
+  - id: '22-body-with-horizontal-rule'
     path: valid/22-body-with-horizontal-rule.mda
     against: [schemas/frontmatter-source.schema.json]
     extraction-expected: ok
@@ -104,7 +104,7 @@ fixtures:
     rules: [§02-1.1 step 5, §02-1.1 step 6]
     description: Body contains Markdown horizontal rules (`---`); the FIRST `---` line after the opening fence is the closing fence — later `---` lines remain in the body.
 
-  - id: "23-empty-body"
+  - id: '23-empty-body'
     path: valid/23-empty-body.mda
     against: [schemas/frontmatter-source.schema.json]
     extraction-expected: ok
@@ -112,35 +112,35 @@ fixtures:
     rules: [§02-1.1 step 7, §08-3.3]
     description: Frontmatter-only source with an empty body string after the closing fence; the empty body is conformant and §08-3.3 emits no terminating newline.
 
-  - id: "27-trust-policy-github-actions"
+  - id: '27-trust-policy-github-actions'
     path: valid/27-trust-policy-github-actions.json
     against: [schemas/mda-trust-policy.schema.json]
     verdict: accept
     rules: [§13-4]
     description: Trusted runtime policy that pins both GitHub Actions issuer and repository/tag subject and configures Rekor by URL.
 
-  - id: "35-trust-policy-did-web"
+  - id: '35-trust-policy-did-web'
     path: valid/35-trust-policy-did-web.json
     against: [schemas/mda-trust-policy.schema.json]
     verdict: accept
     rules: [§13-4]
     description: Minimal did:web trust policy; no Rekor block is needed for non-Sigstore signers.
 
-  - id: "36-trust-policy-did-web-two-signatures"
+  - id: '36-trust-policy-did-web-two-signatures'
     path: valid/36-trust-policy-did-web-two-signatures.json
     against: [schemas/mda-trust-policy.schema.json]
     verdict: accept
     rules: [§13-4]
     description: did:web trust policy requiring two distinct trusted signer identities.
 
-  - id: "42-trust-policy-human-sigstore"
+  - id: '42-trust-policy-human-sigstore'
     path: valid/42-trust-policy-human-sigstore.json
     against: [schemas/mda-trust-policy.schema.json]
     verdict: accept
     rules: [§13-4]
     description: Trusted runtime policy that pins a human Sigstore OIDC issuer and subject and configures Rekor by URL.
 
-  - id: "43-trusted-runtime-sigstore-signed"
+  - id: '43-trusted-runtime-sigstore-signed'
     path: valid/43-trusted-runtime-sigstore-signed.mda
     against: [schemas/frontmatter-source.schema.json]
     semantic-checks: [signature-digest-equality, trusted-runtime-policy]
@@ -148,28 +148,28 @@ fixtures:
     verified-identities:
       - signature-index: 0
         type: sigstore-oidc
-        issuer: "https://accounts.google.com"
-        subject: "maintainer@example.com"
+        issuer: 'https://accounts.google.com'
+        subject: 'maintainer@example.com'
     verdict: accept
     rules: [§13-2, §13-4]
     description: A Sigstore signature whose verified OIDC identity matches the trust policy MUST satisfy trusted-runtime policy matching.
 
   # ─── invalid (§02-1.1 frontmatter extraction algorithm) ───────────────────
-  - id: "24-unterminated-frontmatter"
+  - id: '24-unterminated-frontmatter'
     path: invalid/24-unterminated-frontmatter.mda
     extraction-expected: unterminated-frontmatter
     verdict: reject
     rules: [§02-1.1 step 5]
     description: Opening `---` fence at offset 0 with no matching closing `---` line; extractor MUST refuse with `unterminated-frontmatter`.
 
-  - id: "25-invalid-utf8"
+  - id: '25-invalid-utf8'
     path: invalid/25-invalid-utf8.mda
     extraction-expected: invalid-encoding
     verdict: reject
     rules: [§02-1.1 step 2]
     description: File contains a stray 0xFF byte that is not a valid UTF-8 continuation; extractor MUST refuse with `invalid-encoding` before YAML parsing.
 
-  - id: "26-skill-md-body-only"
+  - id: '26-skill-md-body-only'
     path: invalid/26-skill-md-body-only.md
     against: [schemas/frontmatter-skill-md.schema.json]
     extraction-expected: no-frontmatter
@@ -178,28 +178,28 @@ fixtures:
     description: SKILL.md without an opening `---` fence; §02-1.1 step 4 says only AGENTS.md tolerates body-only — SKILL.md MUST refuse (`missing-required-frontmatter`).
 
   # ─── invalid (source-side rejection) ──────────────────────────────────────
-  - id: "11-name-uppercase"
+  - id: '11-name-uppercase'
     path: invalid/11-name-uppercase.mda
     against: [schemas/frontmatter-source.schema.json]
     verdict: reject
     rules: [§02-2.1]
     description: name field contains uppercase letters; violates kebab-case identifier shape.
 
-  - id: "12-description-over-1024"
+  - id: '12-description-over-1024'
     path: invalid/12-description-over-1024.mda
     against: [schemas/frontmatter-source.schema.json]
     verdict: reject
     rules: [§02-2.2]
     description: description field exceeds 1024 chars.
 
-  - id: "14-signature-without-integrity"
+  - id: '14-signature-without-integrity'
     path: invalid/14-signature-without-integrity.mda
     against: [schemas/frontmatter-source.schema.json]
     verdict: reject
     rules: [§02-2.8, §09-2]
     description: signatures[] present but integrity is missing; dependentRequired clause forces integrity.
 
-  - id: "15-version-range-compound"
+  - id: '15-version-range-compound'
     path: invalid/15-version-range-compound.mda
     against:
       - schemas/frontmatter-source.schema.json
@@ -208,7 +208,7 @@ fixtures:
     rules: [§03-3.2]
     description: depends-on entry uses a compound version-range; v1.0 admits only exact and caret ranges.
 
-  - id: "18-integrity-bad-digest-length"
+  - id: '18-integrity-bad-digest-length'
     path: invalid/18-integrity-bad-digest-length.mda
     against:
       - schemas/frontmatter-source.schema.json
@@ -217,7 +217,7 @@ fixtures:
     rules: [§08-2]
     description: integrity.algorithm is sha256 but digest length does not match (6 hex chars vs required 64).
 
-  - id: "19-signature-digest-mismatch"
+  - id: '19-signature-digest-mismatch'
     path: invalid/19-signature-digest-mismatch.mda
     against:
       - schemas/frontmatter-source.schema.json
@@ -228,56 +228,56 @@ fixtures:
     rules: [§09-2]
     description: integrity.digest and signatures[0].payload-digest are both well-formed but unequal; the cross-field rule MUST reject.
 
-  - id: "28-trust-policy-issuer-only"
+  - id: '28-trust-policy-issuer-only'
     path: invalid/28-trust-policy-issuer-only.json
     against: [schemas/mda-trust-policy.schema.json]
     verdict: reject
     rules: [§13-4]
     description: Sigstore trust policy gives an issuer without a subject; issuer-only trust is too broad and MUST reject.
 
-  - id: "32-trust-policy-sigstore-without-rekor"
+  - id: '32-trust-policy-sigstore-without-rekor'
     path: invalid/32-trust-policy-sigstore-without-rekor.json
     against: [schemas/mda-trust-policy.schema.json]
     verdict: reject
     rules: [§13-4]
     description: Sigstore trust policy MUST configure Rekor verification.
 
-  - id: "33-trust-policy-sigstore-empty-rekor"
+  - id: '33-trust-policy-sigstore-empty-rekor'
     path: invalid/33-trust-policy-sigstore-empty-rekor.json
     against: [schemas/mda-trust-policy.schema.json]
     verdict: reject
     rules: [§13-4]
     description: Sigstore trust policy Rekor configuration MUST include a log URL.
 
-  - id: "34-trust-policy-sigstore-rekor-disabled"
+  - id: '34-trust-policy-sigstore-rekor-disabled'
     path: invalid/34-trust-policy-sigstore-rekor-disabled.json
     against: [schemas/mda-trust-policy.schema.json]
     verdict: reject
     rules: [§13-4]
     description: Sigstore trust policy has no Rekor disable flag; unknown `rekor.required` MUST reject.
 
-  - id: "41-trust-policy-did-web-with-rekor"
+  - id: '41-trust-policy-did-web-with-rekor'
     path: invalid/41-trust-policy-did-web-with-rekor.json
     against: [schemas/mda-trust-policy.schema.json]
     verdict: reject
     rules: [§13-4]
     description: did:web-only trust policies MUST NOT include a Rekor block because Rekor applies only to Sigstore signers.
 
-  - id: "29-sigstore-signature-without-rekor"
+  - id: '29-sigstore-signature-without-rekor'
     path: invalid/29-sigstore-signature-without-rekor.mda
     against: [schemas/frontmatter-source.schema.json]
     verdict: reject
     rules: [§09-2, §09-4]
     description: Sigstore OIDC signatures MUST include Rekor log coordinates.
 
-  - id: "30-did-web-signature-with-rekor"
+  - id: '30-did-web-signature-with-rekor'
     path: invalid/30-did-web-signature-with-rekor.mda
     against: [schemas/frontmatter-source.schema.json]
     verdict: reject
     rules: [§09-2, §09-5]
     description: did:web signatures MUST NOT include Sigstore-only Rekor log coordinates.
 
-  - id: "31-payload-type-jcs-suffix"
+  - id: '31-payload-type-jcs-suffix'
     path: invalid/31-payload-type-jcs-suffix.mda
     against: [schemas/frontmatter-source.schema.json]
     verdict: reject
@@ -285,7 +285,7 @@ fixtures:
     description: Vendor DSSE payload types use +json; +jcs+json is not an accepted structured suffix.
 
   # ─── invalid (trusted-runtime semantic rejection) ────────────────────────
-  - id: "37-trusted-runtime-missing-integrity"
+  - id: '37-trusted-runtime-missing-integrity'
     path: invalid/37-trusted-runtime-missing-integrity.mda
     against: [schemas/frontmatter-source.schema.json]
     semantic-checks: [trusted-runtime-policy]
@@ -295,7 +295,7 @@ fixtures:
     rules: [§13-2]
     description: Schema-valid source without integrity MUST reject under trusted-runtime.
 
-  - id: "38-trusted-runtime-missing-signature"
+  - id: '38-trusted-runtime-missing-signature'
     path: invalid/38-trusted-runtime-missing-signature.mda
     against: [schemas/frontmatter-source.schema.json]
     semantic-checks: [trusted-runtime-policy]
@@ -305,7 +305,7 @@ fixtures:
     rules: [§13-2]
     description: Integrity-only source MUST reject under trusted-runtime because no signature is present.
 
-  - id: "39-trusted-runtime-duplicate-did-web-signature"
+  - id: '39-trusted-runtime-duplicate-did-web-signature'
     path: invalid/39-trusted-runtime-duplicate-did-web-signature.mda
     against: [schemas/frontmatter-source.schema.json]
     semantic-checks: [signature-digest-equality, trusted-runtime-policy]
@@ -315,7 +315,7 @@ fixtures:
     rules: [§13-2, §13-4]
     description: Two signature entries from the same did:web identity count as one trusted signer identity.
 
-  - id: "40-trusted-runtime-untrusted-did-web-signer"
+  - id: '40-trusted-runtime-untrusted-did-web-signer'
     path: invalid/40-trusted-runtime-untrusted-did-web-signer.mda
     against: [schemas/frontmatter-source.schema.json]
     semantic-checks: [signature-digest-equality, trusted-runtime-policy]
@@ -325,7 +325,7 @@ fixtures:
     rules: [§13-2, §13-4]
     description: A signed artifact whose signer is outside the trust policy MUST reject.
 
-  - id: "44-trusted-runtime-untrusted-sigstore-subject"
+  - id: '44-trusted-runtime-untrusted-sigstore-subject'
     path: invalid/44-trusted-runtime-untrusted-sigstore-subject.mda
     against: [schemas/frontmatter-source.schema.json]
     semantic-checks: [signature-digest-equality, trusted-runtime-policy]
@@ -333,14 +333,14 @@ fixtures:
     verified-identities:
       - signature-index: 0
         type: sigstore-oidc
-        issuer: "https://accounts.google.com"
-        subject: "attacker@example.com"
+        issuer: 'https://accounts.google.com'
+        subject: 'attacker@example.com'
     expected-error: no-trusted-signature
     verdict: reject
     rules: [§13-2, §13-4]
     description: A Sigstore signature with a trusted issuer but untrusted verified subject MUST reject.
 
-  - id: "45-trusted-runtime-malformed-policy"
+  - id: '45-trusted-runtime-malformed-policy'
     path: valid/07-did-web-signed.mda
     against: [schemas/frontmatter-source.schema.json]
     semantic-checks: [signature-digest-equality, trusted-runtime-policy]
@@ -351,26 +351,32 @@ fixtures:
     description: A runtime policy that would match semantically but fails the trust-policy schema MUST reject before policy matching.
 
   # ─── invalid (output-side rejection — compiled .md against target schema) ─
-  - id: "13-skill-output-mda-extended-toplevel"
+  - id: '13-skill-output-mda-extended-toplevel'
     path: invalid/13-skill-output-mda-extended-toplevel.md
     against: [schemas/frontmatter-skill-md.schema.json]
     verdict: reject
     rules: [§06-targets/skill-md §06-3.3]
     description: Compiled SKILL.md keeps `doc-id` at top level; must nest under metadata.mda.
 
-  - id: "16-agents-md-allowed-tools-toplevel"
+  - id: '16-agents-md-allowed-tools-toplevel'
     path: invalid/16-agents-md-allowed-tools-toplevel.md
     against: [schemas/frontmatter-agents-md.schema.json]
     verdict: reject
     rules: [§06-targets/agents-md §06-3.2]
     description: AGENTS.md output places allowed-tools at the top level; the target forbids it (must nest under vendor namespace).
 
-  - id: "17-mcp-server-md-missing-name"
+  - id: '17-mcp-server-md-missing-name'
     path: invalid/17-mcp-server-md-missing-name.md
     against: [schemas/frontmatter-mcp-server-md.schema.json]
     verdict: reject
     rules: [§06-targets/mcp-server-md §06-3.1]
     description: MCP-SERVER.md output omits the required top-level `name` field.
 
-  # NOTE: future fixtures will exercise compile flows (compile/) once the
-  # reference compiler emits canonical bytes (§08) end-to-end.
+  # ─── compile equality fixtures ───────────────────────────────────────────
+  - id: '46-compile-basic-targets'
+    input: compile/46-basic-targets/input.mda
+    expected_dir: compile/46-basic-targets/expected
+    targets: [SKILL.md, AGENTS.md, MCP-SERVER.md]
+    verdict: equal
+    rules: [§06-targets/skill-md, §06-targets/agents-md, §06-targets/mcp-server-md, §08]
+    description: Source compiles to SKILL.md, AGENTS.md, MCP-SERVER.md, and the MCP sidecar with target-specific metadata projection.
