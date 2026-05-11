@@ -51,11 +51,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Lint Markdown/AiMD files
-        run: pnpm exec markdownlint-cli "docs/**/*.md" "docs/**/*.aimd"
+      - name: Lint Markdown/MDA files
+        run: pnpm exec markdownlint-cli "docs/**/*.md" "docs/**/*.MDA"
 
       - name: Check spelling
-        run: pnpm exec cspell "docs/**/*.{md,aimd}" --no-progress --show-context
+        run: pnpm exec cspell "docs/**/*.{md,MDA}" --no-progress --show-context
 
       - name: Install Mintlify CLI
         run: pnpm exec mintlify install # Installs necessary Mintlify dependencies
