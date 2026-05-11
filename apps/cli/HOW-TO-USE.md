@@ -220,7 +220,7 @@ Offline and test shape:
 Create a GitHub Actions policy:
 
 ```sh
-mda llmix trust policy --profile github-actions --repo owner/repo --workflow release.yml --ref refs/heads/main --out gha-policy.json
+mda release trust policy --target llmix-registry --profile github-actions --repo owner/repo --workflow release.yml --ref refs/heads/main --out gha-policy.json
 ```
 
 Sign with explicit GitHub Actions evidence:
@@ -246,7 +246,7 @@ Use did:web when your team manages release keys and DID documents directly.
 Create a did:web policy:
 
 ```sh
-mda llmix trust policy --profile did-web --domain tools.example.com --out did-policy.json
+mda release trust policy --target llmix-registry --profile did-web --domain tools.example.com --out did-policy.json
 ```
 
 Sign with explicit key material:
@@ -267,7 +267,7 @@ There is a compatibility alias for older scripts:
 mda sign release.mda --method did-web --key did-web-private.pem --identity tools.example.com --out release.signed.mda
 ```
 
-## LLMix Secure Release
+## Release Workflow For LLMix Registry
 
 The LLMix flow is there to help a user move from signed source presets to an
 external deployment trust manifest. It does not publish the registry for you.
@@ -289,7 +289,7 @@ mda integrity compute authoring/search_summary/openai_fast.mda --target source -
 ### 2. Sign And Verify The Source
 
 ```sh
-mda llmix trust policy --profile github-actions --repo owner/repo --workflow release.yml --ref refs/heads/main --out gha-policy.json
+mda release trust policy --target llmix-registry --profile github-actions --repo owner/repo --workflow release.yml --ref refs/heads/main --out gha-policy.json
 mda sign authoring/search_summary/openai_fast.mda --profile github-actions --repo owner/repo --workflow release.yml --ref refs/heads/main --rekor --offline-sigstore-fixture sigstore-evidence.json --out authoring/search_summary/openai_fast.signed.mda
 mda verify authoring/search_summary/openai_fast.signed.mda --policy gha-policy.json --offline-sigstore-fixture sigstore-evidence.json --json
 ```
@@ -297,7 +297,7 @@ mda verify authoring/search_summary/openai_fast.signed.mda --policy gha-policy.j
 ### 3. Create The Release Plan
 
 ```sh
-mda llmix release plan --source authoring --registry-dir registry --policy gha-policy.json --offline-sigstore-fixture sigstore-evidence.json --out release-plan.json
+mda release prepare --target llmix-registry --source authoring --registry-dir registry --policy gha-policy.json --offline-sigstore-fixture sigstore-evidence.json --out release-plan.json
 ```
 
 The release plan checks validation, integrity, signatures, signer identity, and
@@ -306,13 +306,13 @@ It does not modify the registry and does not publish registry files.
 
 After this step, run the LLMix publisher with `trustedRuntime: true`. The
 publisher owns registry writes. After publishing or staging the registry, sign
-the registry root. Then use `mda llmix trust manifest` to verify the signed
+the registry root. Then use `mda release finalize --target llmix-registry` to verify the signed
 registry root and produce the external deployment trust manifest.
 
 ### 4. Create The External Trust Manifest
 
 ```sh
-mda llmix trust manifest --registry-dir registry --registry-root registry/snapshots/current/registry-root.json --release-plan release-plan.json --policy gha-policy.json --derive-root-digest --out release/llmix-trust.json --offline-sigstore-fixture sigstore-evidence.json
+mda release finalize --target llmix-registry --registry-dir registry --registry-root registry/snapshots/current/registry-root.json --release-plan release-plan.json --policy gha-policy.json --derive-root-digest --out release/llmix-trust.json --offline-sigstore-fixture sigstore-evidence.json
 ```
 
 The trust manifest must be outside the registry directory. The CLI rejects
@@ -322,9 +322,9 @@ inside the registry.
 ### 5. Generate Deployment Snippets
 
 ```sh
-mda llmix trust snippets --manifest release/llmix-trust.json --format json --out release/llmix-trust-snippet.json
-mda llmix trust snippets --manifest release/llmix-trust.json --format env --out release/llmix-trust.env
-mda llmix trust snippets --manifest release/llmix-trust.json --format kubernetes --out release/llmix-trust.yaml
+mda release finalize --target llmix-registry --registry-dir registry --manifest release/llmix-trust.json --snippet-format json --snippet-out release/llmix-trust-snippet.json
+mda release finalize --target llmix-registry --registry-dir registry --manifest release/llmix-trust.json --snippet-format env --snippet-out release/llmix-trust.env
+mda release finalize --target llmix-registry --registry-dir registry --manifest release/llmix-trust.json --snippet-format kubernetes --snippet-out release/llmix-trust.yaml
 ```
 
 Supported snippet formats:
@@ -344,10 +344,10 @@ inside `config/llm/`.
 ### 6. Run Doctor Before Deployment
 
 ```sh
-mda doctor llmix --source authoring --registry-dir registry --manifest release/llmix-trust.json --offline-sigstore-fixture sigstore-evidence.json
+mda doctor release --target llmix-registry --source authoring --registry-dir registry --release-plan release-plan.json --manifest release/llmix-trust.json --offline-sigstore-fixture sigstore-evidence.json
 ```
 
-`doctor llmix` is read-only. It checks source readiness, registry root evidence,
+`doctor release` is read-only. It checks source readiness, registry root evidence,
 signature trust, manifest placement, manifest schema, freshness, high-watermark,
 and recovery next actions.
 
@@ -416,15 +416,15 @@ Verify signatures:
 mda verify <file> --policy <path> [--did-document <path>] [--offline-sigstore-fixture <path>] [--target source|SKILL.md|AGENTS.md|MCP-SERVER.md|auto] [--sidecar <path>] [--json]
 ```
 
-Run LLMix secure-release helpers:
+Run release workflow helpers:
 
 ```sh
-mda llmix trust policy --profile did-web --domain <domain> [--min-signatures <n>] [--out <file>] [--json]
-mda llmix trust policy --profile github-actions --repo <owner/repo> --workflow <workflow> --ref <ref> [--out <file>] [--json]
-mda llmix release plan --source <dir> --registry-dir <dir> --policy <path> --out <file> [--did-document <path>] [--offline-sigstore-fixture <path>] [--json]
-mda llmix trust manifest --registry-dir <dir> --registry-root <file> --release-plan <file> --policy <path> (--expected-root-digest <digest>|--derive-root-digest) --out <file> [--did-document <path>] [--offline-sigstore-fixture <path>] [--json]
-mda llmix trust snippets --manifest <path> --format json|env|kubernetes|github-actions|terraform|typescript|python|rust --out <path> [--json]
-mda doctor llmix --source <dir> --registry-dir <dir> --manifest <path> [--did-document <path>] [--offline-sigstore-fixture <path>] [--json]
+mda release trust policy --target llmix-registry --profile did-web --domain <domain> [--min-signatures <n>] [--out <file>] [--json]
+mda release trust policy --target llmix-registry --profile github-actions --repo <owner/repo> --workflow <workflow> --ref <ref> [--out <file>] [--json]
+mda release prepare --target llmix-registry --source <dir> --registry-dir <dir> --policy <path> --out <file> [--did-document <path>] [--offline-sigstore-fixture <path>] [--json]
+mda release finalize --target llmix-registry --registry-dir <dir> --registry-root <file> --release-plan <file> --policy <path> (--expected-root-digest <digest>|--derive-root-digest) --out <file> [--did-document <path>] [--offline-sigstore-fixture <path>] [--json]
+mda release finalize --target llmix-registry --registry-dir <dir> --manifest <path> --snippet-format json|env|kubernetes|github-actions|terraform|typescript|python|rust --snippet-out <path> [--json]
+mda doctor release --target llmix-registry --source <dir> --registry-dir <dir> --release-plan <path> --manifest <path> [--did-document <path>] [--offline-sigstore-fixture <path>] [--json]
 ```
 
 Run conformance:
