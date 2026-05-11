@@ -11,6 +11,7 @@ const repo = resolve(app, '../..');
 const cli = process.env.MDA_CLI ? resolve(process.env.MDA_CLI) : resolve(app, 'dist/cli.js');
 const defaultCwd = process.env.MDA_TEST_CWD ? resolve(process.env.MDA_TEST_CWD) : repo;
 const tmp = mkdtempSync(join(tmpdir(), 'mda-e2e-'));
+const expectedCliVersion = JSON.parse(readFileSync(join(app, 'package.json'), 'utf8')).version;
 
 function run(args, options = {}) {
 	return spawnSync(process.execPath, [cli, ...args], {
@@ -102,7 +103,23 @@ const help = run([]);
 assert.equal(help.status, 0);
 assert.match(help.stdout, /mda compile <file\.mda>/);
 assert.match(help.stdout, /--json/);
+assert.match(help.stdout, /--version/);
 assert.match(help.stdout, /Exit codes:/);
+
+const version = run(['--version']);
+assert.equal(version.status, 0);
+assert.equal(version.stdout, `${expectedCliVersion}\n`);
+assert.equal(version.stderr, '');
+
+const shortVersion = run(['-v']);
+assert.equal(shortVersion.status, 0);
+assert.equal(shortVersion.stdout, `${expectedCliVersion}\n`);
+assert.equal(shortVersion.stderr, '');
+
+const jsonVersion = json(['--version']);
+assert.equal(jsonVersion.ok, true);
+assert.equal(jsonVersion.command, 'version');
+assert.equal(jsonVersion.version, expectedCliVersion);
 
 const source = join(tmp, 'hello.mda');
 const init = json(['init', 'hello-skill', '--out', source]);
@@ -2525,7 +2542,7 @@ assert.equal(compiledWithManifest.artifacts.at(-1).kind, 'compile-manifest');
 assert.equal(compiledWithManifest.written.at(-1), compileManifestPath);
 const compileManifest = JSON.parse(readFileSync(compileManifestPath, 'utf8'));
 assert.equal(compileManifest.kind, 'mda-compile-manifest');
-assert.equal(compileManifest.compiler.version, '1.1.0');
+assert.equal(compileManifest.compiler.version, expectedCliVersion);
 const sourceCanonicalForManifest = json(['canonicalize', source, '--target', 'source']);
 assert.equal(
 	compileManifest.source.digest,

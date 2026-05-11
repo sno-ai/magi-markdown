@@ -11,6 +11,7 @@ const tmp = mkdtempSync(join(tmpdir(), 'mda-package-smoke-'));
 const packDir = join(tmp, 'pack');
 const project = join(tmp, 'project');
 const INTEGRITY_PAYLOAD_TYPE = 'application/vnd.mda.integrity+json';
+const expectedPackageVersion = JSON.parse(readFileSync(join(app, 'package.json'), 'utf8')).version;
 
 mkdirSync(packDir, { recursive: true });
 mkdirSync(project, { recursive: true });
@@ -91,6 +92,8 @@ const bin = join(project, 'node_modules', '.bin', process.platform === 'win32' ?
 assert.equal(existsSync(bin), true);
 
 run(bin, ['--help']);
+assert.equal(run(bin, ['--version']).stdout, `${expectedPackageVersion}\n`);
+assert.equal(json(bin, ['--version']).version, expectedPackageVersion);
 assert.equal(json(bin, ['conformance', '--level', 'V']).ok, true);
 assert.equal(json(bin, ['conformance', '--level', 'C']).ok, true);
 

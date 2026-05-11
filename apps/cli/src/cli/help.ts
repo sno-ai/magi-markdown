@@ -3,6 +3,7 @@ export const HELP = `Markdown AI CLI (@markdown-ai/cli)
 Usage:
   mda
   mda --help
+  mda --version
   mda init <name> [--out <file>] [--json]
   mda init --template llmix-preset --module <name> --preset <name> --provider <provider> --model <model> [--out <file>] [--json]
   mda validate <file> [--target source|SKILL.md|AGENTS.md|MCP-SERVER.md|auto] [--json]
@@ -29,6 +30,8 @@ Global flags:
   --no-color   Disable ANSI color.
   --no-next    Omit human Next: guidance. JSON nextActions are unchanged.
   -h, --help   Print this full help.
+  -v, --version
+              Print the CLI package version from package.json.
 
 Commands and options:
   init <name>

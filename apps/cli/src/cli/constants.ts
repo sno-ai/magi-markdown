@@ -1,5 +1,4 @@
 export const DIGEST_ALGORITHMS = new Set(['sha256', 'sha384', 'sha512']);
-export const CLI_VERSION = '1.1.0';
 export const LLMIX_PROVIDERS = new Set([
 	'openai',
 	'anthropic',

@@ -18,7 +18,7 @@ import {
 	resolveTarget,
 	validateArtifact,
 } from '../mda.js';
-import { CLI_VERSION, DIGEST_ALGORITHMS, LLMIX_MODULE_NAME, LLMIX_PRESET_NAME, LLMIX_PROVIDERS } from './constants.js';
+import { DIGEST_ALGORITHMS, LLMIX_MODULE_NAME, LLMIX_PRESET_NAME, LLMIX_PROVIDERS } from './constants.js';
 import {
 	artifact,
 	externalNextAction,
@@ -30,6 +30,7 @@ import {
 	targetForPath,
 	unknownOptions,
 } from './shared.js';
+import { getCliVersion } from './version.js';
 
 export function runInit(args: string[], globals: Globals) {
 	const parsed = parseOptions(args);
@@ -703,7 +704,7 @@ function makeCompileManifest(
 		version: 1,
 		compiler: {
 			name: '@markdown-ai/cli',
-			version: CLI_VERSION,
+			version: getCliVersion(),
 		},
 		source: {
 			path: file,

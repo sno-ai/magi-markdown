@@ -5,12 +5,25 @@ import { runConformance } from './conformance-command.js';
 import { runDoctor, runLlmix, runRelease } from './llmix-commands.js';
 import { runSign, runVerify } from './security-commands.js';
 import { splitGlobals, writeResult } from './shared.js';
+import { getCliVersion } from './version.js';
 
 export async function main(): Promise<void> {
 	const { globals, args } = splitGlobals(process.argv.slice(2));
 	try {
 		if (args.length === 0 || args.includes('--help') || args.includes('-h')) {
 			process.stdout.write(HELP);
+			process.exit(EXIT.ok);
+		}
+		if (args.length === 1 && (args[0] === '--version' || args[0] === '-v')) {
+			const version = getCliVersion();
+			writeResult(
+				commandResult(true, 'version', EXIT.ok, [], {
+					summary: `@markdown-ai/cli ${version}`,
+					message: version,
+					version,
+				}),
+				globals,
+			);
 			process.exit(EXIT.ok);
 		}
 
