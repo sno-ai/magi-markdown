@@ -1,48 +1,48 @@
 {
-  "name": "@markdown-ai/cli",
-  "version": "1.0.0-rc.3",
-  "description": "MDA command-line tools for authoring, validating, compiling, and checking Markdown AI artifacts.",
-  "license": "Apache-2.0",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/sno-ai/mda.git",
-    "directory": "apps/cli"
-  },
-  "homepage": "https://github.com/sno-ai/mda",
-  "bugs": {
-    "url": "https://github.com/sno-ai/mda/issues"
-  },
-  "type": "module",
-  "bin": {
-    "mda": "dist/cli.js"
-  },
-  "files": [
-    "dist",
-    "README.md",
-    "HOW-TO-USE.md"
-  ],
-  "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.org"
-  },
-  "keywords": [
-    "mda",
-    "markdown-ai",
-    "markdown",
-    "ai-agent",
-    "agent",
-    "cli",
-    "skill",
-    "agents-md",
-    "mcp",
-    "integrity",
-    "conformance"
-  ],
-  "engines": {
-    "node": ">=20"
-  },
-  "scripts": {
-    "build": "node scripts/build.mjs",
-    "test": "node dist/cli.js --help >/dev/null && node dist/cli.js conformance --suite ../../conformance --level V --json >/dev/null && node test/e2e.mjs"
-  }
+	"name": "@markdown-ai/cli",
+	"version": "1.1.0",
+	"description": "MDA command-line tools for authoring, validating, compiling, and checking Markdown AI artifacts.",
+	"license": "Apache-2.0",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/sno-ai/mda.git",
+		"directory": "apps/cli"
+	},
+	"homepage": "https://github.com/sno-ai/mda",
+	"bugs": {
+		"url": "https://github.com/sno-ai/mda/issues"
+	},
+	"type": "module",
+	"bin": {
+		"mda": "dist/cli.js"
+	},
+	"files": [
+		"dist",
+		"README.md",
+		"HOW-TO-USE.md"
+	],
+	"publishConfig": {
+		"access": "public",
+		"registry": "https://registry.npmjs.org"
+	},
+	"keywords": [
+		"mda",
+		"markdown-ai",
+		"markdown",
+		"ai-agent",
+		"agent",
+		"cli",
+		"skill",
+		"agents-md",
+		"mcp",
+		"integrity",
+		"conformance"
+	],
+	"engines": {
+		"node": ">=20"
+	},
+	"scripts": {
+		"build": "node scripts/build.mjs",
+		"test": "node dist/cli.js --help >/dev/null && node dist/cli.js conformance --suite ../../conformance --level V --json >/dev/null && node test/e2e.mjs"
+	}
 }
