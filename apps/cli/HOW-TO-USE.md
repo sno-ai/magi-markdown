@@ -1,78 +1,93 @@
-# Markdown AI CLI
+# Markdown AI CLI Manual
 
-`@markdown-ai/cli` gives you one small command: `mda`.
+`@markdown-ai/cli` gives you one command: `mda`.
 
-It takes a `.mda` source file and turns it into the Markdown files that agents already know how to read: `SKILL.md`, `AGENTS.md`, and `MCP-SERVER.md`.
+Use it to create, validate, compile, sign, verify, and release Markdown AI
+(MDA) artifacts. The CLI is built for two readers at the same time: a human at a
+terminal, and an AI agent that needs stable JSON and clear next actions.
 
-The most useful path is simple:
-
-```sh
-npx @markdown-ai/cli init hello-skill --out hello.mda
-npx @markdown-ai/cli validate hello.mda
-npx @markdown-ai/cli compile hello.mda --target SKILL.md AGENTS.md --out-dir out --integrity
-```
-
-That is the main flow. Start there.
-
-Run the command with no arguments whenever you are lost:
+The short version:
 
 ```sh
-npx @markdown-ai/cli
+mda init hello-skill --out hello.mda
+mda validate hello.mda
+mda compile hello.mda --target SKILL.md AGENTS.md --out-dir out --integrity
+mda validate out/SKILL.md --target SKILL.md
+mda integrity verify out/SKILL.md --target SKILL.md
 ```
 
-No arguments means help. It does not validate files, write files, sign anything, verify anything, or touch the network.
+That is the center of the tool. Everything else is there to make the same flow
+safer, more explicit, or easier to automate.
 
-After installation, the binary name is `mda`:
+## Install And Help
+
+Run without installing:
+
+```sh
+npx @markdown-ai/cli --help
+```
+
+Install globally:
 
 ```sh
 npm install -g @markdown-ai/cli
 mda --help
 ```
 
-## Quick Start
+The installed binary is `mda`.
 
-Create a source file:
+Running `mda` with no arguments prints help. It does not validate, write, sign,
+verify, or touch the network.
+
+## Main Human Flow
+
+Start with a source file:
 
 ```sh
 mda init hello-skill --out hello.mda
 ```
 
-Validate it:
+Open `hello.mda`. Edit the name, description, metadata, and body. Then validate
+it:
 
 ```sh
 mda validate hello.mda
 ```
 
-Compile it into agent-readable Markdown:
+Compile it:
 
 ```sh
 mda compile hello.mda --target SKILL.md AGENTS.md --out-dir out --integrity
 ```
 
-Validate the output:
+Validate the emitted files:
 
 ```sh
 mda validate out/SKILL.md --target SKILL.md
 mda validate out/AGENTS.md --target AGENTS.md
-```
-
-Check the integrity field:
-
-```sh
 mda integrity verify out/SKILL.md --target SKILL.md
 ```
 
-For most users, that is enough. You create one `.mda`, compile it, and hand the output files to the system that needs them.
+Human output includes `Next:` guidance when the next command is obvious. You can
+turn that off with `--no-next`:
 
-## For AI Agents
+```sh
+mda validate hello.mda --no-next
+```
+
+## Main AI Agent Flow
 
 Use `--json` almost every time.
 
-Human output is for eyes. JSON output is for code. It gives you stable fields: `ok`, `command`, `exitCode`, and `diagnostics`.
+Human output is for eyes. JSON output is for code. It contains stable fields:
 
-There are two good ways for an agent to use this CLI.
-
-The first is authoring. The agent creates or edits `.mda`, validates it, compiles it, then validates the outputs.
+- `ok`
+- `command`
+- `exitCode`
+- `summary`
+- `artifacts`
+- `diagnostics`
+- `nextActions`
 
 Recommended authoring flow:
 
@@ -86,128 +101,18 @@ mda validate out/MCP-SERVER.md --target MCP-SERVER.md --json
 mda integrity verify out/SKILL.md --target SKILL.md --json
 ```
 
-The second is runtime checking. This does not mean your application should depend on `@markdown-ai/cli`, or shell out from a library loader. It means an AI agent can run `mda` as an external gate before it trusts, edits, compiles, or acts on an MDA artifact.
+Agent rules:
 
-Good runtime agent checks:
+- Continue only when `ok` is `true` and `exitCode` is `0`.
+- Stop on any non-zero exit.
+- Read `diagnostics[0].code` before reading human messages.
+- Use `artifacts` for paths produced by a command.
+- Use `nextActions` for the next safe command.
+- Pass `--target` when the filename is not exact.
+- Write generated files into a temp or staging directory first.
 
-```sh
-mda validate config.mda --target source --json
-mda integrity verify config.mda --target source --json
-mda validate SKILL.md --target SKILL.md --json
-mda validate AGENTS.md --target AGENTS.md --json
-mda canonicalize SKILL.md --target SKILL.md --json
-```
-
-For MCP multi-file artifacts:
-
-```sh
-mda validate MCP-SERVER.md --target MCP-SERVER.md --json
-mda integrity verify MCP-SERVER.md --target MCP-SERVER.md --sidecar mcp-server.json --json
-```
-
-An agent should treat these checks as a gate:
-
-- If `ok` is `true` and `exitCode` is `0`, continue.
-- If the command exits non-zero, stop using that artifact and report `diagnostics`.
-- If the file is a Markdown file with a non-standard name, pass `--target`.
-- If the command needs to write files, write into a temp or staging directory first.
-
-Do not use this CLI as the only runtime trust boundary for an application. `mda verify` is not a complete cryptographic verifier in this MVP, and `mda sign` is intentionally unavailable. Use library-level verifier hooks for application runtime trust decisions.
-
-Read success like this:
-
-- `ok: true`
-- `exitCode: 0`
-
-Read failure like this:
-
-- Check `diagnostics[0].code` first.
-- Then read `diagnostics[0].message`.
-- Do not scrape human text from stderr when `--json` is available.
-
-Use explicit targets when the filename is not obvious. The CLI can detect `hello.mda`, `SKILL.md`, `AGENTS.md`, and `MCP-SERVER.md`. Any other Markdown filename needs `--target`.
-
-Good:
-
-```sh
-mda validate generated.md --target SKILL.md --json
-```
-
-Ambiguous:
-
-```sh
-mda validate generated.md --json
-```
-
-For MCP multi-file commands, always pass the sidecar when canonicalizing or checking integrity:
-
-```sh
-mda canonicalize out/MCP-SERVER.md --target MCP-SERVER.md --sidecar out/mcp-server.json --json
-mda integrity verify out/MCP-SERVER.md --target MCP-SERVER.md --sidecar out/mcp-server.json --json
-```
-
-Plain validation of `MCP-SERVER.md` does not need the sidecar:
-
-```sh
-mda validate out/MCP-SERVER.md --target MCP-SERVER.md --json
-```
-
-## For Humans
-
-The easiest way is to run one command at a time and look at the file it produced.
-
-Start with:
-
-```sh
-mda init hello-skill --out hello.mda
-```
-
-Open `hello.mda`. Edit the name, description, and body. Then run:
-
-```sh
-mda validate hello.mda
-```
-
-If it passes, compile:
-
-```sh
-mda compile hello.mda --target SKILL.md AGENTS.md --out-dir out --integrity
-```
-
-You will get files under `out/`. Use those files where your agent runtime expects them.
-
-The word `integrity` sounds like cryptography. Here it mostly means "make a stable fingerprint of the file, then check that the file still matches it." It is like a checksum on a downloaded file. It tells you whether bytes changed. It does not prove who wrote the file.
-
-Signing and full trust verification are not ready in this MVP. The CLI fails closed instead of pretending. That is intentional.
-
-## What To Use Most
-
-Use these commands day to day:
-
-```sh
-mda
-mda init <name> --out <file.mda>
-mda validate <file> [--target <target>]
-mda compile <file.mda> --target SKILL.md AGENTS.md --out-dir out --integrity
-mda integrity verify <file> --target <target>
-```
-
-Use these when you need exact bytes or automated checks:
-
-```sh
-mda canonicalize <file> --target <target> --json
-mda integrity compute <file> --target <target> --algorithm sha256 --json
-mda conformance --level V --json
-```
-
-Use these carefully:
-
-```sh
-mda verify <file> --policy <policy.json> --json
-mda sign <file> --method did-web --key <key.pem> --identity <domain> --out <signed.md>
-```
-
-`verify` validates policy shape and integrity, then fails when real signature verification is required. `sign` is unavailable in this MVP. Both commands exist so scripts can depend on the shape without getting a fake security result.
+Do not scrape human text when JSON is available. That is noise in the signal
+chain. The JSON is the signal.
 
 ## Targets
 
@@ -227,13 +132,228 @@ Auto-detection is exact:
 - `SKILL.md` means `SKILL.md`
 - `AGENTS.md` means `AGENTS.md`
 - `MCP-SERVER.md` means `MCP-SERVER.md`
-- any other `.md` file needs `--target`
+- any other Markdown filename needs `--target`
 
-When in doubt, pass `--target`. It removes ambiguity for humans and agents.
+When in doubt, pass `--target`.
+
+## MCP Sidecars
+
+Plain validation of `MCP-SERVER.md` does not need a sidecar:
+
+```sh
+mda validate out/MCP-SERVER.md --target MCP-SERVER.md --json
+```
+
+Canonical bytes and integrity checks need the sidecar when the artifact is
+multi-file:
+
+```sh
+mda canonicalize out/MCP-SERVER.md --target MCP-SERVER.md --sidecar out/mcp-server.json --json
+mda integrity verify out/MCP-SERVER.md --target MCP-SERVER.md --sidecar out/mcp-server.json --json
+```
+
+## Integrity
+
+Integrity is a stable fingerprint of the canonical artifact bytes. It tells you
+whether the bytes changed. It does not prove who wrote them.
+
+Compute a digest:
+
+```sh
+mda integrity compute hello.mda --target source --json
+```
+
+Write the digest into frontmatter:
+
+```sh
+mda integrity compute hello.mda --target source --write
+```
+
+Verify it later:
+
+```sh
+mda integrity verify hello.mda --target source
+```
+
+For compiled output:
+
+```sh
+mda compile hello.mda --target SKILL.md AGENTS.md MCP-SERVER.md --out-dir out --integrity --manifest out/compile-manifest.json
+```
+
+The compile manifest records source digest, output digests, compiler version,
+capability summary, and compatibility diagnostics.
+
+Use `--strict-compat` when warnings should block output:
+
+```sh
+mda compile hello.mda --target SKILL.md AGENTS.md --out-dir out --manifest out/compile-manifest.json --strict-compat
+```
+
+## Signing And Verification
+
+Signing proves the artifact came from an expected signer. Verification checks
+the signature, payload digest, and local trust policy.
+
+### GitHub Actions Sigstore/Rekor
+
+Most teams should start here. The production trust shape is GitHub Actions OIDC
+identity, Sigstore/Rekor evidence, and a policy pinned to repository, workflow,
+and exact ref.
+
+The CLI 1.1 local gate is deterministic. It consumes explicit evidence through
+`--offline-sigstore-fixture <path>` so signing, verification, release planning,
+and doctor checks do not depend on hidden environment variables or live network
+services.
+
+Production shape:
+
+- GitHub Actions keyless signing identity.
+- Sigstore bundle or Rekor evidence retained with the release.
+- Trust policy pinned to `repo`, `workflow`, and `ref`.
+
+Offline and test shape:
+
+- `--offline-sigstore-fixture <path>` supplies explicit replayable evidence.
+- Tests and local release gates should use deterministic evidence files.
+
+Create a GitHub Actions policy:
+
+```sh
+mda llmix trust policy --profile github-actions --repo owner/repo --workflow release.yml --ref refs/heads/main --out gha-policy.json
+```
+
+Sign with explicit GitHub Actions evidence:
+
+```sh
+mda sign release.mda --profile github-actions --repo owner/repo --workflow release.yml --ref refs/heads/main --rekor --offline-sigstore-fixture sigstore-evidence.json --out release.signed.mda
+```
+
+Verify with the same explicit evidence:
+
+```sh
+mda verify release.signed.mda --policy gha-policy.json --offline-sigstore-fixture sigstore-evidence.json --json
+```
+
+`mda verify --offline` is intentionally unsupported. Use
+`--offline-sigstore-fixture <path>` so the evidence is visible in the command.
+No hidden environment, no repo-local default key path.
+
+### did:web
+
+Use did:web when your team manages release keys and DID documents directly.
+
+Create a did:web policy:
+
+```sh
+mda llmix trust policy --profile did-web --domain tools.example.com --out did-policy.json
+```
+
+Sign with explicit key material:
+
+```sh
+mda sign release.mda --profile did-web --did did:web:tools.example.com --key-id did:web:tools.example.com#release --key-file did-web-private.pem --out release.signed.mda
+```
+
+Verify with an explicit DID document:
+
+```sh
+mda verify release.signed.mda --policy did-policy.json --did-document did.json --json
+```
+
+There is a compatibility alias for older scripts:
+
+```sh
+mda sign release.mda --method did-web --key did-web-private.pem --identity tools.example.com --out release.signed.mda
+```
+
+## LLMix Secure Release
+
+The LLMix flow is there to help a user move from signed source presets to an
+external deployment trust manifest. It does not publish the registry for you.
+It tells you when the inputs are ready, then points to the next step.
+
+### 1. Scaffold An LLMix Preset
+
+```sh
+mda init --template llmix-preset --module search_summary --preset openai_fast --provider openai --model gpt-5-mini --out authoring/search_summary/openai_fast.mda
+```
+
+Validate and add integrity:
+
+```sh
+mda validate authoring/search_summary/openai_fast.mda --target source
+mda integrity compute authoring/search_summary/openai_fast.mda --target source --write
+```
+
+### 2. Sign And Verify The Source
+
+```sh
+mda llmix trust policy --profile github-actions --repo owner/repo --workflow release.yml --ref refs/heads/main --out gha-policy.json
+mda sign authoring/search_summary/openai_fast.mda --profile github-actions --repo owner/repo --workflow release.yml --ref refs/heads/main --rekor --offline-sigstore-fixture sigstore-evidence.json --out authoring/search_summary/openai_fast.signed.mda
+mda verify authoring/search_summary/openai_fast.signed.mda --policy gha-policy.json --offline-sigstore-fixture sigstore-evidence.json --json
+```
+
+### 3. Create The Release Plan
+
+```sh
+mda llmix release plan --source authoring --registry-dir registry --policy gha-policy.json --offline-sigstore-fixture sigstore-evidence.json --out release-plan.json
+```
+
+The release plan checks validation, integrity, signatures, signer identity, and
+the expected registry entry identity. It writes deterministic release evidence.
+It does not modify the registry and does not publish registry files.
+
+After this step, run the LLMix publisher with `trustedRuntime: true`. The
+publisher owns registry writes. After publishing or staging the registry, sign
+the registry root. Then use `mda llmix trust manifest` to verify the signed
+registry root and produce the external deployment trust manifest.
+
+### 4. Create The External Trust Manifest
+
+```sh
+mda llmix trust manifest --registry-dir registry --registry-root registry/snapshots/current/registry-root.json --release-plan release-plan.json --policy gha-policy.json --derive-root-digest --out release/llmix-trust.json --offline-sigstore-fixture sigstore-evidence.json
+```
+
+The trust manifest must be outside the registry directory. The CLI rejects
+direct paths, relative traversal, and symlink cases that put trust authority back
+inside the registry.
+
+### 5. Generate Deployment Snippets
+
+```sh
+mda llmix trust snippets --manifest release/llmix-trust.json --format json --out release/llmix-trust-snippet.json
+mda llmix trust snippets --manifest release/llmix-trust.json --format env --out release/llmix-trust.env
+mda llmix trust snippets --manifest release/llmix-trust.json --format kubernetes --out release/llmix-trust.yaml
+```
+
+Supported snippet formats:
+
+- `json`
+- `env`
+- `kubernetes`
+- `github-actions`
+- `terraform`
+- `typescript`
+- `python`
+- `rust`
+
+Snippets reference external trust anchors. They do not tell you to put authority
+inside `config/llm/`.
+
+### 6. Run Doctor Before Deployment
+
+```sh
+mda doctor llmix --source authoring --registry-dir registry --manifest release/llmix-trust.json --offline-sigstore-fixture sigstore-evidence.json
+```
+
+`doctor llmix` is read-only. It checks source readiness, registry root evidence,
+signature trust, manifest placement, manifest schema, freshness, high-watermark,
+and recovery next actions.
 
 ## Command Reference
 
-Print full help:
+Print help:
 
 ```sh
 mda
@@ -246,10 +366,11 @@ Create a source scaffold:
 mda init <name> [--out <file>] [--json]
 ```
 
-Options:
+Create an LLMix preset source scaffold:
 
-- `--out <file>` writes the scaffold to a file and refuses to overwrite.
-- `--json` returns the scaffold inside JSON instead of raw `.mda` text.
+```sh
+mda init --template llmix-preset --module <name> --preset <name> --provider <provider> --model <model> [--out <file>] [--json]
+```
 
 Validate a source or output file:
 
@@ -257,23 +378,11 @@ Validate a source or output file:
 mda validate <file> [--target source|SKILL.md|AGENTS.md|MCP-SERVER.md|auto] [--json]
 ```
 
-Options:
-
-- `--target <target>` sets the artifact type. Default: `auto`.
-- `--json` prints machine-readable output.
-
 Compile a source file:
 
 ```sh
-mda compile <file.mda> --target <target...> [--out-dir <dir>] [--integrity] [--json]
+mda compile <file.mda> --target <target...> [--out-dir <dir>] [--integrity] [--manifest <path>] [--strict-compat] [--json]
 ```
-
-Options:
-
-- `--target <target...>` is required. Use one or more of `SKILL.md`, `AGENTS.md`, `MCP-SERVER.md`.
-- `--out-dir <dir>` writes outputs into a directory. Default: current directory.
-- `--integrity` adds a `sha256` integrity field to emitted artifacts.
-- `--json` lists planned and written output files.
 
 Canonicalize a file:
 
@@ -281,24 +390,11 @@ Canonicalize a file:
 mda canonicalize <file> [--target source|SKILL.md|AGENTS.md|MCP-SERVER.md|auto] [--sidecar <path>] [--json]
 ```
 
-Options:
-
-- `--target <target>` sets the artifact type. Default: `auto`.
-- `--sidecar <path>` is required only for MCP multi-file canonical bytes.
-- `--json` returns base64 canonical bytes and metadata. Without `--json`, raw canonical bytes are printed.
-
 Compute integrity:
 
 ```sh
-mda integrity compute <file> [--target source|SKILL.md|AGENTS.md|MCP-SERVER.md|auto] [--sidecar <path>] [--algorithm sha256|sha384|sha512] [--json]
+mda integrity compute <file> [--target source|SKILL.md|AGENTS.md|MCP-SERVER.md|auto] [--sidecar <path>] [--algorithm sha256|sha384|sha512] [--write] [--json]
 ```
-
-Options:
-
-- `--target <target>` sets the artifact type. Default: `auto`.
-- `--sidecar <path>` is required only for `MCP-SERVER.md` multi-file integrity.
-- `--algorithm <name>` chooses `sha256`, `sha384`, or `sha512`. Default: `sha256`.
-- `--json` prints the digest in JSON.
 
 Verify integrity:
 
@@ -306,42 +402,30 @@ Verify integrity:
 mda integrity verify <file> [--target source|SKILL.md|AGENTS.md|MCP-SERVER.md|auto] [--sidecar <path>] [--json]
 ```
 
-Options:
-
-- `--target <target>` sets the artifact type. Default: `auto`.
-- `--sidecar <path>` is required only for `MCP-SERVER.md` multi-file integrity.
-- `--json` prints the verification result in JSON.
-
-Verify trust policy and signatures:
-
-```sh
-mda verify <file> --policy <path> [--target source|SKILL.md|AGENTS.md|MCP-SERVER.md|auto] [--sidecar <path>] [--json]
-```
-
-Options:
-
-- `--policy <path>` is required.
-- `--target <target>` sets the artifact type. Default: `auto`.
-- `--sidecar <path>` is required only for `MCP-SERVER.md` multi-file integrity.
-- `--json` prints the result in JSON.
-- `--offline` exists only as an unsupported MVP flag. It exits with a usage error.
-
 Sign an artifact:
 
 ```sh
+mda sign <file> --profile did-web --did <did> --key-id <key-id> --key-file <path> (--out <file>|--in-place) [--json]
+mda sign <file> --profile github-actions --repo <owner/repo> --workflow <workflow> --ref <ref> --rekor --offline-sigstore-fixture <path> (--out <file>|--in-place) [--json]
 mda sign <file> --method did-web --key <path> --identity <domain> (--out <file>|--in-place) [--json]
 ```
 
-Options:
+Verify signatures:
 
-- `--method did-web` is required.
-- `--key <path>` is required.
-- `--identity <domain>` is required.
-- `--out <file>` writes signed output to a new file.
-- `--in-place` replaces the input file.
-- `--json` prints the result in JSON.
+```sh
+mda verify <file> --policy <path> [--did-document <path>] [--offline-sigstore-fixture <path>] [--target source|SKILL.md|AGENTS.md|MCP-SERVER.md|auto] [--sidecar <path>] [--json]
+```
 
-Signing is intentionally unavailable in this MVP. The command exits non-zero with `signing-unavailable`.
+Run LLMix secure-release helpers:
+
+```sh
+mda llmix trust policy --profile did-web --domain <domain> [--min-signatures <n>] [--out <file>] [--json]
+mda llmix trust policy --profile github-actions --repo <owner/repo> --workflow <workflow> --ref <ref> [--out <file>] [--json]
+mda llmix release plan --source <dir> --registry-dir <dir> --policy <path> --out <file> [--did-document <path>] [--offline-sigstore-fixture <path>] [--json]
+mda llmix trust manifest --registry-dir <dir> --registry-root <file> --release-plan <file> --policy <path> (--expected-root-digest <digest>|--derive-root-digest) --out <file> [--did-document <path>] [--offline-sigstore-fixture <path>] [--json]
+mda llmix trust snippets --manifest <path> --format json|env|kubernetes|github-actions|terraform|typescript|python|rust --out <path> [--json]
+mda doctor llmix --source <dir> --registry-dir <dir> --manifest <path> [--did-document <path>] [--offline-sigstore-fixture <path>] [--json]
+```
 
 Run conformance:
 
@@ -349,21 +433,14 @@ Run conformance:
 mda conformance [--suite <path>] [--level V|C] [--json]
 ```
 
-Options:
-
-- `--suite <path>` points to a conformance suite directory.
-- `--level V|C` selects validation or compile conformance. Default: `V`.
-- `--json` prints pass and fail counts in JSON.
-
 ## Global Flags
-
-These flags work across commands:
 
 - `--json` prints stable JSON only on stdout.
 - `--quiet` suppresses non-essential human output.
 - `--verbose` includes extra diagnostic context where available.
 - `--no-color` disables ANSI color.
-- `-h`, `--help` prints full help.
+- `--no-next` hides human `Next:` guidance. JSON `nextActions` are unchanged.
+- `-h`, `--help` prints help.
 
 For agents, prefer `--json`. For humans, plain output is easier to read.
 
@@ -375,12 +452,41 @@ For agents, prefer `--json`. For humans, plain output is easier to read.
 - `3`: IO or configuration error, such as overwrite refusal or unreadable policy
 - `4`: internal bug
 
-Agents should use the exit code and JSON fields together. Humans can usually read the printed diagnostic and fix the command.
+Agents should use the exit code and JSON fields together. Humans can usually
+read the printed diagnostic and follow `Next:`.
+
+## Conformance And Release Gates
+
+Use validation conformance:
+
+```sh
+mda conformance --level V --json
+```
+
+Use compile/equality conformance:
+
+```sh
+mda conformance --level C --json
+```
+
+For local development of this CLI package, the useful gates are:
+
+```sh
+pnpm -C apps/cli build
+pnpm -C apps/cli test
+node scripts/validate-conformance.mjs
+pnpm -C apps/cli smoke:package
+```
+
+The package smoke test installs the packed package in a temporary directory
+outside the repository and runs the real `mda` binary. That matters. A local
+source tree can hide problems a packed package cannot.
 
 ## Status
 
-This is the MVP CLI.
+This is the 1.1 CLI.
 
-Validation, compilation, canonicalization, integrity checks, and level V conformance are the useful parts today.
-
-Full signing and cryptographic trust verification are not complete. The CLI says no when it cannot prove the answer. Quietly, but clearly.
+The covered path is source authoring, validation, compile, integrity, GitHub
+Actions Sigstore/Rekor signing evidence, did:web signing and verification,
+LLMix release planning, external trust manifests, deployment snippets, doctor
+checks, and Level V/Level C conformance.

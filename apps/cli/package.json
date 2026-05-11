@@ -43,6 +43,7 @@
 	},
 	"scripts": {
 		"build": "node scripts/build.mjs",
+		"smoke:package": "node scripts/package-smoke.mjs",
 		"test": "node dist/cli.js --help >/dev/null && node dist/cli.js conformance --suite ../../conformance --level V --json >/dev/null && node test/e2e.mjs"
 	}
 }

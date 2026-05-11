@@ -646,6 +646,22 @@ assert.ok(
 		1,
 	).diagnostics.some((diagnostic) => diagnostic.code.startsWith('schema.')),
 );
+assert.equal(
+	json(
+		[
+			'verify',
+			githubActionsSignedLlmix,
+			'--target',
+			'source',
+			'--policy',
+			githubActionsEnvOnlyPolicy,
+			'--offline-sigstore-fixture',
+			githubActionsFixture,
+		],
+		1,
+	).diagnostics[0].code,
+	'trust_policy.environment_only_not_supported',
+);
 
 const githubActionsEnvWrongRefPolicy = join(tmp, 'github-actions-env-wrong-ref-policy.json');
 writeFileSync(
@@ -749,6 +765,11 @@ assert.equal(
 );
 
 const signedLlmix = join(tmp, 'signed-openai-fast.mda');
+assert.equal(
+	json(['sign', llmixSource, '--profile', 'did-web', '--did', did, '--key-id', didKeyId, '--out', join(tmp, 'missing-key.mda')], 2)
+		.diagnostics[0].code,
+	'did_web.key_input_missing',
+);
 const didSign = json([
 	'sign',
 	llmixSource,
@@ -1684,7 +1705,7 @@ const missingRekorManifest = json(
 	],
 	1,
 );
-assert.equal(missingRekorManifest.diagnostics[0].code, 'rekor.evidence_mismatch');
+assert.equal(missingRekorManifest.diagnostics[0].code, 'rekor.evidence_missing');
 
 trustManifestFailure(registryRootPath, 'freshness-rollback-manifest.json', 'llmix.freshness_revision_rollback', [
 	'--minimum-revision',
