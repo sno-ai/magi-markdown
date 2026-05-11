@@ -63,5 +63,7 @@ jobs:
       - run: npm pack --dry-run --json
         working-directory: apps/cli
 
-      - run: npm publish --access public
+      - run: npm publish --provenance --access public
         working-directory: apps/cli
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
