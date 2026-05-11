@@ -97,4 +97,3 @@ ai-doc/
 .claude/
 openspec/*
 internal/*
-internal/dev-scripts/code-check.sh
