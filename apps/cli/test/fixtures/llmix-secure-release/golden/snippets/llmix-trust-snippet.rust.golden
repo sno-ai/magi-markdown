@@ -1,0 +1,7 @@
+pub const LLMIX_TRUST_MANIFEST: &str = "<TRUST_MANIFEST>";
+pub const LLMIX_EXPECTED_ROOT_DIGEST: &str = "sha256:<digest>";
+pub const LLMIX_SOURCE_SET_DIGEST: &str = "sha256:<digest>";
+pub const LLMIX_RELEASE_PLAN_DIGEST: &str = "sha256:<digest>";
+pub const LLMIX_REGISTRY_ROOT: &str = "<REGISTRY_ROOT>";
+pub const LLMIX_RELEASE_PLAN: &str = "<RELEASE_PLAN>";
+pub const LLMIX_HIGH_WATERMARK: &str = "2026-05-09T120000Z";
