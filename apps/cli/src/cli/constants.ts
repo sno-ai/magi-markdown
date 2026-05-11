@@ -13,6 +13,7 @@ export const LLMIX_PROVIDERS = new Set([
 export const LLMIX_MODULE_NAME = /^(?:_default|[a-z][a-z0-9_]{0,63})$/;
 export const LLMIX_PRESET_NAME = /^(?:_base[a-z0-9_]*|[a-z][a-z0-9_]{0,63})$/;
 export const INTEGRITY_PAYLOAD_TYPE = 'application/vnd.mda.integrity+json';
+export const LLMIX_REGISTRY_ROOT_PAYLOAD_TYPE = 'application/vnd.snoai.llmix.registry-root+json';
 export const GITHUB_ACTIONS_ISSUER = 'https://token.actions.githubusercontent.com';
 export const GITHUB_REPOSITORY = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 export const GITHUB_REF = /^refs\/(?:heads|tags)\/\S+$/;

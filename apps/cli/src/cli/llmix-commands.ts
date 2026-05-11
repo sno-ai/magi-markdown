@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, realpathSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, realpathSync } from 'node:fs';
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 
 import { EXIT, commandResult, diag, ioError, usage, type CommandResult } from '../types.js';
@@ -18,6 +18,8 @@ import {
 	GITHUB_ACTIONS_ISSUER,
 	GITHUB_REF,
 	GITHUB_REPOSITORY,
+	INTEGRITY_PAYLOAD_TYPE,
+	LLMIX_REGISTRY_ROOT_PAYLOAD_TYPE,
 	LLMIX_MODULE_NAME,
 	LLMIX_PRESET_NAME,
 	LLMIX_SNIPPET_FORMATS,
@@ -56,6 +58,9 @@ type TrustManifestEvidence = {
 };
 
 const LLMIX_REGISTRY_TARGET = 'llmix-registry';
+const LLMIX_NATIVE_ROOT_SCHEMA = 'llmix.config-registry.root-envelope';
+const LLMIX_NATIVE_ROOT_PAYLOAD_SCHEMA = 'llmix.config-registry.root';
+const SHA256_HEX = /^[a-f0-9]{64}$/;
 
 export function runLlmix(args: string[]) {
 	return migratedCommand('llmix', llmixMigrationReplacement(args));
@@ -233,6 +238,7 @@ function runLlmixReleasePlan(args: string[], command = 'release prepare') {
 			module: identity.module,
 			preset: identity.preset,
 			sourcePath: sourceRelativePath,
+			rawSourceDigest: computeDigest(readFileSync(file), 'sha256'),
 			canonicalSourceDigest: computeDigest(canonical.bytes, 'sha256'),
 			signaturePayloadDigest: signerIdentity.payloadDigest,
 			signerIdentity,
@@ -440,7 +446,7 @@ function runLlmixTrustManifest(args: string[], command = 'release finalize') {
 	if (!registryRoot.ok) return ioError(command, registryRoot.message, { registryRoot: registryRootPath, written: false });
 
 	const diagnostics: ReturnType<typeof diag>[] = [];
-	const rootEvidence = validateRegistryRootEvidence(registryRoot.value);
+	const rootEvidence = validateRegistryRootEvidence(registryRoot.value, registryRootPath);
 	diagnostics.push(...rootEvidence.diagnostics);
 	const releasePlanEvidence = validateReleasePlanEvidence(releasePlan.value);
 	diagnostics.push(...releasePlanEvidence.diagnostics);
@@ -456,13 +462,14 @@ function runLlmixTrustManifest(args: string[], command = 'release finalize') {
 				highWatermark: oneOption(parsed.options, '--high-watermark'),
 			}),
 		);
-		diagnostics.push(...sourceSetDiagnostics(rootEvidence.root, releasePlanEvidence.releasePlan));
+		diagnostics.push(...sourceSetDiagnostics(rootEvidence.root, releasePlanEvidence.releasePlan, registryDir));
 		const signatureVerification = verifySignatureEntries(
 			rootEvidence.root.signatures,
 			rootEvidence.root.integrity,
 			policy.value,
 			oneOption(parsed.options, '--did-document'),
 			oneOption(parsed.options, '--offline-sigstore-fixture'),
+			{ payloadType: rootEvidence.root.signaturePayloadType, payloadBytes: rootEvidence.root.signaturePayloadBytes },
 		);
 		if (signatureVerification.malformed) {
 			diagnostics.push(diag('signature.invalid_entry', 'Registry-root signature entry is malformed'));
@@ -485,11 +492,12 @@ function runLlmixTrustManifest(args: string[], command = 'release finalize') {
 		}
 		if (diagnostics.length === 0) {
 			const trustedSignerIdentity = firstTrustedSignerIdentity(signatureVerification.trustedSignerIdentities);
+			const sourceSetDigest = sourceSetDigestForManifest(rootEvidence.root, releasePlanEvidence.releasePlan);
 			const manifest = {
 				version: 1,
 				kind: 'llmix-trust-manifest',
 				expectedRootDigest,
-				sourceSetDigest: rootEvidence.root.sourceSetDigest,
+				sourceSetDigest,
 				releasePlanDigest: computeDigest(Buffer.from(jcs(releasePlan.value), 'utf8'), 'sha256'),
 				registryRootTrustPolicy: policy.value,
 				rekorPolicy: isRecord(policy.value) && isRecord(policy.value.rekor) ? policy.value.rekor : null,
@@ -533,7 +541,7 @@ function runLlmixTrustManifest(args: string[], command = 'release finalize') {
 				releasePlan: releasePlanPath,
 				out,
 				expectedRootDigest,
-				sourceSetDigest: rootEvidence.root.sourceSetDigest,
+				sourceSetDigest,
 				written: true,
 			});
 		}
@@ -799,7 +807,9 @@ function runDoctorRelease(args: string[]) {
 		const releasePlanRead = readJson(releasePlanPath);
 		if (!releasePlanRead.ok) diagnostics.push(diag('filesystem.io', releasePlanRead.message, { path: manifest.manifest.releasePlan.path }));
 
-		const rootEvidence = registryRootRead?.ok ? validateRegistryRootEvidence(registryRootRead.value) : null;
+		const rootEvidence = registryRootRead?.ok
+			? validateRegistryRootEvidence(registryRootRead.value, manifest.manifest.registryRoot.path)
+			: null;
 		const releasePlanEvidence = releasePlanRead.ok ? validateReleasePlanEvidence(releasePlanRead.value) : null;
 		if (rootEvidence) diagnostics.push(...rootEvidence.diagnostics);
 		if (releasePlanEvidence) diagnostics.push(...releasePlanEvidence.diagnostics);
@@ -809,11 +819,11 @@ function runDoctorRelease(args: string[]) {
 		if (rootEvidence?.ok && releasePlanEvidence?.ok) {
 			if (manifest.manifest.expectedRootDigest !== rootEvidence.rootDigest)
 				diagnostics.push(diag('llmix.root_digest_mismatch', 'Trust manifest expectedRootDigest does not match registry-root evidence'));
-			if (manifest.manifest.sourceSetDigest !== rootEvidence.root.sourceSetDigest)
+			if (manifest.manifest.sourceSetDigest !== sourceSetDigestForManifest(rootEvidence.root, releasePlanEvidence.releasePlan))
 				diagnostics.push(diag('llmix.source_set_digest_mismatch', 'Trust manifest sourceSetDigest does not match registry-root evidence'));
 			if (manifest.manifest.releasePlanDigest !== computeDigest(Buffer.from(jcs(releasePlanRead.value), 'utf8'), 'sha256'))
 				diagnostics.push(diag('llmix.release_plan_digest_mismatch', 'Trust manifest releasePlanDigest does not match release plan'));
-			diagnostics.push(...sourceSetDiagnostics(rootEvidence.root, releasePlanEvidence.releasePlan));
+			diagnostics.push(...sourceSetDiagnostics(rootEvidence.root, releasePlanEvidence.releasePlan, registryDir));
 			diagnostics.push(
 				...freshnessDiagnostics(rootEvidence.root, {
 					minimumRevision: manifest.manifest.minimumRevision,
@@ -827,6 +837,7 @@ function runDoctorRelease(args: string[]) {
 				manifest.manifest.registryRootTrustPolicy,
 				didDocumentPath,
 				sigstoreFixturePath,
+				{ payloadType: rootEvidence.root.signaturePayloadType, payloadBytes: rootEvidence.root.signaturePayloadBytes },
 			);
 			if (signatureVerification.malformed) {
 				diagnostics.push(diag('signature.invalid_entry', 'Registry-root signature entry is malformed'));
@@ -1005,13 +1016,23 @@ function doctorSourceReadiness(sourceDir: string) {
 }
 
 type RegistryRootEvidence = {
+	mode: 'legacy' | 'native';
 	revision: string;
 	publishedAt: string;
 	highWatermark: string;
-	sourceSetDigest: string;
+	sourceSetDigest?: string;
 	sources: Record<string, unknown>[];
+	files: NativeRegistryRootFile[];
 	integrity: { algorithm: 'sha256'; digest: string };
 	signatures: unknown[];
+	signaturePayloadType: string;
+	signaturePayloadBytes: Buffer;
+};
+
+type NativeRegistryRootFile = {
+	path: string;
+	sha256: string;
+	role: 'authoring' | 'resolved';
 };
 
 type ReleasePlanEvidence = {
@@ -1019,11 +1040,12 @@ type ReleasePlanEvidence = {
 	sources: Record<string, unknown>[];
 };
 
-function validateRegistryRootEvidence(value: unknown) {
+function validateRegistryRootEvidence(value: unknown, registryRootPath?: string) {
 	const diagnostics: ReturnType<typeof diag>[] = [];
 	if (!isRecord(value)) {
 		return { ok: false as const, diagnostics: [diag('llmix.registry_root_invalid', 'Registry-root evidence must be a JSON object')] };
 	}
+	if (value.schema === LLMIX_NATIVE_ROOT_SCHEMA) return validateNativeRegistryRootEvidence(value, registryRootPath);
 	if (value.kind !== 'llmix-registry-root')
 		diagnostics.push(diag('llmix.registry_root_invalid', 'Registry-root kind must be llmix-registry-root'));
 	if (value.version !== 1) diagnostics.push(diag('llmix.registry_root_invalid', 'Registry-root version must be 1'));
@@ -1054,13 +1076,25 @@ function validateRegistryRootEvidence(value: unknown) {
 	}
 	if (diagnostics.length > 0) return { ok: false as const, diagnostics };
 	const root: RegistryRootEvidence = {
+		mode: 'legacy',
 		revision: value.revision as string,
 		publishedAt: value.publishedAt as string,
 		highWatermark: value.highWatermark as string,
 		sourceSetDigest: value.sourceSetDigest as string,
 		sources: sources as Record<string, unknown>[],
+		files: [],
 		integrity: value.integrity as { algorithm: 'sha256'; digest: string },
 		signatures: value.signatures as unknown[],
+		signaturePayloadType: INTEGRITY_PAYLOAD_TYPE,
+		signaturePayloadBytes: Buffer.from(
+			jcs({
+				integrity: {
+					algorithm: (value.integrity as Record<string, unknown>).algorithm,
+					digest: (value.integrity as Record<string, unknown>).digest,
+				},
+			}),
+			'utf8',
+		),
 	};
 	return {
 		ok: true as const,
@@ -1076,6 +1110,93 @@ function unsignedRegistryRoot(root: Record<string, unknown>) {
 		if (key !== 'integrity' && key !== 'signatures') unsigned[key] = value;
 	}
 	return unsigned;
+}
+
+function validateNativeRegistryRootEvidence(value: Record<string, unknown>, registryRootPath?: string) {
+	const diagnostics: ReturnType<typeof diag>[] = [];
+	if (value.schema_version !== 1)
+		diagnostics.push(diag('llmix.registry_root_invalid', 'Native registry-root envelope schema_version must be 1'));
+	const payload = isRecord(value.payload) ? value.payload : null;
+	if (!payload) diagnostics.push(diag('llmix.registry_root_invalid', 'Native registry-root envelope payload must be an object'));
+	if (!isRecord(value.integrity) || value.integrity.algorithm !== 'sha256' || typeof value.integrity.digest !== 'string') {
+		diagnostics.push(diag('llmix.registry_root_invalid', 'Native registry-root integrity must contain sha256 digest'));
+	}
+	if (typeof value.payload_sha256 !== 'string' || !SHA256_HEX.test(value.payload_sha256))
+		diagnostics.push(diag('llmix.registry_root_invalid', 'Native registry-root payload_sha256 must be a sha256 hex digest'));
+	if (!Array.isArray(value.signatures) || value.signatures.length === 0)
+		diagnostics.push(diag('missing-required-signature', 'Native registry-root envelope requires signatures[]'));
+	if (!payload) return { ok: false as const, diagnostics };
+
+	if (payload.schema !== LLMIX_NATIVE_ROOT_PAYLOAD_SCHEMA)
+		diagnostics.push(diag('llmix.registry_root_invalid', 'Native registry-root payload schema is not supported'));
+	if (payload.schema_version !== 1)
+		diagnostics.push(diag('llmix.registry_root_invalid', 'Native registry-root payload schema_version must be 1'));
+	if (typeof payload.revision !== 'string' || payload.revision.length === 0)
+		diagnostics.push(diag('llmix.registry_root_invalid', 'Native registry-root payload revision must be a non-empty string'));
+	if (typeof payload.published_at !== 'string' || Number.isNaN(Date.parse(payload.published_at)))
+		diagnostics.push(diag('llmix.registry_root_invalid', 'Native registry-root payload published_at must be an ISO timestamp'));
+	const files = parseNativeRegistryRootFiles(payload.files, diagnostics);
+	const payloadBytes = Buffer.from(jcs(payload), 'utf8');
+	const payloadDigest = computeDigest(payloadBytes, 'sha256');
+	if (typeof value.payload_sha256 === 'string' && `sha256:${value.payload_sha256}` !== payloadDigest) {
+		diagnostics.push(diag('integrity.mismatch', 'Native registry-root payload_sha256 does not match canonical payload bytes'));
+	}
+	if (isRecord(value.integrity) && value.integrity.digest !== payloadDigest) {
+		diagnostics.push(diag('integrity.mismatch', 'Native registry-root integrity digest does not match payload_sha256'));
+	}
+	if (diagnostics.length > 0) return { ok: false as const, diagnostics };
+	const root: RegistryRootEvidence = {
+		mode: 'native',
+		revision: payload.revision as string,
+		publishedAt: payload.published_at as string,
+		highWatermark: payload.revision as string,
+		sources: [],
+		files,
+		integrity: value.integrity as { algorithm: 'sha256'; digest: string },
+		signatures: value.signatures as unknown[],
+		signaturePayloadType: LLMIX_REGISTRY_ROOT_PAYLOAD_TYPE,
+		signaturePayloadBytes: payloadBytes,
+	};
+	return {
+		ok: true as const,
+		diagnostics,
+		rootDigest: registryRootPath
+			? computeDigest(readFileSync(registryRootPath), 'sha256')
+			: computeDigest(Buffer.from(jcs(value), 'utf8'), 'sha256'),
+		root,
+	};
+}
+
+function parseNativeRegistryRootFiles(value: unknown, diagnostics: ReturnType<typeof diag>[]) {
+	const files: NativeRegistryRootFile[] = [];
+	if (!Array.isArray(value)) {
+		diagnostics.push(diag('llmix.registry_root_invalid', 'Native registry-root payload files must be an array'));
+		return files;
+	}
+	const seen = new Set<string>();
+	for (const [index, file] of value.entries()) {
+		if (!isRecord(file)) {
+			diagnostics.push(diag('llmix.registry_root_invalid', `Native registry-root files[${index}] must be a JSON object`));
+			continue;
+		}
+		const path = file.path;
+		const sha256 = file.sha256;
+		const role = file.role;
+		if (typeof path !== 'string' || path.length === 0)
+			diagnostics.push(diag('llmix.registry_root_invalid', `Native registry-root files[${index}].path must be a non-empty string`));
+		if (typeof sha256 !== 'string' || !SHA256_HEX.test(sha256))
+			diagnostics.push(diag('llmix.registry_root_invalid', `Native registry-root files[${index}].sha256 must be a sha256 hex digest`));
+		if (role !== 'authoring' && role !== 'resolved')
+			diagnostics.push(diag('llmix.registry_root_invalid', `Native registry-root files[${index}].role must be authoring or resolved`));
+		if (typeof path !== 'string' || typeof sha256 !== 'string' || (role !== 'authoring' && role !== 'resolved')) continue;
+		if (seen.has(path)) {
+			diagnostics.push(diag('llmix.registry_root_invalid', `Native registry-root contains duplicate file path ${path}`));
+			continue;
+		}
+		seen.add(path);
+		files.push({ path, sha256, role });
+	}
+	return files;
 }
 
 function validateReleasePlanEvidence(value: unknown) {
@@ -1189,7 +1310,16 @@ function compareMonotonicValues(actual: MonotonicValue, requirement: MonotonicVa
 	return 0;
 }
 
-function sourceSetDiagnostics(root: RegistryRootEvidence, releasePlan: ReleasePlanEvidence) {
+function sourceSetDigestForManifest(root: RegistryRootEvidence, releasePlan: ReleasePlanEvidence) {
+	return root.mode === 'native' ? releasePlan.sourceSetDigest : (root.sourceSetDigest as string);
+}
+
+function sourceSetDiagnostics(root: RegistryRootEvidence, releasePlan: ReleasePlanEvidence, registryDir?: string) {
+	if (root.mode === 'native') return nativeSourceSetDiagnostics(root, releasePlan, registryDir);
+	return legacySourceSetDiagnostics(root, releasePlan);
+}
+
+function legacySourceSetDiagnostics(root: RegistryRootEvidence, releasePlan: ReleasePlanEvidence) {
 	const diagnostics: ReturnType<typeof diag>[] = [];
 	if (root.sourceSetDigest !== releasePlan.sourceSetDigest) {
 		diagnostics.push(diag('llmix.source_set_digest_mismatch', 'Registry-root sourceSetDigest does not match the release plan'));
@@ -1234,6 +1364,71 @@ function sourceSetDiagnostics(root: RegistryRootEvidence, releasePlan: ReleasePl
 	for (const identity of rootSources.keys()) {
 		if (!releaseIdentities.has(identity))
 			diagnostics.push(diag('llmix.registry_root_extra_preset', `Registry-root has extra preset ${identity}`));
+	}
+	return diagnostics;
+}
+
+function nativeSourceSetDiagnostics(root: RegistryRootEvidence, releasePlan: ReleasePlanEvidence, registryDir?: string) {
+	const diagnostics: ReturnType<typeof diag>[] = [];
+	if (!registryDir) {
+		return [diag('release.registry_dir_required', '--registry-dir <dir> is required to verify native registry-root file coverage')];
+	}
+	const authoringPaths = new Map<string, string>();
+	const resolvedPaths = new Set<string>();
+	for (const file of root.files) {
+		const candidate = resolve(registryDir, file.path);
+		if (!pathResolvesInsideDir(candidate, registryDir)) {
+			diagnostics.push(diag('llmix.registry_root_file_outside_registry', `Native registry-root file path escapes registry: ${file.path}`));
+			continue;
+		}
+		try {
+			const actualDigest = computeDigest(readFileSync(candidate), 'sha256');
+			const expectedDigest = `sha256:${file.sha256}`;
+			if (actualDigest !== expectedDigest) {
+				diagnostics.push(
+					diag('llmix.registry_root_file_digest_mismatch', `Native registry-root file digest does not match bytes for ${file.path}`),
+				);
+			}
+		} catch (error) {
+			diagnostics.push(diag('filesystem.io', error instanceof Error ? error.message : String(error), { path: candidate }));
+			continue;
+		}
+		if (file.role === 'authoring') {
+			const digest = `sha256:${file.sha256}`;
+			authoringPaths.set(file.path, digest);
+		} else {
+			resolvedPaths.add(file.path);
+		}
+	}
+	for (const source of releasePlan.sources) {
+		const identity = registryEntryIdentity(source);
+		if (!identity) {
+			diagnostics.push(diag('llmix.release_plan_invalid', 'Release plan source is missing registry entry identity'));
+			continue;
+		}
+		const sourceRawDigest =
+			typeof source.rawSourceDigest === 'string' && DIGEST_PATTERN.test(source.rawSourceDigest) ? source.rawSourceDigest : null;
+		if (!sourceRawDigest) {
+			diagnostics.push(diag('llmix.release_plan_invalid', `Release plan source ${identity} is missing rawSourceDigest`));
+		}
+		if (typeof source.module !== 'string' || typeof source.preset !== 'string') {
+			diagnostics.push(diag('llmix.release_plan_invalid', `Release plan source ${identity} is missing module or preset`));
+			continue;
+		}
+		const nativeAuthoringPath = `snapshots/${root.revision}/authoring/${source.module}/${source.preset}.mda`;
+		const nativeAuthoringDigest = authoringPaths.get(nativeAuthoringPath);
+		if (!nativeAuthoringDigest) {
+			diagnostics.push(diag('llmix.registry_root_missing_preset', `Native registry-root is missing authoring source for ${identity}`));
+		} else if (sourceRawDigest && nativeAuthoringDigest !== sourceRawDigest) {
+			diagnostics.push(
+				diag('llmix.registry_root_stale_digest', `Native registry-root authoring digest for ${identity} does not match the release plan`),
+			);
+		}
+		const nativeResolvedPath = `snapshots/${root.revision}/resolved/${source.module}/${source.preset}.json`;
+		const legacyResolvedPath = typeof source.expectedRegistryEntryPath === 'string' ? source.expectedRegistryEntryPath : null;
+		if (!resolvedPaths.has(nativeResolvedPath) && (!legacyResolvedPath || !resolvedPaths.has(legacyResolvedPath))) {
+			diagnostics.push(diag('llmix.registry_root_missing_preset', `Native registry-root is missing resolved config for ${identity}`));
+		}
 	}
 	return diagnostics;
 }

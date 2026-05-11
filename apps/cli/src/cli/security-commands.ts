@@ -159,9 +159,10 @@ function asSignatureEntry(value: unknown): SignatureEntry | null {
 	return value as SignatureEntry;
 }
 
-function payloadTypeDiagnostic(signature: SignatureEntry) {
-	if (signature['payload-type'] === undefined || signature['payload-type'] === INTEGRITY_PAYLOAD_TYPE) return null;
-	return diag('signature.payload_type_mismatch', `Signature payload-type must be ${INTEGRITY_PAYLOAD_TYPE}`);
+function payloadTypeDiagnostic(signature: SignatureEntry, expectedPayloadType: string) {
+	if (signature['payload-type'] === undefined && expectedPayloadType === INTEGRITY_PAYLOAD_TYPE) return null;
+	if (signature['payload-type'] === expectedPayloadType) return null;
+	return diag('signature.payload_type_mismatch', `Signature payload-type must be ${expectedPayloadType}`);
 }
 
 export function verifySignatureEntries(
@@ -170,8 +171,10 @@ export function verifySignatureEntries(
 	policy: unknown,
 	didDocumentPath: string | null,
 	sigstoreFixturePath: string | null,
+	options: { payloadType?: string; payloadBytes?: Buffer } = {},
 ) {
-	const payload = integrityPayloadBytes(integrity);
+	const payloadType = options.payloadType ?? INTEGRITY_PAYLOAD_TYPE;
+	const payload = options.payloadBytes ?? integrityPayloadBytes(integrity);
 	const sigstoreFixture = sigstoreFixturePath ? readSigstoreFixture(sigstoreFixturePath, false) : null;
 	const trusted = new Set<string>();
 	const trustedSignerIdentities: TrustedSignerIdentity[] = [];
@@ -186,7 +189,7 @@ export function verifySignatureEntries(
 				rejectedTrusted.push(diag('signature.digest_mismatch', 'Signature payload digest does not match the expected integrity digest'));
 				continue;
 			}
-			const payloadTypeError = payloadTypeDiagnostic(signature);
+			const payloadTypeError = payloadTypeDiagnostic(signature, payloadType);
 			if (payloadTypeError) {
 				rejectedTrusted.push(payloadTypeError);
 				continue;
@@ -202,7 +205,7 @@ export function verifySignatureEntries(
 				);
 				continue;
 			}
-			const ok = cryptoVerify(null, dssePae(INTEGRITY_PAYLOAD_TYPE, payload), keyResult.key, Buffer.from(signature.signature, 'base64'));
+			const ok = cryptoVerify(null, dssePae(payloadType, payload), keyResult.key, Buffer.from(signature.signature, 'base64'));
 			if (!ok) {
 				rejectedTrusted.push(diag('signature.verification_failed', `Signature verification failed for ${signature['key-id']}`));
 				continue;
@@ -226,7 +229,7 @@ export function verifySignatureEntries(
 			rejectedTrusted.push(diag('signature.digest_mismatch', 'Signature payload digest does not match the expected integrity digest'));
 			continue;
 		}
-		const payloadTypeError = payloadTypeDiagnostic(signature);
+		const payloadTypeError = payloadTypeDiagnostic(signature, payloadType);
 		if (payloadTypeError) {
 			rejectedTrusted.push(payloadTypeError);
 			continue;
@@ -276,7 +279,7 @@ export function verifySignatureEntries(
 			rejectedTrusted.push(diag('signature.unsupported_algorithm', 'Signature algorithm does not match the Sigstore fixture public key'));
 			continue;
 		}
-		const ok = cryptoVerify(null, dssePae(INTEGRITY_PAYLOAD_TYPE, payload), publicKey, Buffer.from(signature.signature, 'base64'));
+		const ok = cryptoVerify(null, dssePae(payloadType, payload), publicKey, Buffer.from(signature.signature, 'base64'));
 		if (!ok) {
 			rejectedTrusted.push(diag('signature.verification_failed', `Signature verification failed for ${signature['key-id']}`));
 			continue;

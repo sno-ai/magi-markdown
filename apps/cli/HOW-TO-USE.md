@@ -309,6 +309,13 @@ publisher owns registry writes. After publishing or staging the registry, sign
 the registry root. Then use `mda release finalize --target llmix-registry` to verify the signed
 registry root and produce the external deployment trust manifest.
 
+The preferred registry root is the native LLMix signed envelope written by the
+publisher: `schema: "llmix.config-registry.root-envelope"`. The CLI also keeps
+compatibility with older synthetic `kind: "llmix-registry-root"` evidence. For
+native roots, finalize verifies `payload_sha256`, the native registry-root
+signature payload type, each `files[]` digest against the registry directory,
+and release-plan coverage for authoring sources and resolved configs.
+
 ### 4. Create The External Trust Manifest
 
 ```sh
@@ -318,6 +325,10 @@ mda release finalize --target llmix-registry --registry-dir registry --registry-
 The trust manifest must be outside the registry directory. The CLI rejects
 direct paths, relative traversal, and symlink cases that put trust authority back
 inside the registry.
+
+When `--derive-root-digest` is used with a native LLMix registry root, the
+manifest `expectedRootDigest` is the sha256 digest of the actual
+`registry-root.json` file bytes. That is the same object the LLMix runtime pins.
 
 ### 5. Generate Deployment Snippets
 

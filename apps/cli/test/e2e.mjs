@@ -57,6 +57,7 @@ function normalizeSnippetGolden(content, paths) {
 }
 
 const INTEGRITY_PAYLOAD_TYPE = 'application/vnd.mda.integrity+json';
+const LLMIX_REGISTRY_ROOT_PAYLOAD_TYPE = 'application/vnd.snoai.llmix.registry-root+json';
 
 function dssePae(payloadType, payload) {
 	return Buffer.concat([
@@ -68,6 +69,10 @@ function dssePae(payloadType, payload) {
 function signatureForPayloadType(privateKey, payloadType, digest) {
 	const payload = Buffer.from(JSON.stringify({ integrity: { algorithm: 'sha256', digest } }), 'utf8');
 	return cryptoSign(null, dssePae(payloadType, payload), privateKey).toString('base64');
+}
+
+function signatureForPayloadBytes(privateKey, payloadType, payloadBytes) {
+	return cryptoSign(null, dssePae(payloadType, Buffer.from(payloadBytes)), privateKey).toString('base64');
 }
 
 function stableJson(value) {
@@ -83,6 +88,14 @@ function stableJson(value) {
 
 function digestJson(value) {
 	return `sha256:${createHash('sha256').update(stableJson(value)).digest('hex')}`;
+}
+
+function digestBytes(bytes) {
+	return `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+}
+
+function sha256Hex(bytes) {
+	return createHash('sha256').update(bytes).digest('hex');
 }
 
 function fileDigests(paths) {
@@ -999,6 +1012,7 @@ assert.equal(releasePlan.kind, 'llmix-release-plan');
 assert.equal(releasePlan.sources[0].module, 'search_summary');
 assert.equal(releasePlan.sources[0].preset, 'openai_fast');
 assert.equal(releasePlan.sources[0].sourcePath, 'search_summary/openai_fast.mda');
+assert.equal(releasePlan.sources[0].rawSourceDigest, digestBytes(readFileSync(releaseSourceFile)));
 assert.equal(releasePlan.sources[0].canonicalSourceDigest, llmixIntegrity.digest);
 assert.equal(releasePlan.sources[0].signaturePayloadDigest, llmixIntegrity.digest);
 assert.equal(releasePlan.sources[0].signerIdentity.signer, 'did-web:tools.example.com');
@@ -1132,6 +1146,260 @@ assert.equal(trustManifest.rekorPolicy, null);
 assert.equal(trustManifest.minimumRevision, '2026-05-09T120000Z');
 assert.equal(trustManifest.minimumPublishedAt, '2026-05-09T12:00:00Z');
 assert.equal(trustManifest.highWatermark, '2026-05-09T120000Z');
+
+const nativeRevision = '2026-05-10T120000Z';
+const nativeSnapshotDir = join(registryDir, 'snapshots', nativeRevision);
+const nativeAuthoringPath = join(nativeSnapshotDir, 'authoring', 'search_summary', 'openai_fast.mda');
+const nativeResolvedPath = join(nativeSnapshotDir, 'resolved', 'search_summary', 'openai_fast.json');
+mkdirSync(join(nativeSnapshotDir, 'authoring', 'search_summary'), { recursive: true });
+mkdirSync(join(nativeSnapshotDir, 'resolved', 'search_summary'), { recursive: true });
+writeFileSync(nativeAuthoringPath, readFileSync(releaseSourceFile));
+writeFileSync(nativeResolvedPath, `${stableJson({ model: 'gpt-5-mini', provider: 'openai' })}\n`);
+const nativeAuthoringRel = `snapshots/${nativeRevision}/authoring/search_summary/openai_fast.mda`;
+const nativeResolvedRel = `snapshots/${nativeRevision}/resolved/search_summary/openai_fast.json`;
+const nativeManifestRel = `snapshots/${nativeRevision}/manifest.json`;
+const nativeManifest = {
+	revision: nativeRevision,
+	published_at: '2026-05-10T12:00:00.000Z',
+	schema_version: 1,
+	presets: {
+		'search_summary/openai_fast': {
+			authoring_path: 'authoring/search_summary/openai_fast.mda',
+			authoring_sha256: sha256Hex(readFileSync(nativeAuthoringPath)),
+			resolved_path: 'resolved/search_summary/openai_fast.json',
+			resolved_sha256: sha256Hex(readFileSync(nativeResolvedPath)),
+		},
+	},
+};
+const nativeManifestPath = join(nativeSnapshotDir, 'manifest.json');
+writeFileSync(nativeManifestPath, `${JSON.stringify(nativeManifest, null, 2)}\n`);
+const nativeManifestSha = sha256Hex(readFileSync(nativeManifestPath));
+const nativeCurrent = { revision: nativeRevision, manifest_sha256: nativeManifestSha };
+const nativeCurrentPath = join(registryDir, 'current.json');
+writeFileSync(nativeCurrentPath, `${JSON.stringify(nativeCurrent, null, 2)}\n`);
+const nativePayload = {
+	schema: 'llmix.config-registry.root',
+	schema_version: 1,
+	revision: nativeRevision,
+	published_at: '2026-05-10T12:00:00.000Z',
+	current: {
+		path: 'current.json',
+		revision: nativeRevision,
+		manifest_sha256: nativeManifestSha,
+		sha256: sha256Hex(readFileSync(nativeCurrentPath)),
+	},
+	manifest: {
+		path: nativeManifestRel,
+		sha256: nativeManifestSha,
+	},
+	files: [
+		{ path: nativeAuthoringRel, sha256: sha256Hex(readFileSync(nativeAuthoringPath)), role: 'authoring' },
+		{ path: nativeResolvedRel, sha256: sha256Hex(readFileSync(nativeResolvedPath)), role: 'resolved' },
+	],
+};
+const nativePayloadBytes = Buffer.from(stableJson(nativePayload), 'utf8');
+const nativePayloadSha = sha256Hex(nativePayloadBytes);
+const nativeEnvelope = {
+	schema: 'llmix.config-registry.root-envelope',
+	schema_version: 1,
+	payload: nativePayload,
+	integrity: { algorithm: 'sha256', digest: `sha256:${nativePayloadSha}` },
+	payload_sha256: nativePayloadSha,
+	signatures: [
+		{
+			signer: 'did-web:tools.example.com',
+			'key-id': didKeyId,
+			algorithm: 'ed25519',
+			'payload-type': LLMIX_REGISTRY_ROOT_PAYLOAD_TYPE,
+			'payload-digest': `sha256:${nativePayloadSha}`,
+			signature: signatureForPayloadBytes(didPrivateKey, LLMIX_REGISTRY_ROOT_PAYLOAD_TYPE, nativePayloadBytes),
+		},
+	],
+};
+const nativeRegistryRootPath = join(nativeSnapshotDir, 'registry-root.json');
+writeFileSync(nativeRegistryRootPath, `${JSON.stringify(nativeEnvelope, null, 2)}\n`);
+const nativeRegistryRootDigest = digestBytes(readFileSync(nativeRegistryRootPath));
+const nativeTrustManifestOut = join(tmp, 'release', 'llmix-native-trust.json');
+const nativeTrustManifestResult = json([
+	'release',
+	'finalize',
+	'--target',
+	'llmix-registry',
+	'--registry-dir',
+	registryDir,
+	'--registry-root',
+	nativeRegistryRootPath,
+	'--release-plan',
+	releasePlanOut,
+	'--policy',
+	didPolicy,
+	'--did-document',
+	didDocument,
+	'--derive-root-digest',
+	'--out',
+	nativeTrustManifestOut,
+]);
+assert.equal(nativeTrustManifestResult.ok, true);
+assert.equal(nativeTrustManifestResult.expectedRootDigest, nativeRegistryRootDigest);
+assert.equal(nativeTrustManifestResult.sourceSetDigest, releasePlan.sourceSetDigest);
+const nativeTrustManifest = JSON.parse(readFileSync(nativeTrustManifestOut, 'utf8'));
+assert.equal(nativeTrustManifest.expectedRootDigest, nativeRegistryRootDigest);
+assert.equal(nativeTrustManifest.registryRoot.revision, nativeRevision);
+
+const tamperedNativePayloadDigestPath = join(nativeSnapshotDir, 'registry-root-bad-payload-digest.json');
+writeFileSync(tamperedNativePayloadDigestPath, `${JSON.stringify({ ...nativeEnvelope, payload_sha256: '0'.repeat(64) }, null, 2)}\n`);
+const tamperedNativePayloadDigest = json(
+	[
+		'release',
+		'finalize',
+		'--target',
+		'llmix-registry',
+		'--registry-dir',
+		registryDir,
+		'--registry-root',
+		tamperedNativePayloadDigestPath,
+		'--release-plan',
+		releasePlanOut,
+		'--policy',
+		didPolicy,
+		'--did-document',
+		didDocument,
+		'--derive-root-digest',
+		'--out',
+		join(tmp, 'release', 'native-bad-payload-digest.json'),
+	],
+	1,
+);
+assert.ok(tamperedNativePayloadDigest.diagnostics.some((diagnostic) => diagnostic.code === 'integrity.mismatch'));
+
+const badPayloadTypePath = join(nativeSnapshotDir, 'registry-root-bad-payload-type.json');
+writeFileSync(
+	badPayloadTypePath,
+	`${JSON.stringify(
+		{
+			...nativeEnvelope,
+			signatures: [
+				{
+					...nativeEnvelope.signatures[0],
+					'payload-type': INTEGRITY_PAYLOAD_TYPE,
+					signature: signatureForPayloadBytes(didPrivateKey, INTEGRITY_PAYLOAD_TYPE, nativePayloadBytes),
+				},
+			],
+		},
+		null,
+		2,
+	)}\n`,
+);
+const badPayloadType = json(
+	[
+		'release',
+		'finalize',
+		'--target',
+		'llmix-registry',
+		'--registry-dir',
+		registryDir,
+		'--registry-root',
+		badPayloadTypePath,
+		'--release-plan',
+		releasePlanOut,
+		'--policy',
+		didPolicy,
+		'--did-document',
+		didDocument,
+		'--derive-root-digest',
+		'--out',
+		join(tmp, 'release', 'native-bad-payload-type.json'),
+	],
+	1,
+);
+assert.ok(badPayloadType.diagnostics.some((diagnostic) => diagnostic.code === 'signature.payload_type_mismatch'));
+
+const badFileDigestPath = join(nativeSnapshotDir, 'registry-root-bad-file-digest.json');
+const badFileDigestPayload = {
+	...nativePayload,
+	files: [nativePayload.files[0], { ...nativePayload.files[1], sha256: '1'.repeat(64) }],
+};
+const badFileDigestPayloadBytes = Buffer.from(stableJson(badFileDigestPayload), 'utf8');
+const badFileDigestPayloadSha = sha256Hex(badFileDigestPayloadBytes);
+writeFileSync(
+	badFileDigestPath,
+	`${JSON.stringify(
+		{
+			...nativeEnvelope,
+			payload: badFileDigestPayload,
+			integrity: { algorithm: 'sha256', digest: `sha256:${badFileDigestPayloadSha}` },
+			payload_sha256: badFileDigestPayloadSha,
+			signatures: [
+				{
+					...nativeEnvelope.signatures[0],
+					'payload-digest': `sha256:${badFileDigestPayloadSha}`,
+					signature: signatureForPayloadBytes(didPrivateKey, LLMIX_REGISTRY_ROOT_PAYLOAD_TYPE, badFileDigestPayloadBytes),
+				},
+			],
+		},
+		null,
+		2,
+	)}\n`,
+);
+const badFileDigest = json(
+	[
+		'release',
+		'finalize',
+		'--target',
+		'llmix-registry',
+		'--registry-dir',
+		registryDir,
+		'--registry-root',
+		badFileDigestPath,
+		'--release-plan',
+		releasePlanOut,
+		'--policy',
+		didPolicy,
+		'--did-document',
+		didDocument,
+		'--derive-root-digest',
+		'--out',
+		join(tmp, 'release', 'native-bad-file-digest.json'),
+	],
+	1,
+);
+assert.ok(badFileDigest.diagnostics.some((diagnostic) => diagnostic.code === 'llmix.registry_root_file_digest_mismatch'));
+
+const badRawReleasePlanPath = join(tmp, 'release', 'plan-bad-raw-source.json');
+writeFileSync(
+	badRawReleasePlanPath,
+	`${JSON.stringify(
+		{
+			...releasePlan,
+			sources: releasePlan.sources.map((sourceEntry) => ({ ...sourceEntry, rawSourceDigest: `sha256:${'2'.repeat(64)}` })),
+		},
+		null,
+		2,
+	)}\n`,
+);
+const badRawSource = json(
+	[
+		'release',
+		'finalize',
+		'--target',
+		'llmix-registry',
+		'--registry-dir',
+		registryDir,
+		'--registry-root',
+		nativeRegistryRootPath,
+		'--release-plan',
+		badRawReleasePlanPath,
+		'--policy',
+		didPolicy,
+		'--did-document',
+		didDocument,
+		'--derive-root-digest',
+		'--out',
+		join(tmp, 'release', 'native-bad-raw-source.json'),
+	],
+	1,
+);
+assert.ok(badRawSource.diagnostics.some((diagnostic) => diagnostic.code === 'llmix.registry_root_stale_digest'));
 const releaseTemp = join(tmp, 'release', '.mda-tmp');
 writeFileSync(releaseTemp, 'user-owned-release-temp\n');
 const failedTrustManifestExistingOut = json(

@@ -83,6 +83,13 @@ mda release finalize --target llmix-registry --registry-dir registry --manifest 
 mda doctor release --target llmix-registry --source authoring --registry-dir registry --release-plan release-plan.json --manifest release/llmix-trust.json --offline-sigstore-fixture sigstore-evidence.json
 ```
 
+`release finalize` accepts the LLMix native signed registry root envelope from
+the publisher: `schema: "llmix.config-registry.root-envelope"`. In that mode the
+CLI verifies the native registry-root signature payload type, `payload_sha256`,
+registry file digests, and release-plan source coverage. With
+`--derive-root-digest`, the trust manifest `expectedRootDigest` is the digest of
+the actual `registry-root.json` bytes that the runtime pins.
+
 The `--offline-sigstore-fixture` option is the CLI 1.1 deterministic evidence
 input for local and CI gates. Production release automation can keep using
 GitHub Actions keyless signing and Sigstore/Rekor evidence; this CLI gate makes
@@ -140,6 +147,12 @@ mda release finalize --target llmix-registry --registry-dir registry --registry-
 mda release finalize --target llmix-registry --registry-dir registry --manifest release/llmix-trust.json --snippet-format json --snippet-out release/llmix-trust-snippet.json
 mda doctor release --target llmix-registry --source authoring --registry-dir registry --release-plan release-plan.json --manifest release/llmix-trust.json --offline-sigstore-fixture sigstore-evidence.json
 ```
+
+The registry root can be the LLMix native signed root envelope
+(`llmix.config-registry.root-envelope`) or the older synthetic
+`kind: "llmix-registry-root"` evidence format. Native roots are checked against
+the actual registry directory and the release plan before the external trust
+manifest is written.
 
 Use did:web as an advanced or alternate signing profile when your team manages
 release keys and DID documents directly.
