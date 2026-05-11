@@ -168,3 +168,4 @@ Les contributions sont les bienvenues. Les changements majeurs à l'Open Spec ou
 
 - Site de documentation : https://mda.sno.dev
 - Discussions sur la spec : https://github.com/sno-ai/mda/discussions
+- Guide du dépôt lisible par les LLM : [`llms.txt`](../../llms.txt)

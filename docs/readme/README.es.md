@@ -168,3 +168,4 @@ Las contribuciones son bienvenidas. Los cambios mayores en la Open Spec o en el 
 
 - Sitio de documentación: https://mda.sno.dev
 - Discusión del spec: https://github.com/sno-ai/mda/discussions
+- Guía del repositorio legible por LLM: [`llms.txt`](../../llms.txt)

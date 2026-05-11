@@ -13,10 +13,6 @@ Thank you for your interest in contributing to MDA Markdown! We welcome contribu
    pnpm install
    ```
 
-3. **Set Up Development Environment**
-   - Copy `.env.local.example` to `.env.local` (if applicable)
-   - Configure any necessary environment variables
-
 ## Development Workflow
 
 1. **Create a Branch**

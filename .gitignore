@@ -96,3 +96,4 @@ ai-doc/
 .codex/
 .claude/
 openspec/*
+internal/*

@@ -3,7 +3,7 @@
   "default": true, // Start with default rules
   "globs": [
     "**/*.md",
-    "**/*.aimd", // Include custom .aimd files
+    "**/*.mda", // Include custom .mda files",
     "!**/node_modules/**" // Exclude node_modules
   ],
   // Example rule customization (add more as needed):

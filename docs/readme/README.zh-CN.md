@@ -168,3 +168,4 @@ v1.0 交付的是**契约**，不是围绕它的整个生态。
 
 - 文档站点：https://mda.sno.dev
 - 规范讨论：https://github.com/sno-ai/mda/discussions
+- 面向 LLM 的仓库指南：[`llms.txt`](../../llms.txt)

@@ -168,3 +168,4 @@ v1.0 **कॉन्ट्रैक्ट** शिप करता है, उस
 
 - डॉक्यूमेंटेशन साइट: https://mda.sno.dev
 - स्पेक चर्चा: https://github.com/sno-ai/mda/discussions
+- LLM-पठनीय रिपॉज़िटरी गाइड: [`llms.txt`](../../llms.txt)

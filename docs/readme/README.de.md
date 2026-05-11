@@ -168,3 +168,4 @@ Beiträge sind willkommen. Größere Änderungen an der Open Spec oder am Vendor
 
 - Dokumentationsseite: https://mda.sno.dev
 - Spec-Diskussion: https://github.com/sno-ai/mda/discussions
+- LLM-lesbarer Repository-Leitfaden: [`llms.txt`](../../llms.txt)
