@@ -3,7 +3,7 @@ name: Publish CLI
 on:
   push:
     tags:
-      - "v1.0.0-rc.*"
+      - "v*.*.*"
 
 permissions:
   contents: read
@@ -12,6 +12,9 @@ permissions:
 jobs:
   npm:
     runs-on: ubuntu-latest
+    concurrency:
+      group: publish-cli-${{ github.ref }}
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
         with:
@@ -23,9 +26,16 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           registry-url: "https://registry.npmjs.org"
           cache: "pnpm"
+
+      - name: Verify release environment
+        run: |
+          node --version
+          npm --version
+          node -e "const [major, minor] = process.versions.node.split('.').map(Number); if (major < 22 || (major === 22 && minor < 14)) throw new Error('npm trusted publishing requires Node 22.14.0 or newer')"
+          node -e "const { execSync } = require('node:child_process'); const [major, minor, patch] = execSync('npm --version', { encoding: 'utf8' }).trim().split('.').map(Number); if (major < 11 || (major === 11 && (minor < 5 || (minor === 5 && patch < 1)))) throw new Error('npm trusted publishing requires npm 11.5.1 or newer')"
 
       - run: pnpm install --frozen-lockfile
 
@@ -35,14 +45,23 @@ jobs:
       - name: Verify tag matches CLI package version
         run: |
           version="$(node -p "require('./apps/cli/package.json').version")"
+          node -e "const version = process.argv[1]; if (!/^\\d+\\.\\d+\\.\\d+$/.test(version)) throw new Error('Official CLI releases must use a stable semver version')" "$version"
           test "v${version}" = "${GITHUB_REF_NAME}"
+          echo "CLI_VERSION=${version}" >> "$GITHUB_ENV"
+
+      - name: Verify version is not already published
+        run: |
+          if npm view "@markdown-ai/cli@${CLI_VERSION}" version --registry https://registry.npmjs.org >/dev/null 2>&1; then
+            echo "@markdown-ai/cli@${CLI_VERSION} is already published"
+            exit 1
+          fi
 
       - run: pnpm cli:test
+
+      - run: pnpm -C apps/cli smoke:package
 
       - run: npm pack --dry-run --json
         working-directory: apps/cli
 
-      - run: npm publish --provenance --access public --tag rc
+      - run: npm publish --access public
         working-directory: apps/cli
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
